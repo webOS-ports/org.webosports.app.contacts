@@ -2,6 +2,703 @@
 	Put anything you reference with "url()" in ../assets/
 	This way, you can minify your application, and just remove the "source" folder for production
 */
-.nice-padding {
-	padding: 15px;
+
+/****************
+
+ContactsUI CSS
+
+****************/
+/* ContactList */
+/* popup 
+.enyo-popup .group {
+	-webkit-border-image: url(../images/bg_rowgroup.png) 10 10 repeat;
+	border-width: 10px;
+	margin: 10px 0;
+}
+.enyo-popup .group-inner {
+	margin: -6px -8px;
+	-webkit-box-sizing:content-box;
+	-webkit-border-radius:10px
+}*/
+/* Square search field */
+.enyo-contacts-list .contacts-search.enyo-input.enyo-rounded-input {
+	margin:0 0 -3px; /* blend shadow from bg_search.png */
+	-webkit-border-image:url(../images/bg_search.png) 0 15 repeat;
+	border-width:0 15px;	
+	height:44px;
+}
+.enyo-contacts-list .contacts-search.enyo-input .enyo-input-input {
+	margin:0 7px;
+	height:40px;
+}
+/* items */
+.enyo-contacts-list .no-srch-results-msg {
+	color:#666;
+	padding:13px 0;
+	min-height:0
+}
+.enyo-contacts-list .gal-message {
+	font-size:16px;
+}
+.enyo-contacts-list .enyo-item {
+	padding:0 14px;
+	min-height: 68px;
+	border-width:1px 0;
+	border-style:solid none solid none;
+	border-top-color:rgba(255,255,255,0.5);
+	border-bottom-color:rgba(0,0,0,0.1);
+}
+.enyo-contacts-list .enyo-item div {
+	vertical-align:middle;
+}
+.enyo-contacts-list .enyo-item.first {
+	border-top:0;
+}
+.enyo-contacts-list .enyo-item.last {
+	border-bottom:0;
+}
+.enyo-contacts-list .enyo-item.selected {
+	background-color:#d1e5f5;
+	border-color:#B3d9f2
+}
+.enyo-contacts-list .enyo-item .content {
+	height:100%;
+}
+.enyo-contacts-list .enyo-item .icon {
+	height:50px;
+	margin:10px 15px 10px 0;
+	width:50px;
+	position:relative;
+}
+.enyo-contacts-list .enyo-item .icon .mask {
+	position:absolute;
+	top:0;
+	left:0;
+	height:100%;
+	width:100%;
+	background:url(../images/bg_icon_mask.png) no-repeat 0 0;
+}
+.enyo-contacts-list .enyo-item .icon .img {
+	-webkit-border-radius: 3px;
+	height:100%;
+	width:100%;
+	background-position:50% 50%;
+	background-repeat: no-repeat;
+	background-color:#f1f1f1;
+	background-image:url(../images/bg_icon_img.png)
+}
+.enyo-contacts-list .enyo-item .name {
+	white-space:nowrap;
+	overflow:hidden;
+	text-overflow:ellipsis;
+	max-width:165px;
+}
+.enyo-contacts-list .enyo-item .name.long {
+	max-width:200px
+}
+.enyo-contacts-list .enyo-item .name.long.long-favOnly {
+	max-width:165px
+}
+.enyo-contacts-list .enyo-item .name.no-im-status {
+	margin-left:-30px
+}
+.enyo-contacts-list .enyo-item .favorite {
+	margin:25px 0 0 8px;
+	background:url(../images/bg_list_favorite.png) no-repeat right bottom;
+	height:25px;
+	width:25px;
+	float:right;
+}
+.enyo-contacts-list .enyo-item .status {
+	margin:5px 5px 0 0;
+}
+.enyo-contacts-list .divider-Label {
+	text-transform: uppercase;
+}
+/** Favorites list **/
+.enyo-contacts-list .header.favorites {
+	background:none;
+	border-bottom-color:rgba(0,0,0,0.30);
+}
+/* Details */
+.enyo-contacts-details {
+	padding:0 2px;
+}
+.enyo-contacts-details .header {
+	padding:5px 13px 10px 5px;
+	border-bottom:1px solid #d8d8d8;
+}
+.enyo-contacts-details .icon {
+	height:50px;
+	margin:0 10px 4px 2px;
+	width:50px;
+	position:relative;
+}
+.enyo-contacts-details .icon .mask {
+	position:absolute;
+	top:0;
+	left:0;
+	height:100%;
+	width:100%;
+	background:url(../images/bg_icon_mask.png) no-repeat 0 0;
+}
+.enyo-contacts-details .icon .img {
+	-webkit-border-radius: 3px;
+	height:100%;
+	width:100%;
+	background-position:50% 50%;
+	background-repeat: no-repeat;
+	background-color:#f1f1f1;
+	background-image:url(../images/bg_icon_img.png)
+}
+.enyo-contacts-details .nameinfo {
+	font-size:20px;
+	margin:0 0 4px;
+}
+.enyo-contacts-details .nameinfo div {
+	overflow:hidden;
+	text-overflow:ellipsis;
+}
+.enyo-contacts-details .name {
+	color:#222;
+	font-weight:normal;
+/*	padding:0 0 0.5em; */
+	overflow:hidden;
+	text-overflow:ellipsis;
+	width:100%;
+	white-space: nowrap;
+}
+.enyo-contacts-details .position {
+	color:#888;
+}
+.enyo-contacts-details .group .enyo-scroller {
+	margin:-12px;
+}
+.enyo-contacts-details .enyo-group {
+	-webkit-border-image:none;
+	border:0;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+	border-top:1px solid (255,255,255,0.2);
+	-webkit-border-radius:0;
+	margin:0;
+}
+.enyo-contacts-details .enyo-group .enyo-item {
+	border-top-width:1px;
+	border-bottom-width:1px;
+}
+.enyo-contacts-details .enyo-group:first-child {
+	border-top-width:0;
+}
+.enyo-contacts-details .enyo-group:first-child .enyo-item.enyo-first {
+	border-top-width:0;
+}
+.enyo-contacts-details .enyo-group-inner {
+	margin:0;
+}
+.enyo-contacts-details .enyo-group .enyo-item {
+	color:#222;
+}
+.enyo-contacts-pointpickerlist .label {
+	color:#1879cd;
+	font-weight:normal;
+	text-transform: uppercase;
+	font-size:0.7rem;
+}
+.enyo-contacts-details .label {
+	color:#1879cd;
+	font-weight:normal;
+	text-transform: uppercase;
+	font-size:0.7rem;
+}
+.enyo-contacts-details .value {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.enyo-contacts-details .button-arrow {
+	height:42px;
+	width:32px;
+	background: url(../images/bg_details_input_skype.png) no-repeat 50% 50%
+}
+.enyo-contacts-details .enyo-button.action .enyo-button-icon {
+	margin:-6px -8px -10px
+}
+.enyo-contacts-details .contacts-actions .enyo-button {
+	margin:0 0 10px;
+}
+
+.im-status {
+	height: 28px;
+	background: url(../images/status-away.png) no-repeat 0 0;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+}
+.edit-contact.enyo-button {
+	background:none;
+	-webkit-border-image:none;
+}
+/* TODO: temporary styling to be replaced...all GAL styling TDB*/
+.contacts-GAL-message {
+	margin-top:10px;
+	margin-bottom:10px;
+	margin-left:14px;
+	color: #2d6c94;
+}
+.contacts-gal-person {
+	padding: 10px 10px;
+}
+.contacts-gal-person.selected {
+	background-color:#d1e5f5;
+	border-color:#B3d9f2
+}
+.contacts-gal-noresults {
+	color: gray;
+	text-align: center;
+}
+.contacts-gal-spinner {
+	margin:10px 14px 10px 0px;
+}
+
+.contactsui-peoplepicker {
+  width: 320px;
+  border-width: 24px;
+  -webkit-border-image: url(../images/dialogbg.png) 24 stretch stretch;
+}
+
+.contactsui-peoplepicker-container {
+  margin: 0px;
+  height: 300px;
+}
+
+.contactsui-peoplepicker .enyo-iframe {
+  background-color: #ccc;
+}
+
+
+
+/****************
+
+Contacts App CSS
+
+****************/
+
+
+body {
+    background: transparent;
+}
+
+.leftpane {
+    background-color: #e4e4e2;
+}
+
+img {
+    vertical-align: middle;
+}
+
+/* add favorite styles to global enyo list */
+.enyo-contacts-list .favorites .enyo-item .favorite,
+.enyo-contacts-list .favorites .enyo-divider-alpha {
+    display: none;
+}
+
+.enyo-contacts-list .favorites .enyo-item {
+    border-width: 1px 0;
+}
+
+.enyo-contacts-list .favorites .enyo-item .icon {
+    height: 100px;
+    width: 100px;
+}
+
+.enyo-contacts-list .favorites .enyo-item .icon .mask {
+    background: url(../images/bg_favorites_icon_mask.png) no-repeat 0 0;
+}
+
+.enyo-contacts-list .favorites .enyo-item .icon .img {
+    height: 100%;
+    width: 100%;
+    border-radius: 6px;
+}
+
+/* Global - copying all over the place, will clean up reduntant things */
+.favorite {
+    width: 34px;
+    height: 34px;
+    background: url(../images/bg_favorite.png) no-repeat 0 0;
+}
+
+/* Contact photos: icon to list is as avatar to detail */
+.mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.icon {
+    height: 50px;
+    margin: 10px 15px 10px 0;
+    width: 50px;
+    position: relative;
+}
+
+.icon .mask {
+    background: url(../images/bg_icon_mask.png) no-repeat 0 0;
+}
+
+.icon .img {
+    -webkit-border-radius: 3px;
+    width: 100%;
+    height: 100%;
+}
+
+.avatar {
+    width: 222px;
+    position: relative;
+    height: 222px;
+}
+
+.avatar .img {
+    height: 196px;
+    width: 196px;
+    top: 13px;
+    position: absolute;
+    left: 13px;
+    background-color: #f1f1f1;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+}
+
+.avatar .mask {
+    background: url(../images/bg_avatar_mask.png) no-repeat 0 0;
+}
+
+/* Edit */
+.edit-toolbar .switch-account.enyo-button {
+    height: 38px;
+}
+
+.edit-toolbar .switch-account.enyo-button .enyo-listselector-arrow {
+    margin: -6px 0;
+}
+
+.edit-toolbar .switch-account.enyo-button img {
+    margin: -8px 0 -6px -4px;
+    padding: 0
+}
+
+.edit .avatar {
+    margin: 0 15px 0 0;
+}
+
+.edit .avatar .mask {
+    background: url(../images/bg_edit_mask.png) no-repeat 0 0;
+}
+
+.edit .avatar .change {
+    position: absolute;
+    bottom: 13px;
+    left: 13px
+}
+
+.edit .avatar .change .enyo-button-icon {
+    margin: -4px -8px -10px;
+}
+
+.edit .enyo-item {
+    /*	border-bottom-color:#d8d8d8; */
+}
+
+.edit .enyo-item .enyo-input.birthday {
+    min-height: 49px;
+    font-size: 18px;
+}
+
+.edit .enyo-item .enyo-input.notes {
+    min-height: 49px;
+}
+
+.edit .field-button {
+    border: 12px;
+    float: left;
+    -webkit-border-image: url(../images/bg_prefix.png) 12 repeat;
+}
+
+.edit .field-button-inner {
+    width: 32px;
+    height: 32px;
+    margin: -9px;
+}
+
+.edit .field-button .favorite {
+    background: url(../images/bg_edit_favorite.png) no-repeat 0 0;
+}
+
+.edit .field-button .favorite.true {
+    background-position: 0 -32px;
+}
+
+.edit .field-button .prefix {
+    background: url(../images/bg_edit_prefix.png) no-repeat 0 0;
+}
+
+.edit .editable-field-button {
+    height: 40px;
+    margin: -6px 0;
+}
+
+.edit .editable-label {
+    border: 12px;
+    margin: 0 0 0 13px;
+    -webkit-border-image: url(../images/bg_prefix.png) 12 repeat;
+}
+
+.edit .label,
+.edit .editable-label .enyo-menucheckitem-caption {
+    color: #1879cd;
+    padding: 0;
+    font-weight: normal;
+    text-transform: uppercase;
+    font-size: 14px;
+}
+
+.edit .editable-label .enyo-listselector-label {
+    display: none;
+}
+
+.edit .enyo-item > .enyo-listselector {
+    margin: 0 0;
+    padding: 0 0;
+}
+
+.edit .new.enyo-input .enyo-swipeableitem {
+    background: url(../images/bg_field_new.png) no-repeat 0 50%;
+    padding-left: 25px;
+
+}
+
+.edit .enyo-input .enyo-swipeableitem {
+    border: 0;
+    min-height: 0;
+    padding: 0;
+}
+
+.edit .enyo-item.enyo-middle,
+.edit .enyo-item.enyo-last {
+    /*
+     border-top:1px solid;
+     border-top-color:rgba(255,255,255,0.5);
+     */
+}
+
+/* Details */
+.details {
+    background: url(../images/bg_body.png) 0 0 repeat;
+    padding: 4px;
+    border-left: 1px solid #a8a8a8;
+}
+
+.details .container {
+    -webkit-border-image: url(../images/bg_details.png) 9 repeat;
+    border-width: 9px;
+}
+
+.details .content {
+    margin: -3px;
+}
+
+.details .header {
+    padding: 5px 13px 10px 5px;
+    border-bottom: 1px solid #d8d8d8;
+}
+
+.details .avatar {
+    width: 222px;
+    position: relative;
+    height: 222px;
+    margin: 0 8px 0 0;
+}
+
+.details .avatar .img {
+    height: 196px;
+    width: 196px;
+    top: 13px;
+    position: absolute;
+    left: 13px;
+    background-color: #f1f1f1;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+}
+
+.details .avatar .mask {
+    background: url(../images/bg_avatar_mask.png) no-repeat 0 0;
+}
+
+.details .nameinfo {
+    width: 100%;
+}
+
+.details .nameinfo div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.details .name {
+    font-size: 34px;
+    color: #222;
+    padding: 0 0 0.3em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 60%;
+    white-space: nowrap;
+    font-family: PreludeWGL-Light, "Prelude Light", Prelude, "Prelude Medium", "Segoe UI", Arial, Helvetica, sans-serif;
+}
+
+.portrait .details .nameinfo .name {
+    font-size: 26px;
+    white-space: normal;
+}
+
+.details .nickname {
+    color: #555;
+    font-size: 0.9em;
+}
+
+.portrait .details .nameinfo .nickname {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    white-space: nowrap;
+}
+
+.details .position {
+    color: #888;
+    font-size: 0.9em;
+}
+
+.portrait .details .nameinfo .position {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    white-space: nowrap;
+}
+
+.details .favorite {
+    width: 34px;
+    height: 34px;
+    margin: 10px 0 0 10px;
+    background: url(../images/bg_favorite.png) no-repeat 0 0;
+}
+
+.details .favorite.true {
+    background-position: 0 -33px;
+}
+
+.details .profiles-button {
+    background: url(../images/btn_linked_profiles.png) no-repeat 95% 3px;
+    padding: 3px 30px 3px 10px;
+    margin: 3px 0 0 0;
+}
+
+.details .profiles-button.enyo-button-depressed {
+    background-position: 95% -17px;
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+.details .profiles {
+    background: #f4f4f4;
+}
+
+.details .profiles .enyo-item {
+    border-top: 1px dashed #ccc;
+    border-bottom: 0;
+    height: 73px;
+    color: #222;
+    font-weight: normal;
+    padding: 0 14px;
+}
+
+.details .profiles .icon .img {
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    background-color: #f1f1f1;
+    background-image: url(../images/bg_icon_img.png)
+}
+
+.details .enyo-group {
+    -webkit-border-image: none;
+    border: 0;
+    border-bottom: 1px solid #d8d8d8;
+    -webkit-border-radius: 0;
+    margin: 0;
+}
+
+.details .enyo-group-inner {
+    margin: 0;
+}
+
+.details .enyo-group .enyo-item {
+    padding: 0.5rem 0.7rem;
+    color: #222;
+    font-size: 0.9rem;
+}
+
+.details .label {
+    color: #1879cd;
+    font-weight: normal;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+}
+
+.details .value {
+    overflow: hidden;
+    margin: 0 0 0.2rem;
+    text-overflow: ellipsis;
+}
+
+.details .button-arrow {
+    height: 42px;
+    width: 32px;
+    background: url(../images/bg_details_input_skype.png) no-repeat 50% 50%
+}
+
+.details .enyo-button.action .enyo-button-icon {
+    margin: -6px -8px -10px
+}
+
+/* this isn't ideal */
+.details-toolbar .border {
+    border-left: 1px solid #A8A8A8;
+    float: left;
+    height: 100%;
+    left: -4px;
+    position: absolute;
+    width: 1px;
+}
+
+/* less than ideal stuff ends here */
+/* Preferences */
+.contacts-preferences {
+    padding: 6px 0;
+}
+
+.contacts-preferences .enyo-group {
+    margin: 18px 0 0 0;
+}
+
+.contacts-preferences .instructional {
+    padding: 18px 0 12px;
+    color: #333;
+    font-size: 0.9em;
+}
+
+.contacts-preferences .footnote {
+    padding: 12px 0 6px;
+    color: #666;
+    font-size: 0.8em;
+}
+
+.details-placeholder {
+    background: #F9f9f9 url(../images/defaultview-panel-tile.png) bottom left repeat-x;
 }
