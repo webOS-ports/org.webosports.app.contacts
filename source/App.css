@@ -8,39 +8,47 @@
 ContactsUI CSS
 
 ****************/
-/* ContactList */
-/* popup 
-.enyo-popup .group {
-	-webkit-border-image: url(../images/bg_rowgroup.png) 10 10 repeat;
-	border-width: 10px;
-	margin: 10px 0;
+.contacts-list {
+	background-color:#e4e4e2;
 }
-.enyo-popup .group-inner {
-	margin: -6px -8px;
-	-webkit-box-sizing:content-box;
-	-webkit-border-radius:10px
-}*/
-/* Square search field */
-.enyo-contacts-list .contacts-search.enyo-input.enyo-rounded-input {
-	margin:0 0 -3px; /* blend shadow from bg_search.png */
-	-webkit-border-image:url(../images/bg_search.png) 0 15 repeat;
+.contacts-list .contacts-search {
+	/* margin:0 0 -3px; /* blend shadow from bg_search.png */
+    /* border-image:url(../assets/bg_search.png) 0 15 repeat;
 	border-width:0 15px;	
-	height:44px;
+	height:44px;*/
+    width: 100%;
 }
-.enyo-contacts-list .contacts-search.enyo-input .enyo-input-input {
+.contacts-list .contacts-search .onyx-input {
+	/* margin:0 0 -3px; /* blend shadow from bg_search.png */
+    /* border-image:url(../assets/bg_search.png) 0 15 repeat;
+	border-width:0 15px;	
+	height:44px;*/
+    float:left;
+    width:91%;
+}
+.contacts-list .contacts-search img {
+	/* margin:0 0 -3px; /* blend shadow from bg_search.png */
+    /* border-image:url(../assets/bg_search.png) 0 15 repeat;
+	border-width:0 15px;	
+	height:44px;*/
+    float:right;
+}
+.contacts-list .contacts-search.input .input-input {
 	margin:0 7px;
 	height:40px;
 }
+
+
 /* items */
-.enyo-contacts-list .no-srch-results-msg {
+.contacts-list .no-srch-results-msg {
 	color:#666;
 	padding:13px 0;
 	min-height:0
 }
-.enyo-contacts-list .gal-message {
+.contacts-list .gal-message {
 	font-size:16px;
 }
-.enyo-contacts-list .enyo-item {
+.contacts-list .contacts-item {
 	padding:0 14px;
 	min-height: 68px;
 	border-width:1px 0;
@@ -48,118 +56,122 @@ ContactsUI CSS
 	border-top-color:rgba(255,255,255,0.5);
 	border-bottom-color:rgba(0,0,0,0.1);
 }
-.enyo-contacts-list .enyo-item div {
+.contacts-list .contacts-item div {
 	vertical-align:middle;
 }
-.enyo-contacts-list .enyo-item.first {
+.contacts-list .contacts-item.first {
 	border-top:0;
 }
-.enyo-contacts-list .enyo-item.last {
+.contacts-list .contacts-item.last {
 	border-bottom:0;
 }
-.enyo-contacts-list .enyo-item.selected {
+.contacts-list .contacts-item.selected {
 	background-color:#d1e5f5;
 	border-color:#B3d9f2
 }
-.enyo-contacts-list .enyo-item .content {
+.contacts-list .contacts-item .content {
 	height:100%;
 }
-.enyo-contacts-list .enyo-item .icon {
+.contacts-list .contacts-item .icon {
 	height:50px;
 	margin:10px 15px 10px 0;
 	width:50px;
 	position:relative;
 }
-.enyo-contacts-list .enyo-item .icon .mask {
+.contacts-list .contacts-item .icon .mask {
 	position:absolute;
 	top:0;
 	left:0;
 	height:100%;
 	width:100%;
-	background:url(../images/bg_icon_mask.png) no-repeat 0 0;
+	background:url(../assets/bg_icon_mask.png) no-repeat 0 0;
 }
-.enyo-contacts-list .enyo-item .icon .img {
-	-webkit-border-radius: 3px;
+.contacts-list .contacts-item .icon .img {
+	border-radius: 3px;
 	height:100%;
 	width:100%;
 	background-position:50% 50%;
 	background-repeat: no-repeat;
 	background-color:#f1f1f1;
-	background-image:url(../images/bg_icon_img.png)
+	background-image:url(../assets/bg_icon_img.png)
 }
-.enyo-contacts-list .enyo-item .name {
+.contacts-list .contacts-item .name {
 	white-space:nowrap;
 	overflow:hidden;
 	text-overflow:ellipsis;
 	max-width:165px;
 }
-.enyo-contacts-list .enyo-item .name.long {
+.contacts-list .contacts-item .name.long {
 	max-width:200px
 }
-.enyo-contacts-list .enyo-item .name.long.long-favOnly {
+.contacts-list .contacts-item .name.long.long-favOnly {
 	max-width:165px
 }
-.enyo-contacts-list .enyo-item .name.no-im-status {
+.contacts-list .contacts-item .name.no-im-status {
 	margin-left:-30px
 }
-.enyo-contacts-list .enyo-item .favorite {
+.contacts-list .contacts-item .favorite {
 	margin:25px 0 0 8px;
-	background:url(../images/bg_list_favorite.png) no-repeat right bottom;
+	background:url(../assets/bg_list_favorite.png) no-repeat right bottom;
 	height:25px;
 	width:25px;
 	float:right;
 }
-.enyo-contacts-list .enyo-item .status {
+.contacts-list .contacts-item .status {
 	margin:5px 5px 0 0;
 }
-.enyo-contacts-list .divider-Label {
+.contacts-list .divider-Label {
 	text-transform: uppercase;
 }
+
+
 /** Favorites list **/
-.enyo-contacts-list .header.favorites {
+.contacts-list .header.favorites {
 	background:none;
 	border-bottom-color:rgba(0,0,0,0.30);
 }
+
+
 /* Details */
-.enyo-contacts-details {
+.contacts-details {
 	padding:0 2px;
 }
-.enyo-contacts-details .header {
+.contacts-details .header {
 	padding:5px 13px 10px 5px;
 	border-bottom:1px solid #d8d8d8;
 }
-.enyo-contacts-details .icon {
+.contacts-details .icon {
 	height:50px;
 	margin:0 10px 4px 2px;
 	width:50px;
 	position:relative;
 }
-.enyo-contacts-details .icon .mask {
+.contacts-details .icon .mask {
 	position:absolute;
 	top:0;
 	left:0;
 	height:100%;
 	width:100%;
-	background:url(../images/bg_icon_mask.png) no-repeat 0 0;
+	background:url(../assets/bg_icon_mask.png) no-repeat 0 0;
 }
-.enyo-contacts-details .icon .img {
-	-webkit-border-radius: 3px;
+.contacts-details .icon .img {
+	border-radius: 3px;
 	height:100%;
 	width:100%;
 	background-position:50% 50%;
 	background-repeat: no-repeat;
 	background-color:#f1f1f1;
-	background-image:url(../images/bg_icon_img.png)
+	background-image:url(../assets/bg_icon_img.png)
 }
-.enyo-contacts-details .nameinfo {
+.contacts-details .nameinfo {
 	font-size:20px;
 	margin:0 0 4px;
 }
-.enyo-contacts-details .nameinfo div {
+.contacts-details .nameinfo div {
 	overflow:hidden;
 	text-overflow:ellipsis;
 }
-.enyo-contacts-details .name {
+.contacts-details .name {
 	color:#222;
 	font-weight:normal;
 /*	padding:0 0 0.5em; */
@@ -168,74 +180,74 @@ ContactsUI CSS
 	width:100%;
 	white-space: nowrap;
 }
-.enyo-contacts-details .position {
+.contacts-details .position {
 	color:#888;
 }
-.enyo-contacts-details .group .enyo-scroller {
+.contacts-details .group .scroller {
 	margin:-12px;
 }
-.enyo-contacts-details .enyo-group {
-	-webkit-border-image:none;
+.contacts-details .group {
+	border-image:none;
 	border:0;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 	border-top:1px solid (255,255,255,0.2);
-	-webkit-border-radius:0;
+	border-radius:0;
 	margin:0;
 }
-.enyo-contacts-details .enyo-group .enyo-item {
+.contacts-details .group .contacts-item {
 	border-top-width:1px;
 	border-bottom-width:1px;
 }
-.enyo-contacts-details .enyo-group:first-child {
+.contacts-details .group:first-child {
 	border-top-width:0;
 }
-.enyo-contacts-details .enyo-group:first-child .enyo-item.enyo-first {
+.contacts-details .group:first-child .contacts-item.first {
 	border-top-width:0;
 }
-.enyo-contacts-details .enyo-group-inner {
+.contacts-details .group-inner {
 	margin:0;
 }
-.enyo-contacts-details .enyo-group .enyo-item {
+.contacts-details .group .contacts-item {
 	color:#222;
 }
-.enyo-contacts-pointpickerlist .label {
+.contacts-pointpickerlist .label {
 	color:#1879cd;
 	font-weight:normal;
 	text-transform: uppercase;
 	font-size:0.7rem;
 }
-.enyo-contacts-details .label {
+.contacts-details .label {
 	color:#1879cd;
 	font-weight:normal;
 	text-transform: uppercase;
 	font-size:0.7rem;
 }
-.enyo-contacts-details .value {
+.contacts-details .value {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-.enyo-contacts-details .button-arrow {
+.contacts-details .button-arrow {
 	height:42px;
 	width:32px;
-	background: url(../images/bg_details_input_skype.png) no-repeat 50% 50%
+	background: url(../assets/bg_details_input_skype.png) no-repeat 50% 50%
 }
-.enyo-contacts-details .enyo-button.action .enyo-button-icon {
+.contacts-details .button.action .button-icon {
 	margin:-6px -8px -10px
 }
-.enyo-contacts-details .contacts-actions .enyo-button {
+.contacts-details .contacts-actions .button {
 	margin:0 0 10px;
 }
 
 .im-status {
 	height: 28px;
-	background: url(../images/status-away.png) no-repeat 0 0;
+	background: url(../assets/status-away.png) no-repeat 0 0;
 	position: absolute;
 	left: 0px;
 	top: 0px;
 }
-.edit-contact.enyo-button {
+.edit-contact.button {
 	background:none;
-	-webkit-border-image:none;
+	border-image:none;
 }
 /* TODO: temporary styling to be replaced...all GAL styling TDB*/
 .contacts-GAL-message {
@@ -262,7 +274,7 @@ ContactsUI CSS
 .contactsui-peoplepicker {
   width: 320px;
   border-width: 24px;
-  -webkit-border-image: url(../images/dialogbg.png) 24 stretch stretch;
+  border-image: url(../assets/dialogbg.png) 24 stretch stretch;
 }
 
 .contactsui-peoplepicker-container {
@@ -270,7 +282,7 @@ ContactsUI CSS
   height: 300px;
 }
 
-.contactsui-peoplepicker .enyo-iframe {
+.contactsui-peoplepicker .iframe {
   background-color: #ccc;
 }
 
@@ -287,34 +299,34 @@ body {
     background: transparent;
 }
 
-.leftpane {
+/*.leftpane {
     background-color: #e4e4e2;
-}
+}*/
 
 img {
     vertical-align: middle;
 }
 
 /* add favorite styles to global enyo list */
-.enyo-contacts-list .favorites .enyo-item .favorite,
-.enyo-contacts-list .favorites .enyo-divider-alpha {
+.contacts-list .favorites .item .favorite,
+.contacts-list .favorites .divider-alpha {
     display: none;
 }
 
-.enyo-contacts-list .favorites .enyo-item {
+.contacts-list .favorites .item {
     border-width: 1px 0;
 }
 
-.enyo-contacts-list .favorites .enyo-item .icon {
+.contacts-list .favorites .item .icon {
     height: 100px;
     width: 100px;
 }
 
-.enyo-contacts-list .favorites .enyo-item .icon .mask {
-    background: url(../images/bg_favorites_icon_mask.png) no-repeat 0 0;
+.contacts-list .favorites .item .icon .mask {
+    background: url(../assets/bg_favorites_icon_mask.png) no-repeat 0 0;
 }
 
-.enyo-contacts-list .favorites .enyo-item .icon .img {
+.contacts-list .favorites .item .icon .img {
     height: 100%;
     width: 100%;
     border-radius: 6px;
@@ -324,7 +336,7 @@ img {
 .favorite {
     width: 34px;
     height: 34px;
-    background: url(../images/bg_favorite.png) no-repeat 0 0;
+    background: url(../assets/bg_favorite.png) no-repeat 0 0;
 }
 
 /* Contact photos: icon to list is as avatar to detail */
@@ -344,11 +356,11 @@ img {
 }
 
 .icon .mask {
-    background: url(../images/bg_icon_mask.png) no-repeat 0 0;
+    background: url(../assets/bg_icon_mask.png) no-repeat 0 0;
 }
 
 .icon .img {
-    -webkit-border-radius: 3px;
+    border-radius: 3px;
     width: 100%;
     height: 100%;
 }
@@ -371,19 +383,19 @@ img {
 }
 
 .avatar .mask {
-    background: url(../images/bg_avatar_mask.png) no-repeat 0 0;
+    background: url(../assets/bg_avatar_mask.png) no-repeat 0 0;
 }
 
 /* Edit */
-.edit-toolbar .switch-account.enyo-button {
+.edit-toolbar .switch-account.button {
     height: 38px;
 }
 
-.edit-toolbar .switch-account.enyo-button .enyo-listselector-arrow {
+.edit-toolbar .switch-account.button .listselector-arrow {
     margin: -6px 0;
 }
 
-.edit-toolbar .switch-account.enyo-button img {
+.edit-toolbar .switch-account.button img {
     margin: -8px 0 -6px -4px;
     padding: 0
 }
@@ -393,7 +405,7 @@ img {
 }
 
 .edit .avatar .mask {
-    background: url(../images/bg_edit_mask.png) no-repeat 0 0;
+    background: url(../assets/bg_edit_mask.png) no-repeat 0 0;
 }
 
 .edit .avatar .change {
@@ -402,27 +414,27 @@ img {
     left: 13px
 }
 
-.edit .avatar .change .enyo-button-icon {
+.edit .avatar .change .button-icon {
     margin: -4px -8px -10px;
 }
 
-.edit .enyo-item {
-    /*	border-bottom-color:#d8d8d8; */
+.edit .item {
+    /* border-bottom-color:#d8d8d8; */
 }
 
-.edit .enyo-item .enyo-input.birthday {
+.edit .item .input.birthday {
     min-height: 49px;
     font-size: 18px;
 }
 
-.edit .enyo-item .enyo-input.notes {
+.edit .item .input.notes {
     min-height: 49px;
 }
 
 .edit .field-button {
     border: 12px;
     float: left;
-    -webkit-border-image: url(../images/bg_prefix.png) 12 repeat;
+    border-image: url(../assets/bg_prefix.png) 12 repeat;
 }
 
 .edit .field-button-inner {
@@ -432,7 +444,7 @@ img {
 }
 
 .edit .field-button .favorite {
-    background: url(../images/bg_edit_favorite.png) no-repeat 0 0;
+    background: url(../assets/bg_edit_favorite.png) no-repeat 0 0;
 }
 
 .edit .field-button .favorite.true {
@@ -440,7 +452,7 @@ img {
 }
 
 .edit .field-button .prefix {
-    background: url(../images/bg_edit_prefix.png) no-repeat 0 0;
+    background: url(../assets/bg_edit_prefix.png) no-repeat 0 0;
 }
 
 .edit .editable-field-button {
@@ -451,11 +463,11 @@ img {
 .edit .editable-label {
     border: 12px;
     margin: 0 0 0 13px;
-    -webkit-border-image: url(../images/bg_prefix.png) 12 repeat;
+    border-image: url(../assets/bg_prefix.png) 12 repeat;
 }
 
 .edit .label,
-.edit .editable-label .enyo-menucheckitem-caption {
+.edit .editable-label .menucheckitem-caption {
     color: #1879cd;
     padding: 0;
     font-weight: normal;
@@ -463,45 +475,47 @@ img {
     font-size: 14px;
 }
 
-.edit .editable-label .enyo-listselector-label {
+.edit .editable-label .listselector-label {
     display: none;
 }
 
-.edit .enyo-item > .enyo-listselector {
+.edit .item > .listselector {
     margin: 0 0;
     padding: 0 0;
 }
 
-.edit .new.enyo-input .enyo-swipeableitem {
-    background: url(../images/bg_field_new.png) no-repeat 0 50%;
+.edit .new.input .swipeableitem {
+    background: url(../assets/bg_field_new.png) no-repeat 0 50%;
     padding-left: 25px;
 
 }
 
-.edit .enyo-input .enyo-swipeableitem {
+.edit .input .swipeableitem {
     border: 0;
     min-height: 0;
     padding: 0;
 }
 
-.edit .enyo-item.enyo-middle,
-.edit .enyo-item.enyo-last {
+.edit .item.middle,
+.edit .item.last {
     /*
-     border-top:1px solid;
-     border-top-color:rgba(255,255,255,0.5);
-     */
+border-top:1px solid;
+border-top-color:rgba(255,255,255,0.5);
+*/
 }
 
 /* Details */
 .details {
-    background: url(../images/bg_body.png) 0 0 repeat;
+    background: url(../assets/bg_body.png) 0 0 repeat;
     padding: 4px;
     border-left: 1px solid #a8a8a8;
 }
 
 .details .container {
-    -webkit-border-image: url(../images/bg_details.png) 9 repeat;
+    border-style: solid;
+    border-image: url(../assets/bg_details.png) 9 repeat;
     border-width: 9px;
+    background-color: #fff;
 }
 
 .details .content {
@@ -532,7 +546,7 @@ img {
 }
 
 .details .avatar .mask {
-    background: url(../images/bg_avatar_mask.png) no-repeat 0 0;
+    background: url(../assets/bg_avatar_mask.png) no-repeat 0 0;
 }
 
 .details .nameinfo {
@@ -588,20 +602,20 @@ img {
     width: 34px;
     height: 34px;
     margin: 10px 0 0 10px;
-    background: url(../images/bg_favorite.png) no-repeat 0 0;
+    /*background: url(../assets/bg_details_favorite.png) no-repeat 0 0;*/
 }
 
 .details .favorite.true {
     background-position: 0 -33px;
 }
 
-.details .profiles-button {
-    background: url(../images/btn_linked_profiles.png) no-repeat 95% 3px;
+.details .profiles-button 
+    background: url(../assets/btn_linked_profiles.png) no-repeat 95% 3px;
     padding: 3px 30px 3px 10px;
     margin: 3px 0 0 0;
 }
 
-.details .profiles-button.enyo-button-depressed {
+.details .profiles-button.button-depressed {
     background-position: 95% -17px;
     background-color: rgba(255, 255, 255, 0.8);
 }
@@ -610,7 +624,7 @@ img {
     background: #f4f4f4;
 }
 
-.details .profiles .enyo-item {
+.details .profiles .item {
     border-top: 1px dashed #ccc;
     border-bottom: 0;
     height: 73px;
@@ -623,26 +637,28 @@ img {
     background-position: 50% 50%;
     background-repeat: no-repeat;
     background-color: #f1f1f1;
-    background-image: url(../images/bg_icon_img.png)
+    background-image: url(../assets/bg_icon_img.png)
 }
 
-.details .enyo-group {
-    -webkit-border-image: none;
+.details .group {
+    border-image: none;
     border: 0;
     border-bottom: 1px solid #d8d8d8;
-    -webkit-border-radius: 0;
+    border-radius: 0;
     margin: 0;
 }
 
-.details .enyo-group-inner {
+.details .group-inner {
     margin: 0;
 }
 
-.details .enyo-group .enyo-item {
+.details .group .contacts-item {
     padding: 0.5rem 0.7rem;
     color: #222;
     font-size: 0.9rem;
+    border-bottom: 1px solid #d8d8d8;
 }
+
 
 .details .label {
     color: #1879cd;
@@ -660,10 +676,10 @@ img {
 .details .button-arrow {
     height: 42px;
     width: 32px;
-    background: url(../images/bg_details_input_skype.png) no-repeat 50% 50%
+    background: url(../assets/bg_details_input_skype.png) no-repeat 50% 50%
 }
 
-.details .enyo-button.action .enyo-button-icon {
+.details .button.action .button-icon {
     margin: -6px -8px -10px
 }
 
@@ -683,7 +699,7 @@ img {
     padding: 6px 0;
 }
 
-.contacts-preferences .enyo-group {
+.contacts-preferences .group {
     margin: 18px 0 0 0;
 }
 
@@ -700,5 +716,5 @@ img {
 }
 
 .details-placeholder {
-    background: #F9f9f9 url(../images/defaultview-panel-tile.png) bottom left repeat-x;
+    background: #F9f9f9 url(../assets/defaultview-panel-tile.png) bottom left repeat-x;
 }
