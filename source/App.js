@@ -40,12 +40,12 @@ enyo.kind({
     components: [
         { name: "tabsToolbar", kind: "onyx.Toolbar", components: [
             { name: "tabs", kind: "onyx.RadioGroup", controlClasses: "onyx-tabbutton", onActivate: "paneChange", components: [
-                { content: "All", index: 0, active: true },
-                { content: "Favourites", index: 1 }
+                { name: "0", content: "All", index: 0, active: true },
+                { name: "1", content: "Favourites", index: 1 }
             ]}
         ]},
-        { name: "panes", kind: "enyo.Panels", arrangerKind: "enyo.LeftRightArranger", events: { onPaneChanged: "" }, margin: 0, fit: true, components: [
-            { name: "main", description: "All", kind: "FittableRows", classes: "contacts-list", components: [
+        { name: "panes", kind: "enyo.Panels", arrangerKind: "enyo.LeftRightArranger", onTransitionFinish: "tabChange", onTransitionStart: "tabChange", margin: 0, fit: true, components: [
+            { name: "main", description: "All", kind: "FittableRows",  classes: "contacts-list", components: [
                 { kind: "onyx.InputDecorator", classes: "contacts-search", components: [
 				    { kind: "onyx.Input", placeholder: "Search" },
 				    { kind: "Image", src: "assets/search-input.png" }
@@ -57,9 +57,6 @@ enyo.kind({
                 { kind: "ContactsList" }
             ]}
         ],  
-    /*indexChanged: function(oldValue) {
-        //this.doPaneChanged(this.getIndex());
-    }*/
         }
     ],
     
@@ -70,8 +67,8 @@ enyo.kind({
         }
     },
     
-    tabChange: function(newIndex) {
-        this.$.tabs.$[newIndex].setActive(true);
+    tabChange: function(inSender, inEvent) {
+        this.$[inEvent.toIndex].setActive(true);
     }
 });
 
