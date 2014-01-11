@@ -148,9 +148,9 @@ enyo.kind({
     components: [ { name: "container", classes: "container", components: [
         { name: "content", classes: "content", components: [
             { name: "header", kind: "Header" },
-            { name: "details", kind: "enyo.List", classes: "group", count: 4, components: [
-                { name: "contactDetail", kind: "Detail", classes: "contacts-item" }
-            ]}
+            { name: "details", kind: "enyo.Repeater", classes: "group", count: 4, components: [
+            { name: "contactDetail", kind: "Detail", classes: "contacts-item" }
+            ] }
         ]}
     ]}
     ]
