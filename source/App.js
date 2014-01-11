@@ -21,6 +21,7 @@ enyo.kind({
 
 enyo.kind({
     name: "ContactsList",
+    classes: "contacts-list", 
     kind: "enyo.List",
     count: 12,
     item: "item",
@@ -52,9 +53,9 @@ enyo.kind({
                 ]},
                 { kind: "ContactsList" , fit: true}
             ]},
-            
-            { name: "favourites", description: "Favourites", components: [
-                { kind: "ContactsList" }
+            //Scroller is going crazy without the FittableRows
+            { name: "favourites", description: "Favourites", kind: "FittableRows",  classes: "contacts-list", components: [
+                { kind: "ContactsList", fit: true }
             ]}
         ],  
         }
