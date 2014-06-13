@@ -21,12 +21,21 @@ enyo.kind({
 
 enyo.kind({
     name: "ContactsList",
-    classes: "contacts-list", 
-    kind: "enyo.List",
-    count: 12,
+    classes: "contacts-list",
+    kind: "enyo.DataList",
+    published: {
+        contactCollection: null
+    },
     item: "item",
     components: [
-        { name: "item", kind: "ContactItem", classes: "contacts-item" }
+        {
+            name: "item",
+            kind: "ContactItem",
+            classes: "contacts-item",
+            bindinds: [
+                {from: ".model.name.givenName", to: ".$.item.content"}
+            ]
+        }
     ]
 });
 
@@ -48,26 +57,26 @@ enyo.kind({
         { name: "panes", kind: "enyo.Panels", arrangerKind: "enyo.LeftRightArranger", onTransitionFinish: "tabChange", onTransitionStart: "tabChange", margin: 0, fit: true, components: [
             { name: "main", description: "All", kind: "FittableRows",  classes: "contacts-list", components: [
                 { kind: "onyx.InputDecorator", classes: "contacts-search", components: [
-				    { kind: "onyx.Input", placeholder: "Search" },
-				    { kind: "Image", src: "assets/search-input.png" }
+                    { kind: "onyx.Input", placeholder: "Search" },
+                    { kind: "Image", src: "assets/search-input.png" }
                 ]},
-                { kind: "ContactsList" , fit: true}
+                { kind: "ContactsList" , fit: true, contactCollection: GlobalContactCollection}
             ]},
             //Scroller is going crazy without the FittableRows
             { name: "favourites", description: "Favourites", kind: "FittableRows",  classes: "contacts-list", components: [
                 { kind: "ContactsList", fit: true }
             ]}
-        ],  
+        ]
         }
     ],
-    
+
     paneChange: function(inSender, inEvent) {
         if (inEvent.originator.getActive()) {
             //Is this okay, without index being published?
             this.$.panes.setIndex(inEvent.originator.index);
         }
     },
-    
+
     tabChange: function(inSender, inEvent) {
         this.$[inEvent.toIndex].setActive(true);
     }
@@ -79,20 +88,20 @@ enyo.kind({
     kind: "FittableRows",
     components: [
         { kind: "TabsControl", fit: true, panes: [
-            
+
             { name: "main", description: "All", kind: "FittableRows", components: [
                 {kind: "onyx.InputDecorator", components: [
-				    {kind: "onyx.Input", placeholder: "Search"},
-				    {kind: "Image", src: "assets/search-icon.png"}
+                    {kind: "onyx.Input", placeholder: "Search"},
+                    {kind: "Image", src: "assets/search-icon.png"}
                 ]},
-                { kind: "ContactsList" , fit: true}
+                { kind: "ContactsList" , fit: true, contactCollection: GlobalContactCollection}
             ]},
-            
+
             { name: "favourites", description: "Favourites", components: [
                 { kind: "ContactsList" }
             ]}
         ]}
-        
+
     ]
 });
 
@@ -169,5 +178,11 @@ enyo.kind({
         { name: "BottomToolbar", kind: "onyx.Toolbar", components: [
             { kind: "onyx.Button", content: "Add Contact"}
         ]}
-    ]
+    ],
+    create: function () {
+        this.inherited(arguments);
+
+this.log("Telling global list to fetch contacts...");
+        GlobalContactCollection.fetch();
+    }
 });
