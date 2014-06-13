@@ -1,12 +1,12 @@
 /**
 	_enyo.TransitionScrollStrategy_ is a helper kind that extends
-	<a href="#enyo.TouchScrollStrategy">enyo.TouchScrollStrategy</a>, optimizing
-	it for scrolling environments in which effecting scroll changes with
-	transforms using CSS transitions is fastest.
+	[enyo.TouchScrollStrategy](#enyo.TouchScrollStrategy), optimizing it for
+	scrolling environments in which effecting scroll changes with transforms using
+	CSS transitions is fastest.
 
 	_enyo.TransitionScrollStrategy_ is not typically created in application code.
-	Instead, it is specified as the value of the `strategyKind` property of an
-	`enyo.Scroller` or <a href="#enyo.List">enyo.List</a>, or is used by the
+	Instead, it is specified as the value of the _strategyKind_ property of an
+	[enyo.Scroller](#enyo.Scroller) or [enyo.List](#enyo.List), or is used by the
 	framework implicitly.
 */
 enyo.kind({
@@ -110,14 +110,18 @@ enyo.kind({
 	//* @protected
 
 	// apply initial transform so we're always composited
-	create: function() {
-		this.inherited(arguments);
-		enyo.dom.transformValue(this.$.client, this.translation, "0,0,0");
-	},
-	destroy: function() {
-		this.clearCSSTransitionInterval();
-		this.inherited(arguments);
-	},
+	create: enyo.inherit(function (sup) {
+		return function() {
+			sup.apply(this, arguments);
+			enyo.dom.transformValue(this.$.client, this.translation, "0,0,0");
+		};
+	}),
+	destroy: enyo.inherit(function (sup) {
+		return function() {
+			this.clearCSSTransitionInterval();
+			sup.apply(this, arguments);
+		};
+	}),
 	getScrollSize: function() {
 		var n = this.$.client.hasNode();
 		return {width: n ? n.scrollWidth : 0, height: n ? n.scrollHeight : 0};
@@ -130,6 +134,12 @@ enyo.kind({
 	verticalChanged: function() {
 		if(this.vertical == "hidden") {
 			this.scrollVertical = false;
+		}
+	},
+	intervalChanged: function() {
+		// TODO: Implement variable speed implementation
+		if (this.interval != enyo.TransitionScrollStrategy.prototype.interval) {
+			this.warn("'interval' not implemented in TransitionScrollStrategy");
 		}
 	},
 	calcScrollNode: function() {
@@ -188,7 +198,7 @@ enyo.kind({
 		};
 	},
 	mousewheel: function(inSender, e) {
-		if (!this.dragging) {
+		if (!this.dragging && this.useMouseWheel) {
 			this.calcBoundaries();
 			this.syncScrollMath();
 			this.stabilize();
@@ -202,7 +212,7 @@ enyo.kind({
 		}
 	},
 	// Update thumbs, recalculate boundaries, and bubble scroll event
-	scroll: function(inSender, inEvent) {
+	scroll: function() {
 		if(this.thumb) {
 			this.updateThumbs();
 		}
@@ -228,7 +238,7 @@ enyo.kind({
 	// Set scroll x value to the current computed style
 	updateX: function() {
 		var x = window.getComputedStyle(this.$.client.node,null).getPropertyValue(enyo.dom.getCssTransformProp()).split('(')[1];
-		x = (x == undefined) ? 0 : x.split(')')[0].split(',')[4];
+		x = (x === undefined) ? 0 : x.split(')')[0].split(',')[4];
 		if(-1*parseFloat(x) === this.scrollLeft) {
 			return false;
 		}
@@ -238,7 +248,7 @@ enyo.kind({
 	// Set scroll y value to the current computed style
 	updateY: function() {
 		var y = window.getComputedStyle(this.$.client.node,null).getPropertyValue(enyo.dom.getCssTransformProp()).split('(')[1];
-		y = (y == undefined) ? 0 : y.split(')')[0].split(',')[5];
+		y = (y === undefined) ? 0 : y.split(')')[0].split(',')[5];
 		if(-1*parseFloat(y) === this.scrollTop) {
 			return false;
 		}
@@ -252,10 +262,12 @@ enyo.kind({
 	},
 	// On touch, stop transition by setting transform values to current computed style, and
 	// changing transition time to 0s. TODO
-	down: function(inSender, inEvent) {
+	down: function() {
 		var _this = this;
 		if (this.isScrolling() && !this.isOverscrolling()) {
-			this.stopTimeout = setTimeout(function() { _this.stop(); }, this.stopTimeoutMS);
+			this.stopTimeout = setTimeout(function() {
+				_this.stop();
+			}, this.stopTimeoutMS);
 			return true;
 		}
 	},
@@ -509,8 +521,7 @@ enyo.kind({
 	},
 	// Apply the given transition to this.$.client
 	applyTransition: function(which) {
-		var transform = this.translation+": "+this.transitions[which];
-		this.$.client.applyStyle("-webkit-transition",this.transitions[which]);
+		this.$.client.applyStyle("-webkit-transition", this.transitions[which]);
 	},
 	// Turn off CSS transition and clear this.scrollInterval
 	stopScrolling: function() {
@@ -522,7 +533,7 @@ enyo.kind({
 	// crossing into the overflow region, and bubble a scroll event
 	setCSSTransitionInterval: function() {
 		this.clearCSSTransitionInterval();
-		this.scrollInterval = setInterval(enyo.bind(this, function() {
+		this.scrollInterval = setInterval(this.bindSafely(function() {
 			this.updateScrollPosition();
 			this.correctOverflow();
 		}), this.scrollIntervalMS);
@@ -531,7 +542,7 @@ enyo.kind({
 	// a scroll event (don't check for crossing into overflow since we're there already)
 	setOverflowTransitionInterval: function() {
 		this.clearCSSTransitionInterval();
-		this.scrollInterval = setInterval(enyo.bind(this, function() {
+		this.scrollInterval = setInterval(this.bindSafely(function() {
 			this.updateScrollPosition();
 		}), this.scrollIntervalMS);
 	},
@@ -575,9 +586,9 @@ enyo.kind({
 		if(inEvent.originator !== this.$.client) {
 			return;
 		}
-		
+
 		var posChanged = false;
-		
+
 		if(this.isInTopOverScroll()) {
 			posChanged = true;
 			this.scrollTop = this.topBoundary;
@@ -585,7 +596,7 @@ enyo.kind({
 			posChanged = true;
 			this.scrollTop = -1*this.bottomBoundary;
 		}
-		
+
 		if(this.isInLeftOverScroll()) {
 			posChanged = true;
 			this.scrollLeft = this.leftBoundary;

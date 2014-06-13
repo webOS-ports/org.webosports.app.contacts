@@ -16,9 +16,8 @@
 	* "holdpulse"
 	* "flick"
 
-	For more information on these events, see the documentation on
-	[User Input](https://github.com/enyojs/enyo/wiki/User-Input) in the Enyo
-	Developer Guide.
+	For more information on these events, see the documentation on [User
+	Input](building-apps/user-input.html) in the Enyo Developer Guide.
 */
 
 //* @protected
@@ -34,8 +33,15 @@ enyo.dispatcher.features.push(
 //* @public
 enyo.gesture.drag = {
 	//* @protected
-	hysteresisSquared: 16,
-	holdPulseDelay: 200,
+	holdPulseDefaultConfig: {
+		delay: 200,
+		// if "true", holdPulse will resume when pointer re-enters original control ("onLeave" endHold value)
+		// or coordinates with tolerance ("onMove" endHold value), otherwise will utilize drag behavior
+		resume: false,
+		moveTolerance: 16,
+		endHold: "onMove" // other values include "onLeave" (stop hold when pointer leaves original control)
+	},
+	holdPulseConfig: {},
 	trackCount: 5,
 	minFlick: 0.1,
 	minTrack: 8,
@@ -46,10 +52,8 @@ enyo.gesture.drag = {
 		// on mouseup
 		// make sure to stop dragging in case the up event was not received.
 		this.stopDragging(e);
-		this.cancelHold();
 		this.target = e.target;
 		this.startTracking(e);
-		this.beginHold(e);
 	},
 	move: function(e) {
 		if (this.tracking) {
@@ -65,9 +69,19 @@ enyo.gesture.drag = {
 			}
 			if (this.dragEvent) {
 				this.sendDrag(e);
-			} else if (this.dy*this.dy + this.dx*this.dx >= this.hysteresisSquared) {
-				this.sendDragStart(e);
-				this.cancelHold();
+			} else if (this.holdPulseConfig.endHold === "onMove") {
+				if (this.dy*this.dy + this.dx*this.dx >= this.holdPulseConfig.moveTolerance) { // outside of target
+					if (this.holdJob) { // only stop/cancel hold job if it currently exists
+						if (this.holdPulseConfig.resume) { // pause hold to potentially resume later
+							this.stopHold();
+						} else { // completely cancel hold
+							this.cancelHold();
+							this.sendDragStart(e);
+						}
+					}
+				} else if (this.holdPulseConfig.resume && !this.holdJob) { // when moving inside target, only resume hold job if it was previously paused
+					this.beginHold(e);
+				}
 			}
 		}
 	},
@@ -75,10 +89,24 @@ enyo.gesture.drag = {
 		this.endTracking(e);
 		this.stopDragging(e);
 		this.cancelHold();
+		this.target = null;
+	},
+	enter: function(e) {
+		// resume hold when re-entering original target when using "onLeave" endHold value 
+		if (this.holdPulseConfig.resume && this.holdPulseConfig.endHold === "onLeave" && this.target && e.target === this.target) {
+			this.beginHold(e);
+		}
 	},
 	leave: function(e) {
 		if (this.dragEvent) {
 			this.sendDragOut(e);
+		} else if (this.holdPulseConfig.endHold === "onLeave") {
+			if (this.holdPulseConfig.resume) { // pause hold to potentially resume later
+				this.stopHold();
+			} else { // completely cancel hold
+				this.cancelHold();
+				this.sendDragStart(e);
+			}
 		}
 	},
 	stopDragging: function(e) {
@@ -94,29 +122,30 @@ enyo.gesture.drag = {
 		var h = adx > ady;
 		// suggest locking if off-axis < 22.5 degrees
 		var l = (h ? ady/adx : adx/ady) < 0.414;
-		var e = {
-			type: inType,
-			dx: this.dx,
-			dy: this.dy,
-			ddx: this.dx - this.lastDx,
-			ddy: this.dy - this.lastDy,
-			xDirection: this.xDirection,
-			yDirection: this.yDirection,
-			pageX: inEvent.pageX,
-			pageY: inEvent.pageY,
-			clientX: inEvent.clientX,
-			clientY: inEvent.clientY,
-			horizontal: h,
-			vertical: !h,
-			lockable: l,
-			target: inTarget,
-			dragInfo: inInfo,
-			ctrlKey: inEvent.ctrlKey,
-			altKey: inEvent.altKey,
-			metaKey: inEvent.metaKey,
-			shiftKey: inEvent.shiftKey,
-			srcEvent: inEvent.srcEvent
-		};
+		var e = {};
+		// var e = {
+		e.type = inType;
+		e.dx = this.dx;
+		e.dy = this.dy;
+		e.ddx = this.dx - this.lastDx;
+		e.ddy = this.dy - this.lastDy;
+		e.xDirection = this.xDirection;
+		e.yDirection = this.yDirection;
+		e.pageX = inEvent.pageX;
+		e.pageY = inEvent.pageY;
+		e.clientX = inEvent.clientX;
+		e.clientY = inEvent.clientY;
+		e.horizontal = h;
+		e.vertical = !h;
+		e.lockable = l;
+		e.target = inTarget;
+		e.dragInfo = inInfo;
+		e.ctrlKey = inEvent.ctrlKey;
+		e.altKey = inEvent.altKey;
+		e.metaKey = inEvent.metaKey;
+		e.shiftKey = inEvent.shiftKey;
+		e.srcEvent = inEvent.srcEvent;
+		// };
 		//Fix for IE8, which doesn't include pageX and pageY properties
 		if(enyo.platform.ie==8 && e.target) {
 			e.pageX = e.clientX + e.target.scrollLeft;
@@ -169,7 +198,12 @@ enyo.gesture.drag = {
 		// note: use clientX/Y to be compatible with ie8
 		this.px0 = e.clientX;
 		this.py0 = e.clientY;
-		this.flickInfo = {startEvent: e, moves: []};
+		// this.flickInfo = {startEvent: e, moves: []};
+		this.flickInfo = {};
+		this.flickInfo.startEvent = e;
+		// FIXME: so we're trying to reuse objects where possible, should
+		// do the same in scenarios like this for arrays
+		this.flickInfo.moves = [];
 		this.track(e);
 	},
 	track: function(e) {
@@ -184,14 +218,14 @@ enyo.gesture.drag = {
 		ti.moves.push({
 			x: e.clientX,
 			y: e.clientY,
-			t: enyo.now()
+			t: enyo.perfNow()
 		});
 		// track specified # of points
 		if (ti.moves.length > this.trackCount) {
 			ti.moves.shift();
 		}
 	},
-	endTracking: function(e) {
+	endTracking: function() {
 		this.tracking = false;
 		var ti = this.flickInfo;
 		var moves = ti && ti.moves;
@@ -199,7 +233,7 @@ enyo.gesture.drag = {
 			// note: important to use up time to reduce flick
 			// velocity based on time between move and up.
 			var l = moves[moves.length-1];
-			var n = enyo.now();
+			var n = enyo.perfNow();
 			// take the greatest of flick between each tracked move and last move
 			for (var i=moves.length-2, dt=0, x1=0, y1=0, x=0, y=0, sx=0, sy=0, m; (m=moves[i]); i--) {
 				// this flick (this move - last move) / (this time - last time)
@@ -227,15 +261,27 @@ enyo.gesture.drag = {
 		return inNum > 0 ? 1 : (inNum < 0 ? -1 : inDefault);
 	},
 	beginHold: function(e) {
-		this.holdStart = enyo.now();
-		this.holdJob = setInterval(enyo.bind(this, "sendHoldPulse", e), this.holdPulseDelay);
+		this.holdStart = enyo.perfNow();
+		// clone the event to ensure it stays alive on IE upon returning to event loop
+		var $ce = enyo.clone(e);
+		$ce.srcEvent = enyo.clone(e.srcEvent);
+		this._holdJobFunction = enyo.bind(this, "sendHoldPulse", $ce);
+		this._holdJobFunction.ce = $ce;
+		this.holdJob = setInterval(this._holdJobFunction, this.holdPulseConfig.delay);
 	},
 	cancelHold: function() {
-		clearInterval(this.holdJob);
-		this.holdJob = null;
+		this.stopHold();
 		if (this.sentHold) {
 			this.sentHold = false;
 			this.sendRelease(this.holdEvent);
+		}
+	},
+	stopHold: function() {
+		clearInterval(this.holdJob);
+		this.holdJob = null;
+		if (this._holdJobFunction) {
+			this._holdJobFunction.ce = null;
+			this._holdJobFunction = null;
 		}
 	},
 	sendHoldPulse: function(inEvent) {
@@ -244,7 +290,7 @@ enyo.gesture.drag = {
 			this.sendHold(inEvent);
 		}
 		var e = enyo.gesture.makeEvent("holdpulse", inEvent);
-		e.holdTime = enyo.now() - this.holdStart;
+		e.holdTime = enyo.perfNow() - this.holdStart;
 		enyo.dispatch(e);
 	},
 	sendHold: function(inEvent) {

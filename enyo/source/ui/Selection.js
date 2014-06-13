@@ -26,7 +26,7 @@
 */
 enyo.kind({
 	name: "enyo.Selection",
-	kind: enyo.Component,
+	kind: "enyo.Component",
 	published: {
 		//* If true, multiple selections are allowed
 		multi: false
@@ -66,17 +66,19 @@ enyo.kind({
 		onChange: ""
 	},
 	//* @protected
-	create: function() {
-		this.clear();
-		this.inherited(arguments);
-	},
+	create: enyo.inherit(function (sup) {
+		return function() {
+			this.clear();
+			sup.apply(this, arguments);
+		};
+	}),
 	multiChanged: function() {
 		if (!this.multi) {
 			this.clear();
 		}
 		this.doChange();
 	},
-	highlander: function(inKey) {
+	highlander: function() {
 		if (!this.multi) {
 			this.deselect(this.lastSelected);
 		}

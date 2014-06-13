@@ -65,7 +65,7 @@ enyo.requiresWindow(function() {
 		},
 		// use mouseup after touches are done to reset event handling back to default
 		// --this works as long as no one did a preventDefault on the touch events
-		mouseup: function(e) {
+		mouseup: function() {
 			if (this._touchCount === 0) {
 				this.sawMousedown = false;
 				gesture.events = oldevents;
@@ -117,9 +117,15 @@ enyo.requiresWindow(function() {
 			}
 		},
 		connect: function() {
-			enyo.forEach(['ontouchstart', 'ontouchmove', 'ontouchend', 'ongesturestart', 'ongesturechange', 'ongestureend'], function(e) {
-				document[e] = enyo.dispatch;
+			enyo.forEach(['touchstart', 'touchmove', 'touchend', 'gesturestart', 'gesturechange', 'gestureend'], function(e) {
+				if(enyo.platform.ie < 9){
+					document["on" + e] = enyo.dispatch;
+				} else {
+					// on iOS7 document.ongesturechange is never called
+					document.addEventListener(e, enyo.dispatch, false);
+				}
 			});
+
 			if (enyo.platform.androidChrome <= 18 || enyo.platform.silk === 2) {
 				// HACK: on Chrome for Android v18 on devices with higher density displays,
 				// document.elementFromPoint expects screen coordinates, not document ones

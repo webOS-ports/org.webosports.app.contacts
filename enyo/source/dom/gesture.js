@@ -7,9 +7,8 @@
 	handle basic input differently.
 
 	For more information on normalized input events and their associated
-	properties,	see	the documentation on
-	[User Input](https://github.com/enyojs/enyo/wiki/User-Input) in the Enyo
-	Developer Guide.
+	properties,	see	the documentation on [User Input](building-apps/user-input.html)
+	in the Enyo Developer Guide.
 */
 enyo.gesture = {
 	//* @protected
@@ -17,7 +16,8 @@ enyo.gesture = {
 		"screenX", "screenY", "altKey", "ctrlKey", "metaKey", "shiftKey",
 		"detail", "identifier", "dispatchTarget", "which", "srcEvent"],
 	makeEvent: function(inType, inEvent) {
-		var e = {type: inType};
+		var e = {};
+		e.type = inType;
 		for (var i=0, p; (p=this.eventProps[i]); i++) {
 			e[p] = inEvent[p];
 		}
@@ -35,9 +35,11 @@ enyo.gesture = {
 				e.pageY = e.clientY + e.target.scrollTop;
 			}
 			var b = window.event && window.event.button;
-			// multi-button not supported, priority: left, right, middle
-			// (note: IE bitmask is 1=left, 2=right, 4=center);
-			e.which = b & 1 ? 1 : (b & 2 ? 2 : (b & 4 ? 3 : 0));
+			if (b) {
+				// multi-button not supported, priority: left, right, middle
+				// (note: IE bitmask is 1=left, 2=right, 4=center);
+				e.which = b & 1 ? 1 : (b & 2 ? 2 : (b & 4 ? 3 : 0));
+			}
 		} else if (enyo.platform.webos || window.PalmSystem) {
 			// Temporary fix for owos: it does not currently supply 'which' on move events
 			// and the user agent string doesn't identify itself so we test for PalmSystem
@@ -48,10 +50,21 @@ enyo.gesture = {
 		return e;
 	},
 	down: function(inEvent) {
+		// set holdpulse defaults
+		this.drag.holdPulseConfig = enyo.clone(this.drag.holdPulseDefaultConfig);
+
 		// cancel any hold since it's possible in corner cases to get a down without an up
 		var e = this.makeEvent("down", inEvent);
+
+		// expose method for configuring holdpulse options
+		e.configureHoldPulse = this.configureHoldPulse;
+
 		enyo.dispatch(e);
 		this.downEvent = e;
+
+		// workaround to allow event to propagate to control before hold job begins
+		this.drag.cancelHold();
+		this.drag.beginHold(e);
 	},
 	move: function(inEvent) {
 		var e = this.makeEvent("move", inEvent);
@@ -78,10 +91,12 @@ enyo.gesture = {
 		this.downEvent = null;
 	},
 	over: function(inEvent) {
-		enyo.dispatch(this.makeEvent("enter", inEvent));
+		var e = this.makeEvent("enter", inEvent);
+		enyo.dispatch(e);
 	},
 	out: function(inEvent) {
-		enyo.dispatch(this.makeEvent("leave", inEvent));
+		var e = this.makeEvent("leave", inEvent);
+		enyo.dispatch(e);
 	},
 	sendTap: function(inEvent) {
 		// The common ancestor for the down/up pair is the origin for the tap event
@@ -109,6 +124,9 @@ enyo.gesture = {
 			}
 			c = c.parentNode;
 		}
+	},
+	configureHoldPulse: function(inOpts) {
+		enyo.mixin(enyo.gesture.drag.holdPulseConfig, inOpts);
 	}
 };
 
