@@ -3,12 +3,46 @@ enyo.kind({
     kind: "enyo.Source",
     dbService: "com.palm.db",
 
+    _doRequest: function (method, options, success, failure, subscribe) {
+        var request = new enyo.ServiceRequest({
+            service: this.dbService,
+            method: method,
+            subscribe: !!subscribe,
+            resubscribe: !!subscribe
+        });
+        request.go(options);
+
+        request.response(this.generalSuccess.bind(this, success, failure));
+        request.error(this.generalFailure.bind(this, failure));
+    },
+    generalFailure: function (failure, inSender, inResponse) {
+        console.log("Got failure: ", inSender, " did send ", inResponse);
+        if (failure) {
+            failure();
+        }
+    },
+    generalSuccess: function (success, failure, inSender, inResponse) {
+        console.log("Got success: ", inSender, " did send ", inResponse);
+        if (inResponse.returnValue) {
+            if (success) {
+                if (inResponse.results) {
+                    success(inResponse.results); //need to split that up for Models & Collections.
+                } else {
+                    success(inResponse);
+                }
+            }
+        } else {
+            if (failure) {
+                failure();
+            }
+        }
+    },
+
     fetch: function(rec, opts) {
         var method,
             subscribe = false,
-            options,
-            request;
-this.log("Fetch called...");
+            options;
+console.log("==> Fetch called...");
 
 
         if (rec instanceof enyo.Model) {
@@ -22,20 +56,12 @@ this.log("Fetch called...");
             method = "find";
         }
 
-this.log("Fetching: ", options);
-        request = new enyo.ServiceRequest({
-            service: this.dbService,
-            method: method,
-            subscribe: subscribe,
-            resubscribe: subscribe
-        });
-        request.go(options);
+console.log("===> Fetching: ", options);
 
-        request.response(opts.success);
-        request.error(opts.fail);
+        this._doRequest(method, options, opts.success, opts.fail, subscribe);
     },
     commit: function(rec, opts) {
-        var objects, request;
+        var objects;
 
         if (rec instanceof enyo.Model) {
             objects = [rec.raw()];
@@ -43,18 +69,10 @@ this.log("Fetching: ", options);
             objects = rec.raw();
         }
 
-        request = new enyo.ServiceRequest({
-            service: this.dbService,
-            method: "merge"
-        });
-        request.go({objects: objects});
-
-        request.response(opts.success);
-        request.error(opts.fail);
+        this._doRequest("merge", {objects: objects}, opts.success, opts.fail);
     },
     destroy: function(rec, opts) {
-        var ids,
-            request;
+        var ids;
 
         if (rec instanceof enyo.Collection) {
             ids = [];
@@ -65,24 +83,12 @@ this.log("Fetching: ", options);
             ids = [rec.attributes[rec.primaryKey]];
         }
 
-        request = new enyo.ServiceRequest({
-            service: this.dbService,
-            method: "del"
-        });
-        request.go({ids: ids});
-
-        request.response(opts.success);
-        request.error(opts.fail);
+        this._doRequest("del", {ids: ids}, opts.success, opts.fail);
     },
     find: function(rec, opts) {
-        var request = new enyo.ServiceRequest({
-            service: this.dbService,
-            method: "find"
-        });
-        request.go(rec);
-
-        request.response(opts.success);
-        request.error(opts.fail);
+        this._doRequest("find", rec, opts.success, opts.fail);
+    },
+    getIds: function (n, opts) {
+        this._doRequest("reserveIds", {count: n || 1}, opts.success, opts.fail);
     }
 });
-enyo.store.addSources({db8: "db8Source"});

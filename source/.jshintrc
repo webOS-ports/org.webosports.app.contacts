@@ -3,7 +3,8 @@
         "enyo": false,
         "$L": false,
         "onyx": false,
-        "myapp": false
+        "app": false,
+        "contacts": false
     },
     "es3": true,
     "evil": false,
@@ -18,5 +19,6 @@
     "indent": 4,
     "newcap": true,
     "undef": true,
-    "unused": "vars"
+    "unused": "vars",
+    "devel": true
 }

@@ -1,5 +1,7 @@
 enyo.depends(
     "db8Source.js",
+    "db8SourceMock.js",
     "ContactModel.js",
-    "ContactCollection.js"
+    "PersonModel.js",
+    "PersonCollection.js"
 );

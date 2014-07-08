@@ -1,0 +1,555 @@
+{
+    "activities": [
+        {
+            "type": {
+                "bus": "private",
+                "userInitiated": true,
+                "background": true,
+                "persist": true
+            },
+            "name": "linkerWatch",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://com.palm.service.contacts.linker/dbUpdatedRelinkChanges",
+                "params": {
+                    "revChangedStart": -1
+                }
+            },
+            "trigger": {
+                "method": "palm://com.palm.db/watch",
+                "params": {
+                    "query": {
+                        "from": "com.palm.contact:1",
+                        "incDel": true,
+                        "where": [
+                            {
+                                "op": ">",
+                                "prop": "_rev",
+                                "val": -1,
+                                "_id": "a6"
+                            }
+                        ]
+                    },
+                    "subscribe": true
+                },
+                "key": "fired"
+            },
+            "focused": false,
+            "subscribers": [
+            ],
+            "state": "init",
+            "creator": {
+                "serviceId": "com.palm.service.contacts.linker"
+            },
+            "description": "This is the watch for kicking off the linker on changes",
+            "activityId": 3
+        },
+        {
+            "type": {
+                "bus": "private",
+                "foreground": true,
+                "power": true,
+                "persist": true
+            },
+            "name": "mojotempdbpurge",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://com.palm.tempdb/internal/scheduledPurge"
+            },
+            "focused": false,
+            "subscribers": [
+            ],
+            "creator": {
+                "serviceId": "com.palm.tempdb"
+            },
+            "state": "init",
+            "schedule": {
+                "interval": "5m",
+                "local": true
+            },
+            "description": "Scheduled mojotempdb purge activity",
+            "activityId": 4
+        },
+        {
+            "type": {
+                "bus": "private",
+                "foreground": true,
+                "persist": true
+            },
+            "name": "sortOrderWatch",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://com.palm.service.contacts/sortOrderChanged",
+                "params": {
+                    "isFirstRun": true
+                }
+            },
+            "trigger": {
+                "method": "palm://com.palm.db/watch",
+                "params": {
+                    "query": {
+                        "from": "com.palm.app.contacts.prefs:1",
+                        "where": [
+                            {
+                                "op": "!=",
+                                "prop": "listSortOrder",
+                                "val": ""
+                            }
+                        ]
+                    },
+                    "subscribe": true
+                },
+                "key": "fired"
+            },
+            "focused": false,
+            "subscribers": [
+            ],
+            "state": "init",
+            "creator": {
+                "serviceId": "com.palm.service.contacts"
+            },
+            "description": "This is the watch for updating the sortKey on every person when the sort order is changed in the contacts app",
+            "activityId": 8
+        },
+        {
+            "type": {
+                "bus": "private",
+                "foreground": true,
+                "power": true,
+                "persist": true
+            },
+            "name": "mojomediadbspace",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://com.webos.mediadb/internal/scheduledSpaceCheck"
+            },
+            "focused": false,
+            "subscribers": [
+            ],
+            "creator": {
+                "serviceId": "com.webos.mediadb"
+            },
+            "state": "init",
+            "schedule": {
+                "interval": "5m",
+                "local": true
+            },
+            "description": "Scheduled mojomediadb space check activity",
+            "activityId": 9
+        },
+        {
+            "type": {
+                "bus": "private",
+                "foreground": true,
+                "power": true,
+                "persist": true
+            },
+            "name": "webosmediadbpurge",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://com.webos.mediadb/internal/scheduledPurge"
+            },
+            "focused": false,
+            "subscribers": [
+            ],
+            "creator": {
+                "serviceId": "com.webos.mediadb"
+            },
+            "state": "init",
+            "schedule": {
+                "interval": "1d",
+                "local": true
+            },
+            "description": "Scheduled webosmediadb purge activity",
+            "activityId": 10
+        },
+        {
+            "type": {
+                "bus": "private",
+                "foreground": true,
+                "power": true,
+                "persist": true
+            },
+            "name": "mojodbpurge",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://com.palm.db/internal/scheduledPurge"
+            },
+            "focused": false,
+            "subscribers": [
+            ],
+            "creator": {
+                "serviceId": "com.palm.db"
+            },
+            "state": "init",
+            "schedule": {
+                "interval": "1d",
+                "local": true
+            },
+            "description": "Scheduled mojodb purge activity",
+            "activityId": 11
+        },
+        {
+            "type": {
+                "bus": "private",
+                "foreground": true,
+                "power": true,
+                "persist": true
+            },
+            "name": "mojodbspace",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://com.palm.db/internal/scheduledSpaceCheck"
+            },
+            "focused": false,
+            "subscribers": [
+            ],
+            "creator": {
+                "serviceId": "com.palm.db"
+            },
+            "state": "init",
+            "schedule": {
+                "interval": "5m",
+                "local": true
+            },
+            "description": "Scheduled mojodb space check activity",
+            "activityId": 12
+        },
+        {
+            "type": {
+                "powerDebounce": true,
+                "bus": "private",
+                "explicit": true,
+                "power": true,
+                "background": true,
+                "persist": true
+            },
+            "name": "org.webosports.service.update: Periodic Update Check",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://org.webosports.service.update/checkUpdate",
+                "params": {
+                }
+            },
+            "focused": false,
+            "requirements": {
+                "internet": true
+            },
+            "subscribers": [
+            ],
+            "creator": {
+                "serviceId": "org.webosports.service.update"
+            },
+            "state": "init",
+            "schedule": {
+                "interval": "1d",
+                "local": true
+            },
+            "description": "Periodic system update check",
+            "activityId": 13
+        },
+        {
+            "type": {
+                "bus": "private",
+                "foreground": true,
+                "persist": true
+            },
+            "name": "calendar.startreminders",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://com.palm.service.calendar.reminders/onInit",
+                "params": {
+                }
+            },
+            "focused": false,
+            "requirements": {
+                "bootup": true
+            },
+            "subscribers": [
+            ],
+            "creator": {
+                "serviceId": "com.palm.app.calendar"
+            },
+            "state": "init",
+            "description": "Triggers the reminder service initialization process",
+            "activityId": 14
+        },
+        {
+            "type": {
+                "bus": "private",
+                "foreground": true,
+                "persist": true
+            },
+            "name": "calendar.firstrun",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://com.palm.applicationManager/launch",
+                "params": {
+                    "id": "com.palm.app.calendar",
+                    "params": {
+                        "dayChange": true
+                    }
+                }
+            },
+            "focused": false,
+            "requirements": {
+                "bootup": true
+            },
+            "subscribers": [
+            ],
+            "creator": {
+                "serviceId": "com.palm.app.calendar"
+            },
+            "state": "init",
+            "description": "sets calendar icon to have the current date",
+            "activityId": 15
+        },
+        {
+            "type": {
+                "bus": "private",
+                "foreground": true
+            },
+            "parent": {
+                "appId": "com.palm.app.email"
+            },
+            "name": "com.palm.app.email",
+            "adopters": [
+            ],
+            "focused": false,
+            "subscribers": [
+                {
+                    "appId": "com.palm.app.email"
+                }
+            ],
+            "state": "init",
+            "creator": {
+                "appId": "com.palm.app.email"
+            },
+            "description": "420",
+            "activityId": 16
+        },
+        {
+            "type": {
+                "bus": "private",
+                "foreground": true
+            },
+            "parent": {
+                "appId": "com.palm.app.calendar"
+            },
+            "name": "com.palm.app.calendar",
+            "adopters": [
+            ],
+            "focused": false,
+            "subscribers": [
+                {
+                    "appId": "com.palm.app.calendar"
+                }
+            ],
+            "state": "init",
+            "creator": {
+                "appId": "com.palm.app.calendar"
+            },
+            "description": "421",
+            "activityId": 17
+        },
+        {
+            "type": {
+                "bus": "private",
+                "foreground": true
+            },
+            "parent": {
+                "appId": "com.palm.launcher"
+            },
+            "name": "com.palm.launcher",
+            "adopters": [
+            ],
+            "focused": false,
+            "subscribers": [
+                {
+                    "appId": "com.palm.launcher"
+                }
+            ],
+            "state": "init",
+            "creator": {
+                "appId": "com.palm.launcher"
+            },
+            "description": "415",
+            "activityId": 18
+        },
+        {
+            "type": {
+                "bus": "public",
+                "explicit": true,
+                "background": true,
+                "persist": true
+            },
+            "name": "SyncOnEdit:org.webosports.cdav.service:Iv18XXaTxIR:contact",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://org.webosports.cdav.service/sync",
+                "params": {
+                    "accountId": "Iv18XXaTxIR"
+                }
+            },
+            "trigger": {
+                "method": "palm://com.palm.db/watch",
+                "params": {
+                    "query": {
+                        "from": "org.webosports.cdav.contact:1",
+                        "incDel": true,
+                        "where": [
+                            {
+                                "op": "=",
+                                "prop": "accountId",
+                                "val": "Iv18XXaTxIR"
+                            },
+                            {
+                                "op": ">",
+                                "prop": "_rev",
+                                "val": 1001
+                            }
+                        ]
+                    },
+                    "subscribe": true
+                },
+                "key": "fired"
+            },
+            "focused": false,
+            "requirements": {
+                "internetConfidence": "fair"
+            },
+            "subscribers": [
+            ],
+            "creator": {
+                "serviceId": "org.webosports.cdav.service"
+            },
+            "state": "init",
+            "description": "Sync On Edit",
+            "activityId": 44
+        },
+        {
+            "type": {
+                "bus": "public",
+                "explicit": true,
+                "background": true,
+                "persist": true
+            },
+            "name": "SyncOnEdit:org.webosports.cdav.service:Iv18XXaTxIR:calendarevent",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://org.webosports.cdav.service/sync",
+                "params": {
+                    "accountId": "Iv18XXaTxIR"
+                }
+            },
+            "trigger": {
+                "method": "palm://com.palm.db/watch",
+                "params": {
+                    "query": {
+                        "from": "org.webosports.cdav.calendarevent:1",
+                        "incDel": true,
+                        "where": [
+                            {
+                                "op": "=",
+                                "prop": "accountId",
+                                "val": "Iv18XXaTxIR"
+                            },
+                            {
+                                "op": ">",
+                                "prop": "_rev",
+                                "val": 1200
+                            }
+                        ]
+                    },
+                    "subscribe": true
+                },
+                "key": "fired"
+            },
+            "focused": false,
+            "requirements": {
+                "internetConfidence": "fair"
+            },
+            "subscribers": [
+            ],
+            "creator": {
+                "serviceId": "org.webosports.cdav.service"
+            },
+            "state": "init",
+            "description": "Sync On Edit",
+            "activityId": 47
+        },
+        {
+            "type": {
+                "bus": "public",
+                "explicit": true,
+                "userInitiated": true,
+                "background": true,
+                "persist": true
+            },
+            "name": "Initial Sync:org.webosports.cdav.service:Iv18XXaTxIR",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://org.webosports.cdav.service/sync",
+                "params": {
+                    "accountId": "Iv18XXaTxIR"
+                }
+            },
+            "focused": false,
+            "subscribers": [
+            ],
+            "state": "init",
+            "creator": {
+                "serviceId": "org.webosports.cdav.service"
+            },
+            "description": "Initial Sync",
+            "activityId": 67
+        },
+        {
+            "type": {
+                "bus": "public",
+                "explicit": true,
+                "background": true,
+                "persist": true
+            },
+            "name": "Periodic Sync:org.webosports.cdav.service:Iv18XXaTxIR",
+            "adopters": [
+            ],
+            "callback": {
+                "method": "palm://org.webosports.cdav.service/sync",
+                "params": {
+                    "accountId": "Iv18XXaTxIR"
+                }
+            },
+            "focused": false,
+            "requirements": {
+                "internetConfidence": "fair"
+            },
+            "subscribers": [
+            ],
+            "creator": {
+                "serviceId": "org.webosports.cdav.service"
+            },
+            "state": "init",
+            "schedule": {
+                "interval": "20m",
+                "local": true
+            },
+            "description": "Periodic Sync",
+            "activityId": 81
+        }
+    ],
+    "returnValue": true
+}
