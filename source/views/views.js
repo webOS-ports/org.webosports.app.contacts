@@ -29,7 +29,7 @@ enyo.kind({
     create: function () {
         this.inherited(arguments);
 
-this.log("==========> Telling global list to fetch contacts...");
+        this.log("==========> Telling global list to fetch contacts...");
         GlobalPersonCollection.fetch({strategy: "merge"});
     },
     showPerson: function (inSender, inEvent) {

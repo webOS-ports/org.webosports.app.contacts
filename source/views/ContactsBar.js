@@ -5,8 +5,8 @@ enyo.kind({
     kind: "FittableRows",
     style: "text-align:center;",
     fit: true,
-    published: {
-        panes: ""
+    events: {
+        onSelected: ""
     },
     components: [
         {
@@ -48,7 +48,7 @@ enyo.kind({
                                 { kind: "Image", src: "assets/search-input.png" }
                             ]
                         },
-                        { name: "allContactsList", kind: "ContactsList" , fit: true, collection: GlobalPersonCollection }
+                        { name: "allContactsList", kind: "ContactsList", fit: true, collection: GlobalPersonCollection, ontap: "selectPerson" }
                     ]
                 },
                 //Scroller is going crazy without the FittableRows
@@ -58,21 +58,23 @@ enyo.kind({
                     kind: "FittableRows",
                     classes: "contacts-list",
                     components: [
-                        { name: "favContactsList", kind: "ContactsList", fit: true }
+                        { name: "favContactsList", kind: "ContactsList", fit: true, ontap: "selectPerson" }
                     ]
                 }
             ]
         }
     ],
-
-    paneChange: function(inSender, inEvent) {
+    paneChange: function (inSender, inEvent) {
         if (inEvent.originator.getActive()) {
             //Is this okay, without index being published?
             this.$.panes.setIndex(inEvent.originator.index);
         }
     },
-
-    tabChange: function(inSender, inEvent) {
+    tabChange: function (inSender, inEvent) {
         this.$[inEvent.toIndex].setActive(true);
+    },
+
+    selectPerson: function (inSender, inEvent) {
+        this.doSelected({person: inSender.selected()});
     }
 });

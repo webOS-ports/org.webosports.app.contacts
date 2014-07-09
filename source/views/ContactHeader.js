@@ -2,6 +2,18 @@ enyo.kind({
     name: "ContactHeader",
     kind: "enyo.FittableRows",
     classes: "header",
+    published: {
+        name: "",
+        nickname: "",
+        job: "",
+        favorite: "",
+        numProfiles: ""
+    },
+    bindings: [
+        { from: ".name", to: ".$.name.content"},
+        { from: ".nickname", to: ".$.nickname.content" },
+        { from: ".job", to: ".$.job.content"}
+    ],
     components: [
         {
             kind: "enyo.FittableColumns",
@@ -29,6 +41,7 @@ enyo.kind({
                     style: "text-align: right",
                     components: [
                         {
+                            //TODO: how to make this yellow??
                             name: "favourite",
                             kind: "onyx.ToggleIconButton",
                             classes: "favorite",
