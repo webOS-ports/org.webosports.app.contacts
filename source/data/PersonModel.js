@@ -126,7 +126,7 @@ enyo.kind({
 
     photoURI: function () {
         var photos = this.photos || this.attributes.photos || {};
-        console.log("Returning ", photos.squarePhotoPath);
-        return photos.squarePhotoPath;
+        console.log("Returning ", "file://" + photos.squarePhotoPath);
+        return photos.squarePhotoPath ? "file://" + photos.squarePhotoPath : "";
     }
 });

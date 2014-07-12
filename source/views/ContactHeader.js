@@ -23,7 +23,7 @@ enyo.kind({
                 {
                     classes: "avatar",
                     components: [
-                        { name: "photo", classes: "img" },
+                        { kind: "enyo.Image", name: "photo", classes: "img" },
                         { classes: "mask"}
                     ]
                 },
