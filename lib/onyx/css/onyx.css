@@ -1,5 +1,5 @@
 /* WARNING: This is a generated file for backward-compatibility.  Most      */
-/* usrs should instead modify LESS files.  If you choose to edit this CSS   */
+/* users should instead modify LESS files.  If you choose to edit this CSS  */
 /* directly rather than LESS files, you should make sure less.xx.yy.min.js  */
 /* is commented out in your debug.html, and run deploy.sh/bat using the     */
 /* '-c' flag to disable LESS compilation.  This will force the loader and   */
@@ -7,6 +7,9 @@
 /* LESS file.                                                               */
 
 /* Onyx default parameters defined here */
+/* Paths */
+/* application importing Onyx Less files will have to override this  */
+/* variable. Otherwise, Onyx image load will fail with a 404 error  */
 /* Fonts */
 /* ---------------------------------------*/
 /* Text Colors */
@@ -61,16 +64,12 @@
 }
 .onyx-icon.onyx-icon-button.active,
 .onyx-icon.onyx-icon-button.pressed,
-.onyx-icon.onyx-icon-button:active:hover,
 .onyx-icon-toggle.active {
   background-position: 0 -32px;
 }
 .onyx-icon.disabled {
   opacity: 0.4;
   filter: alpha(opacity=40);
-}
-.onyx-icon.disabled:active:hover {
-  background-position: 0 0px;
 }
 /* Button.css */
 .onyx-button {
@@ -98,7 +97,7 @@
   /* border-bottom: 1px solid rgba(15, 15, 15, 0.5); */
 
   box-shadow: inset 0px 1px 0px rgba(255, 255, 255, 0.2);
-  background: #e1e1e1 url(./../images/gradient.png) repeat-x bottom;
+  background: #e1e1e1 url("../images/gradient.png") repeat-x bottom;
   background-size: contain;
   /**/
 
@@ -119,13 +118,7 @@
 */
 .onyx-button.active,
 .onyx-button.pressed {
-  background-image: url(./../images/gradient-invert.png);
-  background-position: top;
-  border-top: 1px solid rgba(15, 15, 15, 0.6);
-  box-shadow: inset 0px 1px 0px rgba(0, 0, 0, 0.1);
-}
-.onyx-button:active:hover:not([disabled]) {
-  background-image: url(./../images/gradient-invert.png);
+  background-image: url("../images/gradient-invert.png");
   background-position: top;
   border-top: 1px solid rgba(15, 15, 15, 0.6);
   box-shadow: inset 0px 1px 0px rgba(0, 0, 0, 0.1);
@@ -146,7 +139,7 @@
   cursor: pointer;
   height: 32px;
   width: 32px;
-  background: url(./../images/checkbox.png) no-repeat;
+  background: url("../images/checkbox.png") no-repeat;
   /* reset for ? */
 
   margin: 0px;
@@ -163,7 +156,7 @@
 }
 /* Grabber.css */
 .onyx-grabber {
-  background: url(./../images/grabbutton.png) no-repeat center;
+  background: url("../images/grabbutton.png") no-repeat center;
   width: 23px;
   height: 27px;
 }
@@ -175,7 +168,7 @@
   border-radius: 8px;
   padding: 6px;
   color: #ffffff;
-  background: #4c4c4c url(./../images/gradient.png) repeat-x 0 bottom;
+  background: #4c4c4c url("../images/gradient.png") repeat-x 0 bottom;
 }
 .onyx-popup-decorator {
   position: relative;
@@ -195,6 +188,10 @@
   border-radius: 0;
   margin: 0;
   font-size: 16px;
+}
+/* needed for MathJax support */
+.onyx-groupbox > script {
+  display: none;
 }
 .onyx-groupbox > *:first-child {
   border-top-color: #aaaaaa;
@@ -217,7 +214,7 @@
 
   background-color: #4c4c4c;
   border: none;
-  background: #4c4c4c url(./../images/gradient.png) repeat-x 0 10px;
+  background: #4c4c4c url("../images/gradient.png") repeat-x 0 10px;
 }
 .onyx-groupbox .onyx-input-decorator {
   display: block;
@@ -337,6 +334,10 @@
   z-index: 10;
   overflow: visible;
 }
+/* Submenu.css */
+.onyx-submenu {
+  background: rgba(0, 0, 0, 0.25) url("../images/gradient-invert.png") repeat-x 0 top;
+}
 /* Picker.css */
 .onyx-picker-decorator .onyx-button {
   padding: 10px 18px;
@@ -451,7 +452,7 @@
   text-align: center;
   /**/
 
-  background: #e7e7e7 url(./../images/gradient.png) repeat-x bottom;
+  background: #e7e7e7 url("../images/gradient.png") repeat-x bottom;
   /* IE8 */
 
   border: 1px solid #333333;
@@ -473,7 +474,7 @@
 }
 .onyx-radiobutton.active {
   color: #ffffff;
-  background: #0091f2 url(./../images/gradient-invert.png) repeat-x top;
+  background: #0091f2 url("../images/gradient-invert.png") repeat-x top;
   border-top: 1px solid rgba(15, 15, 15, 0.6);
   box-shadow: inset 1px 2px 2px rgba(0, 0, 0, 0.2);
 }
@@ -504,6 +505,150 @@
   font-size: 20px;
   border-radius: 0px;
 }
+/* TabBar.css */
+.onyx-tab-bar {
+  width: 100%;
+  z-index: 10;
+  background-color: #cacaca;
+  padding-top: 1px;
+}
+.onyx-tab-bar-scroller {
+  padding-top: 2px;
+}
+.onyx-tab-bar-scroller > .enyo-thumb {
+  border: 0px;
+}
+.onyx-tab-wrapper {
+  padding: 3px 0px 3px 0px;
+}
+.onyx-tab-line {
+  position: relative;
+  margin-top: -0.1em;
+  border-top: 1px solid #646464;
+  z-index: 2;
+}
+.onyx-tab-rug {
+  position: relative;
+  padding: 0.3em;
+  background-color: #cacaca;
+  z-index: 4;
+}
+/* TabBarItem.css */
+.onyx-tab-item {
+  display: inline;
+  position: relative;
+  border: 1px solid #646464;
+  margin: 0px 2px 0px 2px;
+  border-top-right-radius: 5px;
+  border-top-left-radius: 5px;
+  background-color: #b1b1b1;
+  z-index: 1;
+  padding-top: 0.2em;
+  padding-bottom: 0.7em ;
+  vertical-align: baseline;
+}
+.onyx-tab-item.active {
+  border-bottom: 1px solid #cacaca;
+  background-color: #cacaca;
+  z-index: 3;
+  padding-top: 0.3em;
+}
+.onyx-tab-item:hover {
+  background-color: #cacaca;
+}
+.onyx-tab-item button {
+  overflow: hidden;
+  margin: 3px;
+  border: 1px solid transparent;
+  background-color: transparent ;
+}
+.onyx-tab-item-dissolve {
+  display: inline-block;
+  height: 90%;
+  width: 2em;
+  top: 2px;
+  right: 19px;
+  position: absolute;
+  background: linear-gradient(to right, #b1b1b1 0%, rgba(177, 177, 177, 0) 100%);
+  /* W3C */
+
+  background: -moz-linear-gradient(right, #b1b1b1 0%, rgba(177, 177, 177, 0) 100%);
+  /* FF3.6+ */
+
+  background: -webkit-linear-gradient(left, rgba(177, 177, 177, 0), #b1b1b1);
+  /* Chrome10+,Safari5.1+ */
+
+  background: -webkit-gradient(linear, right top, left top, color-stop(0%, #b1b1b1), color-stop(100%, rgba(177, 177, 177, 0)));
+  /* Chrome,Safari4+ */
+
+  background: -o-linear-gradient(left, #b1b1b1 0%, rgba(177, 177, 177, 0) 100%);
+  /* Opera 11.10+ */
+
+  background: -ms-linear-gradient(left, rgba(177, 177, 177, 0) 0%, #b1b1b1 100%);
+  /* IE10+ */
+
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#00b1b1b1, endColorstr=#ffb1b1b1, GradientType=1);
+  /* IE6-9 */
+
+}
+.onyx-tab-item-dissolve.active {
+  background: linear-gradient(to right, #cacaca 0%, rgba(202, 202, 202, 0) 100%);
+  /* W3C */
+
+  background: -moz-linear-gradient(right, #cacaca 0%, rgba(202, 202, 202, 0) 100%);
+  /* FF3.6+ */
+
+  background: -webkit-linear-gradient(left, rgba(202, 202, 202, 0), #cacaca);
+  /* Chrome10+,Safari5.1+ */
+
+  background: -webkit-gradient(linear, right top, left top, color-stop(0%, #cacaca), color-stop(100%, rgba(202, 202, 202, 0)));
+  /* Chrome,Safari4+ */
+
+  background: -o-linear-gradient(left, #cacaca 0%, rgba(202, 202, 202, 0) 100%);
+  /* Opera 11.10+ */
+
+  background: -ms-linear-gradient(left, rgba(202, 202, 202, 0) 0%, #cacaca 100%);
+  /* IE10+ */
+
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#00cacaca, endColorstr=#ffcacaca, GradientType=1);
+  /* IE6-9 */
+
+}
+.onyx-tab-item-hovered {
+  background: linear-gradient(to right, #cacaca 0%, rgba(202, 202, 202, 0) 100%);
+  /* W3C */
+
+  background: -moz-linear-gradient(right, #cacaca 0%, rgba(202, 202, 202, 0) 100%);
+  /* FF3.6+ */
+
+  background: -webkit-linear-gradient(left, rgba(202, 202, 202, 0), #cacaca);
+  /* Chrome10+,Safari5.1+ */
+
+  background: -webkit-gradient(linear, right top, left top, color-stop(0%, #cacaca), color-stop(100%, rgba(202, 202, 202, 0)));
+  /* Chrome,Safari4+ */
+
+  background: -o-linear-gradient(left, #cacaca 0%, rgba(202, 202, 202, 0) 100%);
+  /* Opera 11.10+ */
+
+  background: -ms-linear-gradient(left, rgba(202, 202, 202, 0) 0%, #cacaca 100%);
+  /* IE10+ */
+
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#00cacaca, endColorstr=#ffcacaca, GradientType=1);
+  /* IE6-9 */
+
+}
+.onyx-tab-item-close {
+  display: inline-block;
+  margin-right: 3px;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  background-repeat: no-repeat;
+  background-image: url('../images/close-inactive.png');
+}
+.onyx-tab-item-close:hover {
+  background-image: url('../images/close-active.png');
+}
 /* ToggleButton.css */
 .onyx-toggle-button {
   display: inline-block;
@@ -516,7 +661,7 @@
 
   border-radius: 3px;
   box-shadow: inset 0px 1px 3px rgba(0, 0, 0, 0.4);
-  background: #8bba3d url(./../images/gradient-invert.png) repeat-x bottom;
+  background: #8bba3d url("../images/gradient-invert.png") repeat-x bottom;
   background-size: auto 100%;
   /* label */
 
@@ -534,7 +679,7 @@
   height: 30px;
   margin: 1px;
   border-radius: 3px;
-  background: #f6f6f6 url(./../images/gradient.png) repeat-x;
+  background: #f6f6f6 url("../images/gradient.png") repeat-x;
   background-size: auto 100%;
 }
 .onyx-toggle-button .onyx-toggle-button-knob {
@@ -574,7 +719,7 @@
 
   padding: 9px 8px 10px 8px;
   border: 1px solid #3A3A3A;
-  background: #4c4c4c url(./../images/gradient.png) repeat-x 0 bottom;
+  background: #4c4c4c url("../images/gradient.png") repeat-x 0 bottom;
   background-size: contain;
   color: #ffffff;
   /**/
@@ -589,6 +734,11 @@
   vertical-align: middle;
   margin: 4px 6px 5px;
   box-sizing: border-box;
+}
+/* needed for MathJax support */
+.onyx-toolbar-inline > script,
+.enyo-fittable-columns-layout.onyx-toolbar-inline > script {
+  display: none;
 }
 .onyx-toolbar .onyx-icon-button {
   margin: 3px 2px 1px;
@@ -631,7 +781,7 @@
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(0, 0, 0, 0.2);
   color: #ffffff;
-  background: #216593 url(./../images/gradient.png) repeat-x 0 bottom;
+  background: #216593 url("../images/gradient.png") repeat-x 0 bottom;
   border-radius: 3px;
   white-space: nowrap;
 }
@@ -688,13 +838,13 @@
   height: 8px;
   border: 1px solid rgba(15, 15, 15, 0.2);
   border-radius: 3px;
-  background: #b8b8b8 url(./../images/gradient-invert.png) repeat-x;
+  background: #b8b8b8 url("../images/gradient-invert.png") repeat-x;
   background-size: auto 100%;
 }
 .onyx-progress-bar-bar {
   height: 100%;
   border-radius: 3px;
-  background: #58abef url(./../images/gradient.png) repeat-x;
+  background: #58abef url("../images/gradient.png") repeat-x;
   background-size: auto 100%;
 }
 .onyx-progress-bar-bar.striped {
@@ -773,6 +923,10 @@
 .onyx-progress-button-client > * {
   display: inline-block;
 }
+/* needed for MathJax support */
+.onyx-progress-button-client > script {
+  display: none;
+}
 /* Slider.css */
 .onyx-slider {
   position: relative;
@@ -788,12 +942,11 @@
   position: relative;
   height: 40px;
   width: 40px;
-  background: url(./../images/slider-handle.png) left top no-repeat;
+  background: url("../images/slider-handle.png") left top no-repeat;
   margin: -23px -20px;
 }
 .onyx-slider-knob.active,
-.onyx-slider-knob.pressed,
-.onyx-slider-knob:active:hover {
+.onyx-slider-knob.pressed {
   background-position: 0 -40px;
 }
 /* RangeSlider.css */
@@ -833,10 +986,10 @@
   width: 59px;
   height: 58px;
   display: inline-block;
-  background: url(./../images/spinner-dark.gif) no-repeat 0 0;
+  background: url("../images/spinner-dark.gif") no-repeat 0 0;
 }
 .onyx-spinner.onyx-light {
-  background: url(./../images/spinner-light.gif) no-repeat 0 0;
+  background: url("../images/spinner-light.gif") no-repeat 0 0;
 }
 /* MoreToolbar.css */
 .onyx-more-toolbar {
@@ -860,7 +1013,7 @@
   margin-bottom: 5px;
 }
 .onyx-more-button {
-  background-image: url(./../images/more.png);
+  background-image: url("../images/more.png");
   width: 32px;
   height: 32px;
 }

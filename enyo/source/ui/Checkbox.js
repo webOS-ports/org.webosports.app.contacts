@@ -3,7 +3,7 @@
 */
 enyo.kind({
 	name: "enyo.Checkbox",
-	kind: enyo.Input,
+	kind: "enyo.Input",
 	classes: "enyo-checkbox",
 	events: {
 		//* Fires when checkbox is tapped.
@@ -24,20 +24,15 @@ enyo.kind({
 		onchange: "change",
 		onclick: "click"
 	},
-	create: function() {
-		this.inherited(arguments);
-	},
-	rendered: function() {
-		this.inherited(arguments);
-		if (this.active) {
-			this.activeChanged();
-		}
-		this.checkedChanged();
-	},
-	// instance 'checked' property is linked to DOM 'checked' property
-	getChecked: function() {
-		return enyo.isTrue(this.getNodeProperty("checked", this.checked));
-	},
+	rendered: enyo.inherit(function (sup) {
+		return function() {
+			sup.apply(this, arguments);
+			if (this.active) {
+				this.activeChanged();
+			}
+			this.checkedChanged();
+		};
+	}),
 	checkedChanged: function() {
 		this.setNodeProperty("checked", this.checked);
 		this.setAttribute("checked", this.checked ? "checked" : "");
@@ -63,7 +58,8 @@ enyo.kind({
 		// we squelch the inherited method
 	},
 	change: function() {
-		this.setActive(this.getChecked());
+		var nodeChecked = enyo.isTrue(this.getNodeProperty("checked"));
+		this.setActive(nodeChecked);
 	},
 	click: function(inSender, inEvent) {
 		// Various versions of IE (notably IE8) do not fire 'onchange' for

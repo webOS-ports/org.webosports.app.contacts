@@ -34,30 +34,39 @@ enyo.kind({
 		//* Scroll position along vertical axis
 		scrollTop: 0,
 		//* Maximum height of scroll content
-		maxHeight: null
+		maxHeight: null,
+		//* Use mouse wheel to move scroller
+		useMouseWheel: true
 	},
 	//* @protected
 	handlers: {
 		ondragstart: "dragstart",
 		ondragfinish: "dragfinish",
 		ondown: "down",
-		onmove: "move"
+		onmove: "move",
+		onmousewheel: "mousewheel"
 	},
-	create: function() {
-		this.inherited(arguments);
-		this.horizontalChanged();
-		this.verticalChanged();
-		this.maxHeightChanged();
-	},
-	rendered: function() {
-		this.inherited(arguments);
-		enyo.makeBubble(this.container, "scroll");
-		this.scrollNode = this.calcScrollNode();
-	},
-	teardownRender: function() {
-		this.inherited(arguments);
-		this.scrollNode = null;
-	},
+	create: enyo.inherit(function (sup) {
+		return function() {
+			sup.apply(this, arguments);
+			this.horizontalChanged();
+			this.verticalChanged();
+			this.maxHeightChanged();
+		};
+	}),
+	rendered: enyo.inherit(function (sup) {
+		return function() {
+			sup.apply(this, arguments);
+			enyo.makeBubble(this.container, "scroll");
+			this.scrollNode = this.calcScrollNode();
+		};
+	}),
+	teardownRender: enyo.inherit(function (sup) {
+		return function() {
+			sup.apply(this, arguments);
+			this.scrollNode = null;
+		};
+	}),
 	calcScrollNode: function() {
 		return this.container.hasNode();
 	},
@@ -173,7 +182,7 @@ enyo.kind({
 		}
 	},
 	// avoid allowing scroll when starting at a vertical boundary to prevent ios from window scrolling.
-	down: function(inSender, inEvent) {
+	down: function() {
 		this.calcStartInfo();
 	},
 	// NOTE: mobile native scrollers need touchmove. Indicate this by
@@ -181,6 +190,12 @@ enyo.kind({
 	move: function(inSender, inEvent) {
 		if (inEvent.which && (this.canVertical && inEvent.vertical || this.canHorizontal && inEvent.horizontal)) {
 			inEvent.disablePrevention();
+		}
+	},
+	mousewheel: function(inSender, inEvent) {
+		//* We disable mouse wheel scrolling by preventing the default
+		if (!this.useMouseWheel) {
+			inEvent.preventDefault();
 		}
 	}
 });

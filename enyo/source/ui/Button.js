@@ -1,15 +1,14 @@
 /**
 	_enyo.Button_ implements an HTML button, with support for grouping using
-	<a href="#enyo.Group">enyo.Group</a>.
+	[enyo.Group](#enyo.Group).
 
 	For more information, see the documentation on
-	<a href="https://github.com/enyojs/enyo/wiki/Buttons">Buttons</a> in the
-	Enyo Developer Guide.
+	[Buttons](building-apps/controls/buttons.html) in the Enyo Developer Guide.
 */
 enyo.kind({
 	name: "enyo.Button",
 	//* @protected
-	kind: enyo.ToolDecorator,
+	kind: "enyo.ToolDecorator",
 	tag: "button",
 	attributes: {
 		// set to button, as default is "submit" which can cause unexpected
@@ -23,10 +22,12 @@ enyo.kind({
 		disabled: false
 	},
 	//* @protected
-	create: function() {
-		this.inherited(arguments);
-		this.disabledChanged();
-	},
+	create: enyo.inherit(function (sup) {
+		return function() {
+			sup.apply(this, arguments);
+			this.disabledChanged();
+		};
+	}),
 	disabledChanged: function() {
 		this.setAttribute("disabled", this.disabled);
 	},
