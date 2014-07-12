@@ -2,21 +2,39 @@
 enyo.kind({
     name: "Detail",
     components: [
-        { tag: "p", name: "value", classes: "value", content: "joe@dude.com" },
-        { tag: "p", name: "label", classes: "label", content: "Work Email" }
+        { tag: "p", name: "value", classes: "value", allowHtml: true },
+        { tag: "p", name: "label", classes: "label" }
+    ],
+    bindings: [
+        {from: ".model.value", to: ".$.value.content"},
+        {from: ".model.label", to: ".$.label.content"}
     ]
+});
+
+enyo.kind({
+    name: "DetailsModel",
+    kind: "enyo.Model",
+    attributes: {
+        value: "",
+        label: ""
+    }
 });
 
 enyo.kind({
     name: "ContactDetails",
     kind: "enyo.Scroller",
+    touch: true,
     classes: "details",
     published: {
-        person: {},
-        name: {},
-        organization: {}
+        person: ""
     },
     components: [
+        {
+            kind: "enyo.Collection",
+            name: "detailsCollection",
+            model: "DetailsModel",
+            instanceAllRecords: true
+        },
         {
             name: "container",
             classes: "container",
@@ -24,71 +42,134 @@ enyo.kind({
                 {
                     name: "content",
                     classes: "content",
+                    kind: "enyo.FittableRows",
                     components: [
                         { name: "header", kind: "ContactHeader" },
-                        {
-                            name: "details",
-                            kind: "enyo.Repeater",
-                            classes: "group",
-                            count: 4,
-                            components: [
-                                { name: "contactDetail", kind: "Detail", classes: "contacts-item" }
-                            ]
-                        }
+                        //{ kind: "enyo.Scroller", fit: true, components: [
+                            {
+                                name: "details",
+                                kind: "enyo.DataRepeater",
+                                classes: "group",
+                                count: 4,
+                                components: [
+                                    { kind: "Detail", classes: "contacts-item" }
+                                ]
+                            }
+                        //]}
                     ]
                 }
             ]
         }
     ],
     bindings: [
-        //easy stuff:
+        //details stuff:
         {from: ".person.nickname", to: ".$.header.nickname" },
         {from: ".person.favorite", to: ".$.header.favorite" },
-
-        //first make observable parst from supparts:
-        {from: ".person.name", to: ".name"},
-        //{from: ".person.organization", to: ".organization"},
-
-        {from: ".combinedName", to: ".$.header.name"}
-        //{from: ".organization.title", to: ".$.header.job"}
+        {from: ".person.displayName", to: ".$.header.name"},
+        {from: ".person.organizationString", to: ".$.header.job"}
     ],
-    computed: {
-        combinedName: [".name.familyName", ".name.givenName", ".name.honorificPrefix", ".name.honorificSuffix", ".name.middleName"]
-    },
-    observers: [
-        {path: "person.name", method: "nameWatch"}
-    ],
+    create: function () {
+        this.inherited(arguments);
 
-    personChanged: function () {
-        this.log("New person: ", this.person);
+        this.$.details.set("collection", this.$.detailsCollection);
     },
-    nameChanged: function () {
-        this.name = new enyo.Object(this.name);
-        this.log("Name changed: ", this.name);
+    //TODO: maybe move that somewhere else?
+    //TODO: some localization stuff will play into this, too... hmpf.
+    getAddressValue: function (address) {
+        var parts = [];
+        if (address.streetAddress) {
+            parts.push(address.streetAddress);
+        }
+        if (address.locality || address.postalCode) {
+            parts.push(address.locality + " " + address.postalCode);
+        }
+        if (address.region) {
+            parts.push(address.region);
+        }
+        if (address.country) {
+            parts.push(address.country);
+        }
+        return parts.join("<br />");
     },
-    combinedName: function () {
-        this.log("combinedName requested!");
-        var displayName = "";
-        if (this.name.honorificPrefix) {
-            displayName += this.name.honorificPrefix + " ";
+    getLabelFromType: function (obj) {
+        //this is kind of a hack...
+        //assumes that type is of form "type_LABEL", i.e. "type_skype", "type_gtalk", "type_partner", ...
+        return obj.type.substr(5);
+    },
+
+    arrayValues: function (key, person) {
+        this.log("Reading " + key + " of ", person);
+        if (person[key].length > 0) {
+            person[key].forEach(function (obj) {
+                this.log("Adding " + key + " with value " + obj.value);
+                this.$.detailsCollection.add({
+                    label: this.getLabelFromType(obj),
+                    value: obj.normalizedValue || obj.value
+                });
+            }.bind(this));
         }
-        if (this.name.givenName) {
-            displayName += this.name.givenName + " ";
+    },
+    arrayAddresses: function (key, obj) {
+        if (obj[key].length > 0) {
+            obj[key].forEach(function (address) {
+                this.$.detailsCollection.add({
+                    label: address.type === "type_home" ? $L("Home") : $L("Work"),
+                    value: this.getAddressValue(address)
+                });
+            }.bind(this));
         }
-        if (this.name.middleName) {
-            displayName += this.name.middleName + " ";
+    },
+    notesValues: function (key, obj) {
+        if (obj[key].length > 0) {
+            obj[key].forEach(function (note) {
+                this.$.detailsCollection.add({
+                    label: $L("Note"),
+                    value: note.replace(/\r?\n\r?/g, "<br />")
+                });
+            }.bind(this));
         }
-        if (this.name.familyName) {
-            displayName += this.name.familyName;
+    },
+    simpleValue: function (key, obj) {
+        if (this.person[key]) {
+            this.log("Adding " + key + " with value " + obj[key]);
+            this.$.detailsCollection.add({
+                label: key,
+                value: obj[key]
+            });
         }
-        if (this.name.honorificSuffix) {
-            if (this.name.honorificSuffix.charAt(1) === " ") { //handle ", PhD" case.
-                displayName += this.name.honorificSuffix;
-            } else {
-                displayName += " " + this.name.honorificSuffix;
+    },
+    personChanged: function () { //fill details collection.
+        var keysOrdered = [
+            "phoneNumbers",
+            "emails",
+            "ims",
+            "addresses",
+            "urls",
+            "notes",
+            "birthdays",
+            "anniversary",
+            "relations"
+        ],
+            processingMethods = {
+                phoneNumbers: this.arrayValues,
+                emails: this.arrayValues,
+                ims: this.arrayValues,
+                addresses: this.arrayAddresses,
+                urls: this.arrayValues,
+                notes: this.notesValues,
+                birthday: this.simpleValue,
+                anniversary: this.simpleValue,
+                relations: this.arrayValues
+            },
+            i;
+
+        this.log("Person changed!!", this.person);
+        if (this.person) {
+            for (i = 0; i < keysOrdered.length; i += 1) {
+                if (this.person.attributes[keysOrdered[i]]) {
+                    processingMethods[keysOrdered[i]].call(this, keysOrdered[i], this.person.attributes);
+                }
             }
         }
-        displayName = displayName.trim();
-        return displayName;
     }
 });

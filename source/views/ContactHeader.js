@@ -31,9 +31,9 @@ enyo.kind({
                     classes: "nameinfo",
                     fit: true,
                     components: [
-                        { name: "name", classes: "name", content: "Joey Joe" },
-                        { name: "nickname", classes: "nickname", content: "JoJo" },
-                        { name: "job", classes: "position", content: "Joer, Job" }
+                        { name: "name", classes: "name" },
+                        { name: "nickname", classes: "nickname" },
+                        { name: "job", classes: "position" }
                     ]
                 },
                 {
@@ -53,6 +53,7 @@ enyo.kind({
                             classes: "profiles-button",
                             kind: "onyx.Button",
                             ontap: "openProfilesList",
+                            showing: false,
                             content: "2 Profiles"
                         }
                     ]
