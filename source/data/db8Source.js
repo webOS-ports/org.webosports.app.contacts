@@ -1,7 +1,7 @@
 enyo.kind({
     name: "db8Source",
     kind: "enyo.Source",
-    dbService: "com.palm.db",
+    dbService: "palm://com.palm.db",
 
     _doRequest: function (method, options, success, failure, subscribe) {
         var request = new enyo.ServiceRequest({
