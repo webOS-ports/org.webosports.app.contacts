@@ -75,6 +75,10 @@ enyo.kind({
     },
 
     selectPerson: function (inSender, inEvent) {
+        if (!inSender.selected()) {
+            inSender.select(inEvent.index);
+        }
+
         this.doSelected({person: inSender.selected()});
     }
 });

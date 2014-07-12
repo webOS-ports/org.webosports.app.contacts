@@ -98,10 +98,8 @@ enyo.kind({
     },
 
     arrayValues: function (key, person) {
-        this.log("Reading " + key + " of ", person);
         if (person[key].length > 0) {
             person[key].forEach(function (obj) {
-                this.log("Adding " + key + " with value " + obj.value);
                 this.$.detailsCollection.add({
                     label: this.getLabelFromType(obj),
                     value: obj.normalizedValue || obj.value
@@ -131,7 +129,6 @@ enyo.kind({
     },
     simpleValue: function (key, obj) {
         if (this.person[key]) {
-            this.log("Adding " + key + " with value " + obj[key]);
             this.$.detailsCollection.add({
                 label: key,
                 value: obj[key]
@@ -163,8 +160,9 @@ enyo.kind({
             },
             i;
 
-        this.log("Person changed!!", this.person);
         if (this.person) {
+            this.$.detailsCollection.destroyAllLocal();
+
             for (i = 0; i < keysOrdered.length; i += 1) {
                 if (this.person.attributes[keysOrdered[i]]) {
                     processingMethods[keysOrdered[i]].call(this, keysOrdered[i], this.person.attributes);
