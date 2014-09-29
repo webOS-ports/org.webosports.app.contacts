@@ -102,7 +102,7 @@ enyo.kind({
             person[key].forEach(function (obj) {
                 this.$.detailsCollection.add({
                     label: this.getLabelFromType(obj),
-                    value: obj.normalizedValue || obj.value
+                    value: obj.value
                 });
             }.bind(this));
         }
