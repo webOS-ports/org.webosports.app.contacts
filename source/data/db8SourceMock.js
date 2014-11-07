@@ -81,7 +81,7 @@ enyo.kind({
     },
 
 
-
+    // sortKeys are familyName givenName (but not organization)
     dataArray: [
         {
             "_id": "J1EcwkckJBw",
@@ -216,6 +216,7 @@ enyo.kind({
             "_id": "J1EcwpjkP_k",
             "_kind": "com.palm.person:1",
             "_rev": 347,
+            "accountId": "fakeAccountId",
             "addresses": [],
             "anniversary": "",
             "birthday": "",
@@ -300,6 +301,7 @@ enyo.kind({
             "_id": "J1Ecws+LFLJ",
             "_kind": "com.palm.person:1",
             "_rev": 352,
+            "accountId": "fakeAccountId",
             "addresses": [],
             "anniversary": "",
             "birthday": "",
@@ -375,6 +377,7 @@ enyo.kind({
             "_id": "J1EcwtI22Yc",
             "_kind": "com.palm.person:1",
             "_rev": 354,
+            "accountId": "fakeAccountId",
             "addresses": [],
             "anniversary": "",
             "birthday": "",
@@ -451,6 +454,7 @@ enyo.kind({
             "_id": "J1EcwuraPig",
             "_kind": "com.palm.person:1",
             "_rev": 356,
+            "accountId": "fakeAccountId",
             "addresses": [],
             "anniversary": "",
             "birthday": "",
@@ -526,6 +530,7 @@ enyo.kind({
             "_id": "J1EcwwUH33V",
             "_kind": "com.palm.person:1",
             "_rev": 358,
+            "accountId": "fakeAccountId",
             "addresses": [],
             "anniversary": "",
             "birthday": "",
@@ -598,6 +603,177 @@ enyo.kind({
             "searchTerms": ["nnjam", "njamnjam"],
             "sortKey": "njam\tnjam",
             "urls": []
+        },
+        // record with minimal required fields
+        {
+            _id: "kljfldfjkkei",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+        	addressses: [],
+        	anniversary: "",
+        	birthday: "",
+            contactIds: [],
+            favorite: false,
+        	gender: "undisclosed",
+        	name: {},
+        	names: [],
+        	notes: [],
+        	photos: {
+        		accountId: "",
+           		contactId: "",
+        		listPhotoSource: "type_square",
+        		localPathList: "",
+        		photoIdBig: "",
+        		photoIdSquare: ""
+        	},
+        	reminder: "",
+        	ringtone: [],
+        	searchTerms: [],
+            sortKey: "",
+        	urls: []
+        },
+        // prefix & given
+        {
+            _id: "demdmeppep",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+        	addressses: [],
+        	anniversary: "",
+        	birthday: "",
+            contactIds: [],
+            favorite: false,
+        	gender: "undisclosed",
+        	name: {givenName: "Hrolf", honorificPrefix: "King"},
+        	names: [],
+        	notes: [],
+        	nickname: "Kraki",
+        	organization: {name: "Kingdom of Denmark", title: "King"},
+        	photos: {
+        		accountId: "",
+           		contactId: "",
+        		listPhotoSource: "type_square",
+        		localPathList: "",
+        		photoIdBig: "",
+        		photoIdSquare: ""
+        	},
+        	reminder: "",
+        	ringtone: [],
+        	searchTerms: [],
+            sortKey: "hrolf",
+        	urls: []
+        },
+        // many notes
+        {
+            _id: "ruiriuqwoqoei",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+        	addressses: [],
+        	anniversary: "",
+        	birthday: "",
+            contactIds: [],
+            favorite: false,
+        	gender: "undisclosed",
+        	name: {familyName: "Notes", givenName: "Lotso"},
+        	names: [],
+        	notes: ["fie", "fi", "fo", "fum", "I smell the blood", "of an Englishman"],
+        	photos: {
+        		accountId: "",
+           		contactId: "",
+        		listPhotoSource: "type_square",
+        		localPathList: "",
+        		photoIdBig: "",
+        		photoIdSquare: ""
+        	},
+        	reminder: "",
+        	ringtone: [],
+        	searchTerms: [],
+            sortKey: "notes lotso",
+        	urls: []
+        },
+        // nickname but no formal name
+        {
+            _id: "mememenrbrbtby",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+        	addressses: [],
+        	anniversary: "",
+        	birthday: "",
+            contactIds: [],
+            favorite: false,
+        	gender: "undisclosed",
+        	name: {},
+        	names: [],
+        	nickname: "Lefty",
+        	notes: [],
+        	photos: {
+        		accountId: "",
+           		contactId: "",
+        		listPhotoSource: "type_square",
+        		localPathList: "",
+        		photoIdBig: "",
+        		photoIdSquare: ""
+        	},
+        	reminder: "",
+        	ringtone: [],
+        	searchTerms: [],
+            sortKey: "",
+        	urls: []
+        },
+        // Chinese name, w/ normalized name
+        {
+            _id: "fkjeiddoenvmvoe",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+        	addressses: [],
+        	anniversary: "",
+        	birthday: "",
+            contactIds: [],
+            favorite: false,
+        	gender: "undisclosed",
+        	name: {familyName: "孙", givenName: "七"},
+        	names: [{normalizedFamilyName: "Sun", normalizedGivenName: "Seven"}],
+        	notes: ["“Sun Seven”"],
+        	photos: {
+        		accountId: "",
+           		contactId: "",
+        		listPhotoSource: "type_square",
+        		localPathList: "",
+        		photoIdBig: "",
+        		photoIdSquare: ""
+        	},
+        	reminder: "",
+        	ringtone: [],
+        	searchTerms: [],
+            sortKey: "",
+        	urls: []
+        },
+        //
+        {
+            _id: "lkfjfdfooe",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+        	addressses: [],
+        	anniversary: "",
+        	birthday: "",
+            contactIds: [],
+            favorite: false,
+        	gender: "undisclosed",
+        	name: {familyName: "Kringle", givenName: "Kris"},
+        	names: [],
+        	notes: [],
+        	photos: {
+        		accountId: "",
+           		contactId: "",
+        		listPhotoSource: "type_square",
+        		localPathList: "",
+        		photoIdBig: "",
+        		photoIdSquare: ""
+        	},
+        	reminder: "",
+        	ringtone: [],
+        	searchTerms: [],
+            sortKey: "kringle kris",
+        	urls: []
         }
     ]
 });

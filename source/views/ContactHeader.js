@@ -3,14 +3,14 @@ enyo.kind({
     kind: "enyo.FittableRows",
     classes: "header",
     published: {
-        name: "",
+        displayName: "",
         nickname: "",
         job: "",
         favorite: "",
         numProfiles: ""
     },
     bindings: [
-        { from: ".name", to: ".$.name.content"},
+        { from: ".displayName", to: ".$.displayName.content"},
         { from: ".nickname", to: ".$.nickname.content" },
         { from: ".job", to: ".$.job.content"}
     ],
@@ -31,7 +31,7 @@ enyo.kind({
                     classes: "nameinfo",
                     fit: true,
                     components: [
-                        { name: "name", classes: "name" },
+                        { name: "displayName", classes: "name" },
                         { name: "nickname", classes: "nickname" },
                         { name: "job", classes: "position" }
                     ]

@@ -7,7 +7,7 @@ enyo.kind({
     mixins: [enyo.ComputedSupport],
     computed: {
         displayName: ["name", "nickname", "organization", "emails", "ims", "phoneNumbers", {cached: true}],
-        organizationString: ["organization"],
+        displayOrg: ["organization"],
         photoURI: [ "photos", {cached: true}]
     },
     defaults: {
@@ -107,26 +107,30 @@ enyo.kind({
             displayName = "[No Name Available]";
         }
 
-        console.log("Returning ", displayName, " for ", this.attributes);
+        console.log("displayName: ", displayName, " for ", this.attributes);
         return displayName.trim();
     },
 
-    organizationString: function () {
-        var result,
+    displayOrg: function () {
+        var result = "",
             org = this.organization || this.attributes.organization || {};
 
-        result = org.title;
+        if (org.title) {
+        	result += org.title;
+        }
         if (result && org.name) {
             result += ", ";
         }
-        result += org.name;
+        if (org.name) {
+        	result += org.name;
+        }
 
         return result;
     },
 
     photoURI: function () {
         var photos = this.photos || this.attributes.photos || {};
-        console.log("Returning ", "file://" + photos.squarePhotoPath);
+//        console.log("Returning ", "file://" + photos.squarePhotoPath);
         return photos.squarePhotoPath ? "file://" + photos.squarePhotoPath : "";
     }
 });
