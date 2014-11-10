@@ -3,6 +3,7 @@ enyo.kind({
     kind: "enyo.FittableRows",
     classes: "header",
     published: {
+    	displayPhoto: "",
         displayName: "",
         nickname: "",
         job: "",
@@ -10,6 +11,9 @@ enyo.kind({
         numProfiles: ""
     },
     bindings: [
+        // transform is needed to work around a bug in Black Eye when using sizing "cover".
+        // It should not be needed (and is not needed in Safari 7.1).
+        { from: ".displayPhoto", to: ".$.photo.src", transform: function(path) {return "'" + path + "'";} },
         { from: ".displayName", to: ".$.displayName.content"},
         { from: ".nickname", to: ".$.nickname.content" },
         { from: ".job", to: ".$.job.content"}
@@ -23,7 +27,7 @@ enyo.kind({
                 {
                     classes: "avatar",
                     components: [
-                        { kind: "enyo.Image", name: "photo", classes: "img" },
+                        { kind: "enyo.Image", name: "photo", sizing: "cover", classes: "img" },
                         { classes: "mask"}
                     ]
                 },

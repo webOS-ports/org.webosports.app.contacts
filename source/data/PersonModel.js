@@ -6,6 +6,7 @@ enyo.kind({
     primaryKey: "_id",
     mixins: [enyo.ComputedSupport],
     computed: {
+        displayPhoto: ["photos", {cached: true}],
         displayName: ["name", "nickname", "organization", "emails", "ims", "phoneNumbers", {cached: true}],
         displayOrg: ["organization"],
         photoURI: [ "photos", {cached: true}]
@@ -21,6 +22,12 @@ enyo.kind({
 
     parse: function (data) {
         return data;
+    },
+
+    displayPhoto: function () {
+        console.log("displayPhoto | ", this.attributes.photos);
+        if (! this.attributes.photos) return "";
+        return this.attributes.photos.bigPhotoPath || this.attributes.photos.squarePhotoPath || "";
     },
 
     /*

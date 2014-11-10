@@ -63,6 +63,7 @@ enyo.kind({
     ],
     bindings: [
         //details stuff:
+        {from: ".person.displayPhoto", to: ".$.header.displayPhoto"},
         {from: ".person.nickname", to: ".$.header.nickname" },
         {from: ".person.favorite", to: ".$.header.favorite" },
         {from: ".person.displayName", to: ".$.header.displayName"},
