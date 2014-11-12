@@ -67,7 +67,8 @@ enyo.kind({
         {from: ".person.nickname", to: ".$.header.nickname" },
         {from: ".person.favorite", to: ".$.header.favorite" },
         {from: ".person.displayName", to: ".$.header.displayName"},
-        {from: ".person.displayOrg", to: ".$.header.job"}
+        {from: ".person.displayOrg", to: ".$.header.job"},
+        {from: ".person.contactIds", to: ".$.header.contactIds"}
     ],
     create: function () {
         this.inherited(arguments);

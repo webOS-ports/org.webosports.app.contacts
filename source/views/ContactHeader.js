@@ -8,20 +8,26 @@ enyo.kind({
         nickname: "",
         job: "",
         favorite: "",
-        numProfiles: ""
+        contactIds: ""
     },
     bindings: [
         // transform is needed to work around a bug in Black Eye when using sizing "cover".
         // It should not be needed (and is not needed in Safari 7.1).
         { from: ".displayPhoto", to: ".$.photo.src", transform: function(path) {return "'" + path + "'";} },
         { from: ".displayName", to: ".$.displayName.content"},
-        { from: ".nickname", to: ".$.nickname.content" },
-        { from: ".job", to: ".$.job.content"}
+        { from: ".nickname", to: ".$.nickname.content", transform: function(path) {return path ? "“" + path + "”" : "";} },
+        { from: ".job", to: ".$.job.content"},
+        { from: ".contactIds", to: ".$.profilesCount.content", transform: function (ids) {
+            this.$.profiles.setOpen(false);
+            this.$.profilesIndicator.removeClass("active", this.$.profiles.open);
+            return ids.length === 1 ? $L("1 profile")  : ids.length + $L(" linked profiles");
+        }}
     ],
     components: [
         {
             kind: "enyo.FittableColumns",
             fit: true,
+            classes: "headerCard",
             components: [
                 //{ name: "profilePicture", kind: "enyo.Image" },
                 {
@@ -40,37 +46,26 @@ enyo.kind({
                         ]},
                         { name: "displayName", classes: "name" },
                         { name: "nickname", classes: "nickname" },
-                        { name: "job", classes: "position" }
+                        { name: "job", classes: "position" },
+                        {
+	                        name: "profilesButton",
+	                        kind: "onyx.Button",
+	                        classes: "profiles-button",
+		                    ontap: "openProfilesList",
+		                    components: [
+		                        {name: "profilesCount", content: "x Linked Profiles"},
+		                        {name: "profilesIndicator", kind: "onyx.Icon", src: "assets/btn_linked_profiles.png", classes: "profilesIndicator", style: "width: 13px; height: 20px; margin-left: 7px;"}
+		                    ]
+	                    }
                     ]
-                },
-//                {
-//                    kind: "enyo.FittableRows",
-//                    style: "text-align: right",
-//                    components: [
-//                        {
-//                            //TODO: how to make this yellow??
-//                            name: "favourite",
-//                            kind: "onyx.ToggleIconButton",
-//                            classes: "favorite",
-//                            src: "assets/bg_details_favorite.png"
-//                        },
-//                        { fit: true },
-//                        {
-//                            name: "profilesButton",
-//                            classes: "profiles-button",
-//                            kind: "onyx.Button",
-//                            ontap: "openProfilesList",
-//                            showing: false,
-//                            content: "2 Profiles"
-//                        }
-//                    ]
-//                }
+                }
             ]
         },
         {
             name: "profiles",
-            kind: "onyx.Drawer",
+            kind: "enyo.Drawer",
             open: false,
+            classes: "profiles",
             components: [
                 {
                     name: "profilesList",
@@ -83,8 +78,11 @@ enyo.kind({
             ]
         }
     ],
+
     openProfilesList: function () {
+        // TODO: fetch records before opening
+        // consider fetching records when contactIds is set
         this.$.profiles.setOpen(!this.$.profiles.open);
-        this.$.profilesButton.addRemoveClass("active", this.$.profiles.open);
+        this.$.profilesIndicator.addRemoveClass("active", this.$.profiles.open);
     }
 });
