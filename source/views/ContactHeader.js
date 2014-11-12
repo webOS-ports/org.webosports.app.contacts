@@ -35,33 +35,36 @@ enyo.kind({
                     classes: "nameinfo",
                     fit: true,
                     components: [
+                        { classes: "buttonBar", components: [
+                            {name: "favourite", kind: "onyx.ToggleIconButton", classes: "favorite", src: "assets/bg_details_favorite.png"}
+                        ]},
                         { name: "displayName", classes: "name" },
                         { name: "nickname", classes: "nickname" },
                         { name: "job", classes: "position" }
                     ]
                 },
-                {
-                    kind: "enyo.FittableRows",
-                    style: "text-align: right",
-                    components: [
-                        {
-                            //TODO: how to make this yellow??
-                            name: "favourite",
-                            kind: "onyx.ToggleIconButton",
-                            classes: "favorite",
-                            src: "assets/bg_details_favorite.png"
-                        },
-                        { fit: true },
-                        {
-                            name: "profilesButton",
-                            classes: "profiles-button",
-                            kind: "onyx.Button",
-                            ontap: "openProfilesList",
-                            showing: false,
-                            content: "2 Profiles"
-                        }
-                    ]
-                }
+//                {
+//                    kind: "enyo.FittableRows",
+//                    style: "text-align: right",
+//                    components: [
+//                        {
+//                            //TODO: how to make this yellow??
+//                            name: "favourite",
+//                            kind: "onyx.ToggleIconButton",
+//                            classes: "favorite",
+//                            src: "assets/bg_details_favorite.png"
+//                        },
+//                        { fit: true },
+//                        {
+//                            name: "profilesButton",
+//                            classes: "profiles-button",
+//                            kind: "onyx.Button",
+//                            ontap: "openProfilesList",
+//                            showing: false,
+//                            content: "2 Profiles"
+//                        }
+//                    ]
+//                }
             ]
         },
         {

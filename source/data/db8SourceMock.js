@@ -241,7 +241,7 @@ enyo.kind({
                 "honorificSuffix": "",
                 "middleName": "Gaaaanz"
             }],
-            "nickname": "Nick.",
+            "nickname": "Way too long a nickname for any normal person, this entry exists to test the details layout",
             "notes": [],
             "organization": {
                 "department": "",
@@ -632,6 +632,36 @@ enyo.kind({
             sortKey: "",
             urls: []
         },
+        // long name
+        {
+            _id: "icddeioxwo",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+            addressses: [],
+            anniversary: "",
+            birthday: "",
+            contactIds: [],
+            favorite: false,
+            gender: "undisclosed",
+            name: {familyName: "Schmidt", givenName: "John", honorificPrefix: "Herr Dr. Dr.", honorificSuffix: "jünger", middleName: "Jacob Jingleheimer"},
+            names: [],
+            nickname: "Bärchen",
+            notes: [],
+            organization: {title: "Meisterbürger", department: "Büro Fahren", name: "Tauberbischofsheeim"},
+            photos: {
+                accountId: "",
+                   contactId: "",
+                listPhotoSource: "type_square",
+                listPhotoPath: "",
+                bigPhotoId: "",
+                squarePhotoId: ""
+            },
+            reminder: "",
+            ringtone: [],
+            searchTerms: [],
+            sortKey: "",
+            urls: []
+        },
         // prefix & given
         {
             _id: "demdmeppep",
@@ -761,6 +791,7 @@ enyo.kind({
             name: {familyName: "Kringle", givenName: "Kris"},
             names: [],
             notes: [],
+            organization: {title: "Sleigh Driver, Reindeer Wrangler & Elf Taskmaster", department: "Distribution", name: "The Christmas Conspiracy"},
             photos: {
                 accountId: "lkfdjlfjdsfljds+6",
                 bigPhotoId: "129",

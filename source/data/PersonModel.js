@@ -66,7 +66,7 @@ enyo.kind({
             if (name.honorificSuffix.charAt(1) === " ") { //handle ", PhD" case.
                 displayName += name.honorificSuffix;
             } else {
-                displayName += " " + name.honorificSuffix;
+                displayName += ", " + name.honorificSuffix;
             }
         }
         displayName = displayName.trim();
@@ -125,11 +125,17 @@ enyo.kind({
         if (org.title) {
         	result += org.title;
         }
-        if (result && org.name) {
-            result += ", ";
+        if (org.department) {
+            if (result) {
+                result += ", ";
+            }
+            result += org.department;
         }
         if (org.name) {
-        	result += org.name;
+            if (result) {
+                result += ", ";
+            }
+            result += org.name;
         }
 
         return result;
