@@ -130,7 +130,7 @@ enyo.kind({
         }
     },
     simpleValue: function (key, obj) {
-        if (this.person[key]) {
+        if (this.person.attributes[key]) {
             this.$.detailsCollection.add({
                 label: key,
                 value: obj[key]
@@ -145,7 +145,7 @@ enyo.kind({
             "addresses",
             "urls",
             "notes",
-            "birthdays",
+            "birthday",
             "anniversary",
             "relations"
         ],

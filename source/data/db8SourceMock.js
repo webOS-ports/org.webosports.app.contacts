@@ -115,7 +115,7 @@ enyo.kind({
                 "streetAddress": "",
                 "type": "type_work"
             }],
-            "anniversary": "",
+            "anniversary": "2014-09-01",
             "birthday": "2014-07-12",
             "contactIds": ["J1EcwYUFwGV", "J1EcwYUFYEg"],
             "emails": [{
