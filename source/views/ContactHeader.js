@@ -14,6 +14,7 @@ enyo.kind({
         // transform is needed to work around a bug in Black Eye when using sizing "cover".
         // It should not be needed (and is not needed in Safari 7.1).
         { from: ".displayPhoto", to: ".$.photo.src", transform: function(path) {return "'" + path + "'";} },
+        { from: ".favorite", to: ".$.favourite.value", oneWay: false},
         { from: ".displayName", to: ".$.displayName.content"},
         { from: ".nickname", to: ".$.nickname.content", transform: function(path) {return path ? "“" + path + "”" : "";} },
         { from: ".job", to: ".$.job.content"},

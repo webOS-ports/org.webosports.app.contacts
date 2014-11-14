@@ -36,7 +36,7 @@ enyo.kind({
                                 }
                             ]
                         },
-                        { name: "details", kind: "ContactDetails", fit: true }
+                        { name: "details", kind: "ContactDetails", fit: true, onPersonChanged: "savePerson" }
                     ]
                 }
             ]
@@ -72,6 +72,10 @@ enyo.kind({
 
         this.$.details.setPerson(inEvent.person);
     },
+    savePerson: function (inSender, inEvent) {
+    	inEvent.person.commit();
+    },
+    
     goBack: function () {
         if (enyo.Panels.isScreenNarrow()) {
             this.$.main.setIndex(0);

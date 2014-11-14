@@ -28,7 +28,7 @@ enyo.kind({
         console.log("Storing ", rec);
 
         if (rec instanceof enyo.Model) {
-            for (i = 0; i < this.dataArray.length(); i += 1) {
+            for (i = 0; i < this.dataArray.length; i += 1) {
                 if (this.dataArray[i]._id === rec.attributes[rec.primaryKey]) {
                     this.dataArray[i] = rec.attributes;
                     opts.success({
@@ -641,7 +641,7 @@ enyo.kind({
             anniversary: "",
             birthday: "",
             contactIds: [],
-            favorite: false,
+            favorite: true,
             gender: "undisclosed",
             name: {familyName: "Schmidt", givenName: "John", honorificPrefix: "Herr Dr. Dr.", honorificSuffix: "jünger", middleName: "Jacob Jingleheimer"},
             names: [],
@@ -786,7 +786,7 @@ enyo.kind({
             anniversary: "",
             birthday: "",
             contactIds: [],
-            favorite: false,
+            favorite: true,
             gender: "undisclosed",
             name: {familyName: "Kringle", givenName: "Kris"},
             names: [],

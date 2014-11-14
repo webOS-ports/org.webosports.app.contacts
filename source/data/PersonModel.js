@@ -25,7 +25,6 @@ enyo.kind({
     },
 
     displayPhoto: function () {
-        console.log("displayPhoto | ", this.attributes.photos);
         if (! this.attributes.photos) return "";
         return this.attributes.photos.bigPhotoPath || this.attributes.photos.squarePhotoPath || "";
     },
