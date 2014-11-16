@@ -30,7 +30,6 @@ enyo.kind({
             kind: "enyo.Panels",
             arrangerKind: "enyo.LeftRightArranger",
             onTransitionFinish: "tabChange",
-            onTransitionStart: "tabChange",
             margin: 0,
             fit: true,
             components: [
@@ -58,7 +57,7 @@ enyo.kind({
                     kind: "FittableRows",
                     classes: "contacts-list",
                     components: [
-                        { name: "favContactsList", kind: "ContactsList", fit: true, ontap: "selectPerson" }
+                        { name: "favContactsList", kind: "ContactsList", fit: true, collection: new FavoritePersonCollection(), ontap: "selectPerson" }
                     ]
                 }
             ]
@@ -71,7 +70,13 @@ enyo.kind({
         }
     },
     tabChange: function (inSender, inEvent) {
-        this.$[inEvent.toIndex].setActive(true);
+    	if (inEvent.toIndex !== inEvent.fromIndex) {
+    		this.$[inEvent.toIndex].setActive(true);
+    	}
+    },
+    
+    refilterFavorites: function (inSender, inEvent) {
+    	this.$.favContactsList.collection.refilter();
     },
 
     selectPerson: function (inSender, inEvent) {

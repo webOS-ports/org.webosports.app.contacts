@@ -14,7 +14,7 @@ enyo.kind({
             fit: true,
             narrowFit: true, //collapses to one panel only if width < 800px
             components: [
-                { name: "bar", kind: "ContactsBar", onSelected: "showPerson" },
+                { name: "contactsBar", kind: "ContactsBar", onSelected: "showPerson" },
                 {
                     kind: "enyo.Panels",
                     fit: true,
@@ -54,11 +54,15 @@ enyo.kind({
         }
     ],
     create: function () {
+    	var self = this;
         this.inherited(arguments);
 
         this.log("==========> Telling global list to fetch contacts...");
-        GlobalPersonCollection.fetch({strategy: "merge"});
+        GlobalPersonCollection.fetch({strategy: "merge", orderBy: "sortKey", success: function (collection, opts, records) {
+        	self.$.contactsBar.refilterFavorites();
+        }});
     },
+    
     showPerson: function (inSender, inEvent) {
         if (inEvent.person) {
             this.$.detailsPanel.setIndex(1);
@@ -74,6 +78,7 @@ enyo.kind({
     },
     savePerson: function (inSender, inEvent) {
     	inEvent.person.commit();
+    	this.$.contactsBar.refilterFavorites();   // commit does not always trigger the fetch above
     },
     
     goBack: function () {

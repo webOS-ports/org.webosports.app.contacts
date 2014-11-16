@@ -113,7 +113,6 @@ enyo.kind({
             displayName = "[No Name Available]";
         }
 
-        console.log("displayName: ", displayName, " for ", this.attributes);
         return displayName.trim();
     },
 

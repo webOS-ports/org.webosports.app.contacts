@@ -3,14 +3,14 @@ enyo.kind({
     kind: "enyo.Source",
     dbService: "palm://com.palm.db",
 
-    _doRequest: function (method, options, success, failure, subscribe) {
+    _doRequest: function (method, parameters, success, failure, subscribe) {
         var request = new enyo.ServiceRequest({
             service: this.dbService,
             method: method,
             subscribe: !!subscribe,
             resubscribe: !!subscribe
         });
-        request.go(options);
+        request.go(parameters);
 
         request.response(this.generalSuccess.bind(this, success, failure));
         request.error(this.generalFailure.bind(this, failure));
@@ -41,24 +41,36 @@ enyo.kind({
     fetch: function(rec, opts) {
         var method,
             subscribe = false,
-            options;
+            parameters;
 console.log("==> Fetch called...");
 
 
         if (rec instanceof enyo.Model) {
-            options = {ids: [rec.attributes[rec.primaryKey]]};
+            parameters = {ids: [rec.attributes[rec.primaryKey]]};
             method = "get";
         } else {
             //if more than 500 contacts need to implement paging
             //if something changes, need to update collection. TODO: test this!
-            options = {query: {from: rec.dbKind}, count: true, watch: true};
+        	// http://www.openwebosproject.org/docs/developer_reference/data_types/db8#Query
+        	var query = {
+        		select: opts.select,
+        		from: rec.dbKind,
+        		where: opts.where,
+        		orderBy: opts.orderBy,
+        		desc: opts.desc,
+        		incDel: opts.incDel,
+        		limit: opts.limit,
+        		page: opts.page
+        	};
+            parameters = {query: query, count: true, watch: true};
+            console.log("db8Source fetch", rec, opts, parameters);
             subscribe = true;
             method = "find";
         }
 
-console.log("===> Fetching: ", options);
+console.log("===> Fetching: ", parameters);
 
-        this._doRequest(method, options, opts.success, opts.fail, subscribe);
+        this._doRequest(method, parameters, opts.success, opts.fail, subscribe);
     },
     commit: function(rec, opts) {
         var objects;
