@@ -109,7 +109,7 @@ enyo.kind({
     getLabelFromType: function (obj) {
         //this is kind of a hack...
         //assumes that type is of form "type_LABEL", i.e. "type_skype", "type_gtalk", "type_partner", ...
-        return obj.type.substr(5);
+        return typeof obj.type === "string" ? obj.type.substr(5) : "";
     },
 
     arrayValues: function (key, person) {

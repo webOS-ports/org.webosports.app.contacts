@@ -20,15 +20,26 @@ var AllPersonCollection = enyo.kind({
     model: "PersonModel",
     dbKind: "com.palm.person:1",
     published: {
-    	searchText: null
+    	searchText: ""
     },
     searchTextChanged: function () {
+    	var searchText = this.searchText.trim().toLowerCase();
+    	var searchLength = searchText.length;
     	this.log(arguments);
     	this.removeAll();
     	this.add(GlobalPersonCollection.filter(function(item) {
-    		console.log(item);
-    		return true;   // TODO: test against searchText
+    		var i, allSearchTerms, name;
+    		try {
+	    		allSearchTerms = item.get("allSearchTerms") || [""];
+	    		for (i=0; i<allSearchTerms.length; ++i) {
+	    			if (allSearchTerms[i].slice(0, searchLength) === searchText) { return true;}
+	    		}
+    		} catch (err) {
+    			console.error(err);
+    		}
+    		return false;
     	}));
+    	this.log(this.get("length"), "records match", '"' + searchText + '"');
     }
 });
 

@@ -54,12 +54,13 @@ enyo.kind({
         }
     ],
     create: function () {
-    	var self = this;
         this.inherited(arguments);
 
         this.log("==========> Telling global list to fetch contacts...");
+    	var contactsBar = this.$.contactsBar;
         GlobalPersonCollection.fetch({strategy: "merge", orderBy: "sortKey", success: function (collection, opts, records) {
-        	self.$.contactsBar.refilterFavorites();
+        	contactsBar.refilterAll();
+        	contactsBar.refilterFavorites();
         }});
     },
     
@@ -77,13 +78,24 @@ enyo.kind({
         this.$.details.setPerson(inEvent.person);
     },
     savePerson: function (inSender, inEvent) {
-    	inEvent.person.commit();
-    	this.$.contactsBar.refilterFavorites();   // commit does not always trigger the fetch above
+    	var contactsBar = this.$.contactsBar;
+    	inEvent.person.commit({success: function (rec, opts, res) {
+        	contactsBar.refilterAll();   // commit does not always trigger the fetch above
+        	contactsBar.refilterFavorites();   // commit does not always trigger the fetch above    		
+    	}});
     },
     
     goBack: function () {
-        if (enyo.Panels.isScreenNarrow()) {
+        if (enyo.Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
             this.$.main.setIndex(0);
+        } else {
+        	switch (this.$.main.get("index")) {
+        	case 0:
+    			this.$.contactsBar.goBack();
+    			break;
+//        	case 1:
+//        		this.log('details panel');
+        	}
         }
     }
 });

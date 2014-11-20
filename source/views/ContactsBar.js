@@ -43,11 +43,12 @@ enyo.kind({
                             kind: "onyx.InputDecorator",
                             classes: "contacts-search",
                             components: [
-                                { kind: "onyx.Input", placeholder: "Search" },
+                                // When our version of webkit supports type "search", we can get a "recent searches" dropdown for free
+                                { name: "searchInput", kind: "onyx.Input", placeholder: "Search" /*, type: "search", attributes: {results:6, autosave:"contactsSearch"}, style: "font-size: 16px;"*/ },
                                 { kind: "Image", src: "assets/search-input.png" }
                             ]
                         },
-                        { name: "allContactsList", kind: "ContactsList", fit: true, collection: GlobalPersonCollection, ontap: "selectPerson" }
+                        { name: "allContactsList", kind: "ContactsList", fit: true, collection: new AllPersonCollection(), ontap: "selectPerson" }
                     ]
                 },
                 //Scroller is going crazy without the FittableRows
@@ -63,6 +64,11 @@ enyo.kind({
             ]
         }
     ],
+
+    bindings: [
+        {from: ".$.searchInput.value", to: ".$.allContactsList.collection.searchText"}
+    ],
+
     paneChange: function (inSender, inEvent) {
         if (inEvent.originator.getActive()) {
             //Is this okay, without index being published?
@@ -75,6 +81,10 @@ enyo.kind({
     	}
     },
     
+    refilterAll: function (inSender, inEvent) {
+    	this.$.allContactsList.collection.searchTextChanged("", "", "searchText");
+    },
+    
     refilterFavorites: function (inSender, inEvent) {
     	this.$.favContactsList.collection.refilter();
     },
@@ -85,5 +95,13 @@ enyo.kind({
         }
 
         this.doSelected({person: inSender.selected()});
+    },
+    
+    goBack: function (inSender, inEvent) {
+    	if (this.$.panes.get('index') === 0) {
+    		this.$.searchInput.set('value', '');
+    	} else {
+    		this.$.favContactsList.scrollToIndex(0);
+    	}
     }
 });
