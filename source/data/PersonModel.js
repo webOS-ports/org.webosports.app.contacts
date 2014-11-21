@@ -6,10 +6,10 @@ enyo.kind({
     primaryKey: "_id",
     mixins: [enyo.ComputedSupport],
     computed: {
+        listPhoto: ["photos", {cached: true}],
         displayPhoto: ["photos", {cached: true}],
         displayName: ["name", "nickname", "organization", "emails", "ims", "phoneNumbers", {cached: true}],
-        displayOrg: ["organization"],
-        photoURI: [ "photos", {cached: true}]
+        displayOrg: ["organization"]
     },
     defaults: {
         name: {},
@@ -142,9 +142,14 @@ enyo.kind({
     	return data;    	
     },
 
+    listPhoto: function () {
+        if (! this.get("photos")) return "";
+        return this.get("photos").squarePhotoPath || this.get("photos").bigPhotoPath  || "";
+    },
+
     displayPhoto: function () {
-        if (! this.attributes.photos) return "";
-        return this.attributes.photos.bigPhotoPath || this.attributes.photos.squarePhotoPath || "";
+        if (! this.get("photos")) return "";
+        return this.get("photos").bigPhotoPath || this.get("photos").squarePhotoPath || "";
     },
 
     /*
@@ -159,11 +164,11 @@ enyo.kind({
      */
     displayName: function () {
         var displayName = "",
-            name = this.name || this.attributes.name || {},
-            org = this.organization || this.attributes.organization || {},
-            emails = this.emails || this.attributes.emails || {},
-            ims = this.ims || this.attributes.ims || {},
-            phoneNumbers = this.phoneNumbers || this.attributes.phoneNumbers || {},
+            name = this.get("name") || {},
+            org = this.get("organization") || {},
+            emails = this.get("emails") || {},
+            ims = this.get("ims") || {},
+            phoneNumbers = this.get("phoneNumbers") || {},
             i;
 
         //TODO: get display properties from options..
@@ -189,7 +194,7 @@ enyo.kind({
         displayName = displayName.trim();
 
         if (!displayName) {
-            displayName = this.nickname || this.attributes.nickname;
+            displayName = this.get("nickname");
         }
 
         if (!displayName) {
@@ -236,7 +241,7 @@ enyo.kind({
 
     displayOrg: function () {
         var result = "",
-            org = this.organization || this.attributes.organization || {};
+            org = this.get("organization") || {};
 
         if (org.title) {
         	result += org.title;
@@ -255,11 +260,6 @@ enyo.kind({
         }
 
         return result;
-    },
-
-    photoURI: function () {
-        var photos = this.photos || this.attributes.photos || {};
-//        console.log("Returning ", "file://" + photos.squarePhotoPath);
-        return photos.squarePhotoPath ? "file://" + photos.squarePhotoPath : "";
     }
+
 });

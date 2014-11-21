@@ -8,7 +8,9 @@ enyo.kind({
     },
     bindings: [
         {from: ".model.displayName", to: ".$.name.content"},
-        {from: ".model.photoURI", to: ".$.photo.src"},
+        // Quotes are needed to work around a bug in Black Eye when using sizing "cover".
+        // The should not be needed (and are not needed in Safari 7.1).
+        {from: ".model.listPhoto", to: ".$.photo.src", transform: function(path) {return "'" + (path || "assets/bg_icon_img.png") + "'" ;}},
         {from: ".model.favorite", to: ".$.favIcon.showing"}
     ],
     components: [
@@ -18,7 +20,7 @@ enyo.kind({
                 name: "photo",
                 classes: "img",
                 kind: "enyo.Image",
-                sizing: "constrain"
+                sizing: "cover"
             },
             { classes: "mask"}
         ] },
