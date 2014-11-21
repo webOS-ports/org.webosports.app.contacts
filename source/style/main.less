@@ -62,16 +62,14 @@ ContactsUI CSS
     font-size:16px;
 }
 .contacts-list .contacts-item {
-    padding:0 14px;
+    display: table;
+    table-layout: fixed;
+    width: 100%;
     min-height: 68px;
     border-width:1px 0;
     border-style:solid none solid none;
     border-top-color:rgba(255,255,255,0.5);
     border-bottom-color:rgba(0,0,0,0.1);
-    position: relative;
-}
-.contacts-list .contacts-item div {
-    vertical-align:middle;
 }
 .contacts-list .contacts-item.first {
     border-top:0;
@@ -83,27 +81,28 @@ ContactsUI CSS
     background-color:#d1e5f5;
     border-color:#B3d9f2
 }
-.contacts-list .contacts-item .content {
-    height:100%;
+.contacts-list .contacts-item > div {
+    display: table-cell;
+    vertical-align:middle;
 }
 .contacts-list .contacts-item .icon {
-    height:50px;
-    margin:10px 15px 10px 0;
-    width:50px;
-    position: absolute;
+    width: 78px;   /* 50+2*14 */
 }
-.contacts-list .contacts-item .icon .mask {
-    position:absolute;
-    top:0;
-    left:0;
-    height:100%;
-    width:100%;
+.contacts-list .contacts-item .icon .list-mask {
+    position: absolute;
+    top: 9px;
+    left: 14px;
+    height: 50px;
+    width: 50px;
     background:url(../../assets/bg_icon_mask.png) no-repeat 0 0;
 }
-.contacts-list .contacts-item .icon .img {
+.contacts-list .contacts-item .icon .list-img {
+    position: absolute;
+    top: 9px;
+    left: 14px;
+    width: 50px;
+    height: 50px;
     border-radius: 3px;
-    height:100%;
-    width:100%;
     background-position:50% 50%;
     background-repeat: no-repeat;
     background-color:#f1f1f1;
@@ -111,21 +110,20 @@ ContactsUI CSS
     background-size: cover;
 }
 .contacts-list .contacts-item .name {
+    padding-right: 15px;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    max-width: 160px;
     text-align: left;
-    position: absolute;
-    top: 25px;
-    left: 80px;
+}
+.contacts-list .contacts-item .favorite-cell {
+    width: 25px;
+    padding-right: 15px;
 }
 .contacts-list .contacts-item .favorite {
-    margin:20px 0 0 8px;
     background:url(../../assets/bg_list_favorite.png) no-repeat right bottom;
     height:25px;
     width:25px;
-    float: right;
 }
 
 
