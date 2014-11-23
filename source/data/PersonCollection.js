@@ -25,7 +25,6 @@ var AllPersonCollection = enyo.kind({
     searchTextChanged: function () {
     	var searchText = this.searchText.trim().toLowerCase();
     	var searchLength = searchText.length;
-    	this.log(arguments);
     	this.removeAll();
     	this.add(GlobalPersonCollection.filter(function(item) {
     		var i, allSearchTerms, name;

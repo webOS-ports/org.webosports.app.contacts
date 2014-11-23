@@ -81,11 +81,10 @@ enyo.kind({
     	}
     },
     
-    refilterAll: function (inSender, inEvent) {
-    	this.$.allContactsList.collection.searchTextChanged("", "", "searchText");
-    },
-    
-    refilterFavorites: function (inSender, inEvent) {
+    refilter: function (inSender, inEvent) {
+    	var searchText = this.$.allContactsList.collection.get("searchText");
+    	// Forces refiltering without changing searchText.
+    	this.$.allContactsList.collection.searchTextChanged(searchText, searchText, "searchText");
     	this.$.favContactsList.collection.refilter();
     },
 

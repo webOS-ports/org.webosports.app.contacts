@@ -59,8 +59,7 @@ enyo.kind({
         this.log("==========> Telling global list to fetch contacts...");
     	var contactsBar = this.$.contactsBar;
         GlobalPersonCollection.fetch({strategy: "merge", orderBy: "sortKey", success: function (collection, opts, records) {
-        	contactsBar.refilterAll();
-        	contactsBar.refilterFavorites();
+        	contactsBar.refilter();
         }});
     },
     
@@ -80,8 +79,7 @@ enyo.kind({
     savePerson: function (inSender, inEvent) {
     	var contactsBar = this.$.contactsBar;
     	inEvent.person.commit({success: function (rec, opts, res) {
-        	contactsBar.refilterAll();   // commit does not always trigger the fetch above
-        	contactsBar.refilterFavorites();   // commit does not always trigger the fetch above    		
+        	contactsBar.refilter();   // commit does not always trigger the fetch above    		
     	}});
     },
     
