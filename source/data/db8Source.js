@@ -44,7 +44,7 @@ enyo.kind({
             parameters;
 
         if (rec instanceof enyo.Model) {
-            parameters = {ids: [rec.attributes[rec.primaryKey]]};
+            parameters = {ids: [rec.get(rec.primaryKey)]};
             method = "get";
             this._doRequest(method, parameters, opts.success, opts.fail, subscribe);
         } else {
@@ -130,10 +130,10 @@ enyo.kind({
         if (rec instanceof enyo.Collection) {
             ids = [];
             rec.records.forEach(function (m) {
-                ids.push(m.attributes[m.primaryKey]);
+                ids.push(m.get(m.primaryKey));
             });
         } else {
-            ids = [rec.attributes[rec.primaryKey]];
+            ids = [rec.get(rec.primaryKey)];
         }
 
         this._doRequest("del", {ids: ids}, opts.success, opts.fail);

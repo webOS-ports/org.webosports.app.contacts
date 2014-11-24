@@ -9,7 +9,7 @@ enyo.kind({
 
         if (rec instanceof enyo.Model) {
             for (i = 0; i < this.dataArray.length(); i += 1) {
-                if (this.dataArray[i]._id === rec.attributes[rec.primaryKey]) {
+                if (this.dataArray[i]._id === rec.get(rec.primaryKey)) {
                     opts.success([this.dataArray[i]]);
                     return;
                 }
@@ -29,7 +29,7 @@ enyo.kind({
 
         if (rec instanceof enyo.Model) {
             for (i = 0; i < this.dataArray.length; i += 1) {
-                if (this.dataArray[i]._id === rec.attributes[rec.primaryKey]) {
+                if (this.dataArray[i]._id === rec.get(rec.primaryKey)) {
                     this.dataArray[i] = rec.raw();
                     opts.success(this.dataArray[i]);   // commit is expected to return the new value
                     return;
@@ -51,13 +51,13 @@ enyo.kind({
             rec.records.forEach(function (m) {
                 var i;
                 for (i = this.dataArray.length - 1; i >= 0; i -= 1) {
-                    if (this.dataArray[i]._id === m.attributes[m.primaryKey]) {
+                    if (this.dataArray[i]._id === m.get(m.primaryKey)) {
                         this.dataArray.splice(i, 1);
                     }
                 }
             });
         } else {
-            ids = [rec.attributes[rec.primaryKey]];
+            ids = [rec.get(rec.primaryKey)];
         }
     },
     find: function (rec, opts) {
@@ -638,7 +638,7 @@ enyo.kind({
             anniversary: "",
             birthday: "",
             contactIds: [],
-            emails: [{normalizedValue: "schmidt.1234@osu.edu"}],
+            emails: [{normalizedValue: "schmidt.1234@osu.edu", type: "type_home", value: "schmidt.1234@osu.edu"}],
             favorite: true,
             gender: "male",
             name: {familyName: "Schmidt", givenName: "John", honorificPrefix: "Herr Dr. Dr.", honorificSuffix: "jünger", middleName: "Jacob Jingleheimer"},
@@ -727,7 +727,7 @@ enyo.kind({
             anniversary: "",
             birthday: "",
             contactIds: [],
-            emails: [{normalizedValue: "m_a_notes@example.com"}],
+            emails: [{normalizedValue: "m_a_notes@example.com", value: "m_a_notes@example.com"}],
             favorite: false,
             gender: "undisclosed",
             ims: [{_id: "lfkjdlfofcxxc", type: "type_yahoo", label: "label_home", favoriteData: {}, normalizedValue: "huggybear", value: "HuggyBear", primary: true }],
@@ -845,9 +845,9 @@ enyo.kind({
             birthday: "",
             contactIds: ["ldfjadlkfjdkls", "lkfjdlfjkads", "flkjafljds"],
             emails: [
-                {normalizedValue: "   santa  @  northpole.org"},
-                {normalizedValue: "   dearsanta  @  northpole.org"},
-                {normalizedValue: "  wish-fairy   "}
+                {normalizedValue: "   santa  @  northpole.org", type: "type_work", value: "   santa  @  northpole.org"},
+                {normalizedValue: "   dearsanta  @  northpole.org", type: "type_work", value: "   dearsanta  @  northpole.org"},
+                {normalizedValue: "  wish-fairy   ", type: "type_home", value: "  wish-fairy   "}
             ],
             favorite: true,
             gender: "male",

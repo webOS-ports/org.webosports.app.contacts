@@ -143,7 +143,7 @@ enyo.kind({
         }
     },
     simpleValue: function (key, obj) {
-        if (this.person.attributes[key]) {
+        if (this.person.get(key)) {
             this.$.detailsCollection.add({
                 label: key,
                 value: obj[key]
@@ -179,7 +179,7 @@ enyo.kind({
             this.$.detailsCollection.destroyAllLocal();
 
             for (i = 0; i < keysOrdered.length; i += 1) {
-                if (newPerson.attributes[keysOrdered[i]]) {
+                if (newPerson.get(keysOrdered[i])) {
                     processingMethods[keysOrdered[i]].call(this, keysOrdered[i], newPerson.attributes);
                 }
             }
