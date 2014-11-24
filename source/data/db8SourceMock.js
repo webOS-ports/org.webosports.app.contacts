@@ -212,7 +212,6 @@ enyo.kind({
             "_id": "J1EcwpjkP_k",
             "_kind": "com.palm.person:1",
             "_rev": 347,
-            "accountId": "fakeAccountId",
             "addresses": [],
             "anniversary": "",
             "birthday": "",
@@ -297,7 +296,6 @@ enyo.kind({
             "_id": "J1Ecws+LFLJ",
             "_kind": "com.palm.person:1",
             "_rev": 352,
-            "accountId": "fakeAccountId",
             "addresses": [],
             "anniversary": "",
             "birthday": "",
@@ -373,7 +371,6 @@ enyo.kind({
             "_id": "J1EcwtI22Yc",
             "_kind": "com.palm.person:1",
             "_rev": 354,
-            "accountId": "fakeAccountId",
             "addresses": [],
             "anniversary": "",
             "birthday": "",
@@ -450,7 +447,6 @@ enyo.kind({
             "_id": "J1EcwuraPig",
             "_kind": "com.palm.person:1",
             "_rev": 356,
-            "accountId": "fakeAccountId",
             "addresses": [],
             "anniversary": "",
             "birthday": "",
@@ -526,7 +522,6 @@ enyo.kind({
             "_id": "J1EcwwUH33V",
             "_kind": "com.palm.person:1",
             "_rev": 358,
-            "accountId": "fakeAccountId",
             "addresses": [],
             "anniversary": "",
             "birthday": "",
@@ -688,7 +683,7 @@ enyo.kind({
             sortKey: "smythe-jones cecil",
             urls: []
         },
-        // prefix & given; should not be searchable by prefix
+        // prefix & given name; should not be searchable by prefix
         {
             _id: "demdmeppep",
             _kind: "com.palm.person:1",
@@ -778,7 +773,7 @@ enyo.kind({
             sortKey: "lefty",
             urls: []
         },
-        // Chinese name, w/ normalized name
+        // Chinese name, w/ latin name from a second contact
         {
             _id: "fkjeiddoenvmvoe",
             _kind: "com.palm.person:1",
