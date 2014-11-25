@@ -33,17 +33,18 @@ ContactsUI CSS
 .contacts-list .contacts-search .onyx-input {
     /* margin:0 0 -3px; /* blend shadow from bg_search.png */
     /* border-image:url(../../assets/bg_search.png) 0 15 repeat;
-    border-width:0 15px;
-    height:44px;*/
+    border-width:0 15px;*/
+    height:32px;
     float:left;
     width:91%;
 }
 .contacts-list .contacts-search img {
     /* margin:0 0 -3px; /* blend shadow from bg_search.png */
     /* border-image:url(../../assets/bg_search.png) 0 15 repeat;
-    border-width:0 15px;
-    height:44px;*/
-    float:right;
+    border-width:0 15px;*/
+    position: absolute;
+    right: 7px;
+    top: 12px;
 }
 .contacts-list .contacts-search.input .input-input {
     margin:0 7px;
@@ -61,16 +62,14 @@ ContactsUI CSS
     font-size:16px;
 }
 .contacts-list .contacts-item {
-    padding:0 14px;
+    display: table;
+    table-layout: fixed;
+    width: 100%;
     min-height: 68px;
     border-width:1px 0;
     border-style:solid none solid none;
     border-top-color:rgba(255,255,255,0.5);
     border-bottom-color:rgba(0,0,0,0.1);
-    position: relative;
-}
-.contacts-list .contacts-item div {
-    vertical-align:middle;
 }
 .contacts-list .contacts-item.first {
     border-top:0;
@@ -82,27 +81,28 @@ ContactsUI CSS
     background-color:#d1e5f5;
     border-color:#B3d9f2
 }
-.contacts-list .contacts-item .content {
-    height:100%;
+.contacts-list .contacts-item > div {
+    display: table-cell;
+    vertical-align:middle;
 }
 .contacts-list .contacts-item .icon {
-    height:50px;
-    margin:10px 15px 10px 0;
-    width:50px;
-    position: absolute;
+    width: 78px;   /* 50+2*14 */
 }
-.contacts-list .contacts-item .icon .mask {
-    position:absolute;
-    top:0;
-    left:0;
-    height:100%;
-    width:100%;
+.contacts-list .contacts-item .icon .list-mask {
+    position: absolute;
+    top: 9px;
+    left: 14px;
+    height: 50px;
+    width: 50px;
     background:url(../../assets/bg_icon_mask.png) no-repeat 0 0;
 }
-.contacts-list .contacts-item .icon .img {
+.contacts-list .contacts-item .icon .list-img {
+    position: absolute;
+    top: 9px;
+    left: 14px;
+    width: 50px;
+    height: 50px;
     border-radius: 3px;
-    height:100%;
-    width:100%;
     background-position:50% 50%;
     background-repeat: no-repeat;
     background-color:#f1f1f1;
@@ -110,21 +110,20 @@ ContactsUI CSS
     background-size: cover;
 }
 .contacts-list .contacts-item .name {
+    padding-right: 15px;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    max-width: 160px;
     text-align: left;
-    position: absolute;
-    top: 25px;
-    left: 80px;
+}
+.contacts-list .contacts-item .favorite-cell {
+    width: 25px;
+    padding-right: 15px;
 }
 .contacts-list .contacts-item .favorite {
-    margin:20px 0 0 8px;
     background:url(../../assets/bg_list_favorite.png) no-repeat right bottom;
     height:25px;
     width:25px;
-    float: right;
 }
 
 
@@ -554,24 +553,29 @@ border-top-color:rgba(255,255,255,0.5);
 
 .details .nameinfo {
     width: 100%;
+    overflow: hidden;
 }
 
-.details .nameinfo div {
+.details .buttonBar {
+    height: 42px;
+}
+
+.details .nameinfo .name, .details .nameinfo .nickname, .details .nameinfo .position {
     overflow: hidden;
     text-overflow: ellipsis;
-    position: relative;
-    top: 50px;
-    padding-top: 5px;
+    margin-top: 10px;
 }
 
 .details .name {
     font-size: 34px;
     color: #222;
-    padding: 0 0 0.3em;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
     font-family: PreludeWGL-Light, "Prelude Light", Prelude, "Prelude Medium", "Segoe UI", Arial, Helvetica, sans-serif;
+    /* ugly webkit-only clamp to three lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical; 
 }
 
 .portrait .details .nameinfo .name {
@@ -582,6 +586,7 @@ border-top-color:rgba(255,255,255,0.5);
 .details .nickname {
     color: #555;
     font-size: 0.9em;
+    white-space: nowrap;
 }
 
 .portrait .details .nameinfo .nickname {
@@ -594,6 +599,10 @@ border-top-color:rgba(255,255,255,0.5);
 .details .position {
     color: #888;
     font-size: 0.9em;
+    /* ugly webkit-only clamp to two lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; 
 }
 
 .portrait .details .nameinfo .position {
@@ -604,29 +613,29 @@ border-top-color:rgba(255,255,255,0.5);
 }
 
 .details .favorite {
+    float: right;
     width: 34px;
     height: 34px;
-    margin: 10px 0 0 10px;
-    /*background: url(../../assets/bg_details_favorite.png) no-repeat 0 0;*/
+    margin: 8px 8px 0 8px;
 }
 
-.details .favorite.true {
-    background-position: 0 -33px;
+.onyx-icon-toggle.active.favorite {
+    background-position: bottom;
 }
 
 .details .profiles-button {
-    padding: 3px 30px 3px 10px;
-    background: url(../../assets/btn_linked_profiles.png) no-repeat 95% 3px;
-    margin: 3px 0 0 0;
+    position: absolute;
+    right: 0;
+    bottom: 0;
 }
 
-.details .profiles-button.button-depressed {
-    background-position: 95% -17px;
-    background-color: rgba(255, 255, 255, 0.8);
+.details .profilesIndicator.active {
+    background-position: bottom;
 }
+
 
 .details .profiles {
-    background: #f4f4f4;
+/*    background: #C7DAE9; */
 }
 
 .details .profiles .item {

@@ -9,7 +9,7 @@ enyo.kind({
 
         if (rec instanceof enyo.Model) {
             for (i = 0; i < this.dataArray.length(); i += 1) {
-                if (this.dataArray[i]._id === rec.attributes[rec.primaryKey]) {
+                if (this.dataArray[i]._id === rec.get(rec.primaryKey)) {
                     opts.success([this.dataArray[i]]);
                     return;
                 }
@@ -28,20 +28,16 @@ enyo.kind({
         console.log("Storing ", rec);
 
         if (rec instanceof enyo.Model) {
-            for (i = 0; i < this.dataArray.length(); i += 1) {
-                if (this.dataArray[i]._id === rec.attributes[rec.primaryKey]) {
-                    this.dataArray[i] = rec.attributes;
-                    opts.success({
-                        returnValue: true
-                    });
+            for (i = 0; i < this.dataArray.length; i += 1) {
+                if (this.dataArray[i]._id === rec.get(rec.primaryKey)) {
+                    this.dataArray[i] = rec.raw();
+                    opts.success(this.dataArray[i]);   // commit is expected to return the new value
                     return;
                 }
             }
 
             this.dataArray.push(rec.attributes);
-            opts.success({
-                returnValue: true
-            });
+            opts.success(this.dataArray[this.dataArray.length - 1]);   // commit is expected to return the new value
         } else {
             console.log("Can't store collection... still makes me headaches.");
             opts.fail();
@@ -55,13 +51,13 @@ enyo.kind({
             rec.records.forEach(function (m) {
                 var i;
                 for (i = this.dataArray.length - 1; i >= 0; i -= 1) {
-                    if (this.dataArray[i]._id === m.attributes[m.primaryKey]) {
+                    if (this.dataArray[i]._id === m.get(m.primaryKey)) {
                         this.dataArray.splice(i, 1);
                     }
                 }
             });
         } else {
-            ids = [rec.attributes[rec.primaryKey]];
+            ids = [rec.get(rec.primaryKey)];
         }
     },
     find: function (rec, opts) {
@@ -81,7 +77,7 @@ enyo.kind({
     },
 
 
-
+    // sortKeys used here are familyName givenName (but not organization)
     dataArray: [
         {
             "_id": "J1EcwkckJBw",
@@ -115,7 +111,7 @@ enyo.kind({
                 "streetAddress": "",
                 "type": "type_work"
             }],
-            "anniversary": "",
+            "anniversary": "2014-09-01",
             "birthday": "2014-07-12",
             "contactIds": ["J1EcwYUFwGV", "J1EcwYUFYEg"],
             "emails": [{
@@ -167,7 +163,7 @@ enyo.kind({
                     "streetAddress": "",
                     "type": "type_work"
                 },
-                "name": "",
+                "name": "Kentucky Fried Chicken/KFC",
                 "startDate": "",
                 "title": "",
                 "type": ""
@@ -240,7 +236,7 @@ enyo.kind({
                 "honorificSuffix": "",
                 "middleName": "Gaaaanz"
             }],
-            "nickname": "Nick.",
+            "nickname": "Way too long a nickname for any normal person, this entry exists to test the details layout",
             "notes": [],
             "organization": {
                 "department": "",
@@ -255,7 +251,7 @@ enyo.kind({
                     "streetAddress": "",
                     "type": "type_work"
                 },
-                "name": "",
+                "name": "National Public Radio / NPR",
                 "startDate": "",
                 "title": "",
                 "type": ""
@@ -598,6 +594,277 @@ enyo.kind({
             "searchTerms": ["nnjam", "njamnjam"],
             "sortKey": "njam\tnjam",
             "urls": []
+        },
+        // record with minimal required fields
+        // It's not a problem if such a record is not displayed.
+        {
+            _id: "kljfldfjkkei",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+            addressses: [],
+            anniversary: "",
+            birthday: "",
+            contactIds: [],
+            favorite: false,
+            gender: "undisclosed",
+            name: {},
+            names: [],
+            notes: [],
+            photos: {
+                accountId: "",
+                   contactId: "",
+                listPhotoSource: "type_square",
+                listPhotoPath: "",
+                bigPhotoId: "",
+                squarePhotoId: ""
+            },
+            reminder: "",
+            ringtone: [],
+            searchTerms: [],
+            sortKey: "",
+            urls: []
+        },
+        // long name; should be searchable by any word in given, middle or family name
+        {
+            _id: "icddeioxwo",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+            addressses: [],
+            anniversary: "",
+            birthday: "",
+            contactIds: [],
+            emails: [{normalizedValue: "schmidt.1234@osu.edu", type: "type_home", value: "schmidt.1234@osu.edu"}],
+            favorite: true,
+            gender: "male",
+            name: {familyName: "Schmidt", givenName: "John", honorificPrefix: "Herr Dr. Dr.", honorificSuffix: "jünger", middleName: "Jacob Jingleheimer"},
+            names: [{familyName: "Schmidt", givenName: "John", honorificPrefix: "Herr Dr. Dr.", honorificSuffix: "jünger", middleName: "Jacob Jingleheimer"}],
+            nickname: "Bärchen",
+            notes: [],
+            organization: {title: "Meisterbürger", department: "Büro Fahren", name: "Tauberbischofsheeim"},
+            photos: {
+                accountId: "",
+                   contactId: "",
+                listPhotoSource: "type_square",
+                listPhotoPath: "",
+                bigPhotoId: "",
+                squarePhotoId: ""
+            },
+            reminder: "",
+            ringtone: [],
+            searchTerms: ["schmidtjohn", "jschmidt"],
+            sortKey: "",
+            urls: []
+        },
+        // hyphenated family name; should be searchable by either part
+        {
+            _id: "iiiofdofdofdf",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+            addressses: [],
+            anniversary: "",
+            birthday: "",
+            contactIds: [],
+            favorite: false,
+            gender: "undisclosed",
+            name: {familyName: "Smythe-Jones", givenName: "Cecil"},
+            names: [{familyName: "Smythe-Jones", givenName: "Cecil"}],
+            notes: [],
+            photos: {
+                accountId: "",
+                   contactId: "",
+                listPhotoSource: "type_square",
+                listPhotoPath: "",
+                bigPhotoId: "",
+                squarePhotoId: ""
+            },
+            reminder: "",
+            ringtone: [],
+            searchTerms: ["csmythe-jones", "smythe-jonescecil"],
+            sortKey: "smythe-jones cecil",
+            urls: []
+        },
+        // prefix & given name; should not be searchable by prefix
+        {
+            _id: "demdmeppep",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+            addressses: [],
+            anniversary: "",
+            birthday: "",
+            contactIds: [],
+            favorite: false,
+            gender: "undisclosed",
+            name: {givenName: "Hrolf", honorificPrefix: "King"},
+            names: [{givenName: "Hrolf", honorificPrefix: "King"}],
+            notes: [],
+            nickname: "Kraki",
+            organization: {name: "Kingdom of Denmark", title: "King"},
+            photos: {
+                accountId: "",
+                   contactId: "",
+                listPhotoSource: "type_square",
+                listPhotoPath: "",
+                bigPhotoId: "",
+                squarePhotoId: ""
+            },
+            reminder: "",
+            ringtone: [],
+            searchTerms: [],
+            sortKey: "hrolf",
+            urls: []
+        },
+        // many notes, also should be searchable by either word in given name
+        {
+            _id: "ruiriuqwoqoei",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+            addressses: [],
+            anniversary: "",
+            birthday: "",
+            contactIds: [],
+            emails: [{normalizedValue: "m_a_notes@example.com", value: "m_a_notes@example.com"}],
+            favorite: false,
+            gender: "undisclosed",
+            ims: [{_id: "lfkjdlfofcxxc", type: "type_yahoo", label: "label_home", favoriteData: {}, normalizedValue: "huggybear", value: "HuggyBear", primary: true }],
+            name: {familyName: "Notes", givenName: "Mary Ann"},
+            names: [{familyName: "Notes", givenName: "Mary Ann"}],
+            notes: ["fie", "fi", "fo", "fum", "I smell the blood", "of an Englishman"],
+            photos: {
+                accountId: "",
+                   contactId: "",
+                listPhotoSource: "type_square",
+                listPhotoPath: "",
+                bigPhotoId: "",
+                squarePhotoId: ""
+            },
+            reminder: "",
+            ringtone: [],
+            searchTerms: ["notesmary ann", "mnotes"],
+            sortKey: "notes mary ann",
+            urls: []
+        },
+        // nickname but no formal name - should be displayed and searchable by nickname (or IM)
+        {
+            _id: "mememenrbrbtby",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+            addressses: [],
+            anniversary: "",
+            birthday: "",
+            contactIds: [],
+            favorite: false,
+            gender: "undisclosed",
+            ims: [{_id: "zczczffzvs", type: "type_skype", label: "", favoriteData: {}, value: "Cowboy_Bob", primary: false }],
+            name: {},
+            names: [],
+            nickname: "Lefty",
+            notes: [],
+            photos: {
+                accountId: "",
+                   contactId: "",
+                listPhotoSource: "type_square",
+                listPhotoPath: "",
+                bigPhotoId: "",
+                squarePhotoId: ""
+            },
+            reminder: "",
+            ringtone: [],
+            searchTerms: [],
+            sortKey: "lefty",
+            urls: []
+        },
+        // Chinese name, w/ latin name from a second contact
+        {
+            _id: "fkjeiddoenvmvoe",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+            addressses: [],
+            anniversary: "",
+            birthday: "",
+            contactIds: ["lfjdalsfjdlfjd", "cchccicicicoxoxokd"],
+            favorite: false,
+            gender: "undisclosed",
+            name: {familyName: "孙", givenName: "七"},
+            names: [{familyName: "孙", givenName: "七"}, {familyName: "Sun", givenName: "Seven"}],
+            notes: ["“Sun Seven”"],
+            photos: {
+                accountId: "",
+                   contactId: "",
+                listPhotoSource: "type_square",
+                listPhotoPath: "",
+                bigPhotoId: "",
+                squarePhotoId: ""
+            },
+            reminder: "",
+            ringtone: [],
+            searchTerms: ["孙七", "七孙"],
+            sortKey: "孙 七",
+            urls: []
+        },
+        // compound surnames should be searchable by any word
+        {
+            _id: "ncncjddifovkckdic",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+            addressses: [],
+            anniversary: "",
+            birthday: "",
+            contactIds: [],
+            favorite: false,
+            gender: "female",
+            name: {familyName: "Lopez Perez de Ramirez", givenName: "Maria"},
+            names: [{familyName: "Lopez Perez de Ramirez", givenName: "Maria"}],
+            notes: [],
+            organization: {name: "A Better Mortgage Co."},
+            photos: {
+                accountId: "",
+                   contactId: "",
+                listPhotoSource: "type_square",
+                listPhotoPath: "",
+                bigPhotoId: "",
+                squarePhotoId: ""
+            },
+            reminder: "",
+            ringtone: [],
+            searchTerms: ["lopez perez de ramirezmaria", "mlopez perez de ramirez"],
+            sortKey: "lopez perez de ramirez maria",
+            urls: []
+        },
+        // a favorite, with multiple names. Should be searchable by any name
+        {
+            _id: "lkfjfdfooe",
+            _kind: "com.palm.person:1",
+            _rev: 1,
+            addressses: [],
+            anniversary: "",
+            birthday: "",
+            contactIds: ["ldfjadlkfjdkls", "lkfjdlfjkads", "flkjafljds"],
+            emails: [
+                {normalizedValue: "   santa  @  northpole.org", type: "type_work", value: "   santa  @  northpole.org"},
+                {normalizedValue: "   dearsanta  @  northpole.org", type: "type_work", value: "   dearsanta  @  northpole.org"},
+                {normalizedValue: "  wish-fairy   ", type: "type_home", value: "  wish-fairy   "}
+            ],
+            favorite: true,
+            gender: "male",
+            name: {familyName: "Kringle", givenName: "Kris"},
+            names: [{familyName: "Kringle", givenName: "Kris"}, {familyName: "Claus", givenName: "Santa"}, {givenName: "Nicholas", honorificPrefix: "St."}],
+            notes: [],
+            organization: {title: "Sleigh Driver, Reindeer Wrangler & Elf Taskmaster", department: "Distribution", name: "The Christmas Conspiracy"},
+            photos: {
+                accountId: "lkfdjlfjdsfljds+6",
+                bigPhotoId: "129",
+                bigPhotoPath: "assets/kris_kringle.jpg",
+                contactId: "ldjfldjfdfoo",
+                listPhotoPath: "",
+                listPhotoSource: "",
+                squarePhotoId: "",
+                squarePhotoPath: ""
+            },
+            reminder: "",
+            ringtone: [],
+            searchTerms: ["kringlekris", "kkringle"],
+            sortKey: "kringle kris",
+            urls: []
         }
     ]
 });

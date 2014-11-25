@@ -14,7 +14,7 @@ enyo.kind({
             fit: true,
             narrowFit: true, //collapses to one panel only if width < 800px
             components: [
-                { name: "bar", kind: "ContactsBar", onSelected: "showPerson" },
+                { name: "contactsBar", kind: "ContactsBar", onSelected: "showPerson" },
                 {
                     kind: "enyo.Panels",
                     fit: true,
@@ -36,7 +36,7 @@ enyo.kind({
                                 }
                             ]
                         },
-                        { name: "details", kind: "ContactDetails", fit: true }
+                        { name: "details", kind: "ContactDetails", fit: true, onPersonChanged: "savePerson" }
                     ]
                 }
             ]
@@ -57,8 +57,12 @@ enyo.kind({
         this.inherited(arguments);
 
         this.log("==========> Telling global list to fetch contacts...");
-        GlobalPersonCollection.fetch({strategy: "merge"});
+    	var contactsBar = this.$.contactsBar;
+        GlobalPersonCollection.fetch({strategy: "merge", orderBy: "sortKey", success: function (collection, opts, records) {
+        	contactsBar.refilter();
+        }});
     },
+    
     showPerson: function (inSender, inEvent) {
         if (inEvent.person) {
             this.$.detailsPanel.setIndex(1);
@@ -72,9 +76,24 @@ enyo.kind({
 
         this.$.details.setPerson(inEvent.person);
     },
+    savePerson: function (inSender, inEvent) {
+    	var contactsBar = this.$.contactsBar;
+    	inEvent.person.commit({success: function (rec, opts, res) {
+        	contactsBar.refilter();   // commit does not always trigger the fetch above    		
+    	}});
+    },
+    
     goBack: function () {
-        if (enyo.Panels.isScreenNarrow()) {
+        if (enyo.Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
             this.$.main.setIndex(0);
+        } else {
+        	switch (this.$.main.get("index")) {
+        	case 0:
+    			this.$.contactsBar.goBack();
+    			break;
+//        	case 1:
+//        		this.log('details panel');
+        	}
         }
     }
 });

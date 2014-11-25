@@ -4,7 +4,7 @@ enyo.depends(
     "ContactDetails.js",
 
     //contact lists:
-    "ContactListItem.js",
+    "ContactItem.js",
     "ContactsList.js",
 
     //UI controls:

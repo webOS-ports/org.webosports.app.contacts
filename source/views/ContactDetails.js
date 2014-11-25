@@ -26,7 +26,10 @@ enyo.kind({
     touch: true,
     classes: "details",
     published: {
-        person: ""
+        person: null
+    },
+    events: {
+    	onPersonChanged: ""
     },
     components: [
         {
@@ -44,7 +47,7 @@ enyo.kind({
                     classes: "content",
                     kind: "enyo.FittableRows",
                     components: [
-                        { name: "header", kind: "ContactHeader" },
+                        { name: "header", kind: "ContactHeader"},
                         //{ kind: "enyo.Scroller", fit: true, components: [
                             {
                                 name: "details",
@@ -63,10 +66,22 @@ enyo.kind({
     ],
     bindings: [
         //details stuff:
+        {from: ".person.displayPhoto", to: ".$.header.displayPhoto"},
         {from: ".person.nickname", to: ".$.header.nickname" },
-        {from: ".person.favorite", to: ".$.header.favorite" },
-        {from: ".person.displayName", to: ".$.header.name"},
-        {from: ".person.organizationString", to: ".$.header.job"}
+        {from: ".person.favorite", to: ".$.header.favorite", oneWay: false , transform: function (newFavorite, dir, binding) {
+        	// Unfortunately, the xform function is the only one that knows which way the data is flowing.
+        	if (dir === "target") {
+        		// Allows person to be updated before firing event.
+        		var contactDetails = this;
+        		setTimeout(function(){
+        			contactDetails.doPersonChanged({person: contactDetails.person});        			
+        		}, 0);
+        	}
+        	return newFavorite;
+        } },
+        {from: ".person.displayName", to: ".$.header.displayName"},
+        {from: ".person.displayOrg", to: ".$.header.job"},
+        {from: ".person.contactIds", to: ".$.header.contactIds"}
     ],
     create: function () {
         this.inherited(arguments);
@@ -94,7 +109,7 @@ enyo.kind({
     getLabelFromType: function (obj) {
         //this is kind of a hack...
         //assumes that type is of form "type_LABEL", i.e. "type_skype", "type_gtalk", "type_partner", ...
-        return obj.type.substr(5);
+        return typeof obj.type === "string" ? obj.type.substr(5) : "";
     },
 
     arrayValues: function (key, person) {
@@ -128,14 +143,14 @@ enyo.kind({
         }
     },
     simpleValue: function (key, obj) {
-        if (this.person[key]) {
+        if (this.person.get(key)) {
             this.$.detailsCollection.add({
                 label: key,
                 value: obj[key]
             });
         }
     },
-    personChanged: function () { //fill details collection.
+    personChanged: function (oldPerson, newPerson) { //fill details collection.
         var keysOrdered = [
             "phoneNumbers",
             "emails",
@@ -143,7 +158,7 @@ enyo.kind({
             "addresses",
             "urls",
             "notes",
-            "birthdays",
+            "birthday",
             "anniversary",
             "relations"
         ],
@@ -160,14 +175,15 @@ enyo.kind({
             },
             i;
 
-        if (this.person) {
+        if (newPerson) {
             this.$.detailsCollection.destroyAllLocal();
 
             for (i = 0; i < keysOrdered.length; i += 1) {
-                if (this.person.attributes[keysOrdered[i]]) {
-                    processingMethods[keysOrdered[i]].call(this, keysOrdered[i], this.person.attributes);
+                if (newPerson.get(keysOrdered[i])) {
+                    processingMethods[keysOrdered[i]].call(this, keysOrdered[i], newPerson.attributes);
                 }
             }
         }
+        
     }
 });
