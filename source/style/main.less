@@ -148,14 +148,6 @@ ContactsUI CSS
     width:50px;
     position:relative;
 }
-.contacts-details .icon .mask {
-    position:absolute;
-    top:0;
-    left:0;
-    height:100%;
-    width:100%;
-    background:url(../../assets/bg_icon_mask.png) no-repeat 0 0;
-}
 .contacts-details .icon .img {
     border-radius: 3px;
     height:100%;
@@ -324,10 +316,6 @@ img {
     width: 100px;
 }
 
-.contacts-list .favorites .item .icon .mask {
-    background: url(../../assets/bg_favorites_icon_mask.png) no-repeat 0 0;
-}
-
 .contacts-list .favorites .item .icon .img {
     height: 100%;
     width: 100%;
@@ -342,23 +330,12 @@ img {
 }
 
 /* Contact photos: icon to list is as avatar to detail */
-.mask {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-}
 
 .icon {
     height: 50px;
     margin: 10px 15px 10px 0;
     width: 50px;
     position: relative;
-}
-
-.icon .mask {
-    background: url(../../assets/bg_icon_mask.png) no-repeat 0 0;
 }
 
 .icon .img {
@@ -385,10 +362,48 @@ img {
 }
 
 .avatar .mask {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
     background: url(../../assets/bg_avatar_mask.png) no-repeat 0 0;
 }
 
 /* Edit */
+
+.edit-main {
+    max-width: 44rem; 
+    margin-left: auto; 
+    margin-right: auto; 
+    padding: 0.5rem 1rem;
+}
+
+.edit-main .edit-top-groupbox {
+    padding-top: 9px;
+}
+
+.edit-main .avatar {
+    width: 222px;
+    position: relative;
+    height: 222px;
+    margin: 0 8px 0 0;
+}
+
+.edit-main input {
+    width: 100%;
+    box-sizing: border-box;
+}
+.edit-main input:invalid {
+	color: red;
+}
+
+.edit-main textarea {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Edit (Enyo 1) */
 .edit-toolbar .switch-account.button {
     height: 38px;
 }
@@ -534,21 +549,6 @@ border-top-color:rgba(255,255,255,0.5);
     position: relative;
     height: 222px;
     margin: 0 8px 0 0;
-}
-
-.details .avatar .img {
-    height: 196px;
-    width: 196px;
-    top: 13px;
-    position: absolute;
-    left: 13px;
-    background-color: #f1f1f1;
-    background-repeat: no-repeat;
-    background-position: 50% 50%;
-}
-
-.details .avatar .mask {
-    background: url(../../assets/bg_avatar_mask.png) no-repeat 0 0;
 }
 
 .details .nameinfo {

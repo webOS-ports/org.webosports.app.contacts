@@ -108,7 +108,7 @@ enyo.kind({
 	    	if (data.ims instanceof Array) {
 	    		for (i=0; i<data.ims.length; ++i) {
 	    			field = data.ims[i];
-	    			console.log(data.name && data.name.familyName, "IM", field, field.normalizedValue, field.value);
+//	    			console.log(data.name && data.name.familyName, "IM", field, field.normalizedValue, field.value);
 	    			if (field.normalizedValue) {
 	    				lowercaseName = field.normalizedValue.trim();
 	    			} else if (field.value) {
