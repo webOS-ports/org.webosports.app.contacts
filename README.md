@@ -10,5 +10,13 @@ When you're ready to install to a device, run `tools/deploy.sh -i`
 (Luna-Next will restart)
 
 TODO:
-* allow contact editing
+* save new contact to DB8
+* locale-specific code to parse a single address field into DB fields
+* edit relations
+* edit ringtones
 * db watches (currently => need to restart to get fresh data)
+* allow contact editing
+* request dialing phone number
+* request sending email
+* request sending IM
+* request open browser to URL

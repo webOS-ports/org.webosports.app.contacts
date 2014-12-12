@@ -1,3 +1,4 @@
+/* ContactsBar.js - lists of All and Favorite contacts - org.webosports.app.contacts */
 /*global GlobalPersonCollection */
 
 enyo.kind({

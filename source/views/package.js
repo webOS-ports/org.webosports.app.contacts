@@ -9,5 +9,8 @@ enyo.depends(
 
     //UI controls:
     "ContactHeader.js",
-    "views.js"
+    "views.js",
+
+    // add a contact
+    "EditContact.js"
 );

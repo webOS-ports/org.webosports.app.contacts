@@ -88,7 +88,7 @@ enyo.kind({
 
         this.$.details.set("collection", this.$.detailsCollection);
     },
-    //TODO: maybe move that somewhere else?
+    //TODO: maybe move that somewhere else? Perhaps a computed property?
     //TODO: some localization stuff will play into this, too... hmpf.
     getAddressValue: function (address) {
         var parts = [];
