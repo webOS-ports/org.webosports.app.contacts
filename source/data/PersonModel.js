@@ -20,6 +20,7 @@ enyo.kind({
         emails: [],
         ims: [],
         phoneNumbers: [],
+        relations: [],
         notes: [],
         urls: []
     },

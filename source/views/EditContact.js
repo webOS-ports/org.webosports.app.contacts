@@ -28,9 +28,6 @@ enyo.kind({
        		{ from: ".container.inputType", to: ".$.detailInput.type" },   // TODO: Is there a better way to do this?
       		{ from: ".container.placeholder", to: ".$.detailInput.placeholder" },
             { from: ".model.value", to: ".$.detailInput.value" },
-            { from: ".model.type", to: ".$.detailType.content", transform: function (type) {
-            	return type && type.length > 5 ? type.slice(5) : $L("Other");
-            } },
             { from: ".model.type", to: ".$.detailPicker.selected", transform: function (type) {
             	return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
             }}
@@ -41,7 +38,7 @@ enyo.kind({
         	// Is there a better way to get the collection?
         	// this.owner.$.addressRepeater.collection also works
         	if (inEvent.originator.value && inEvent.index === collection.length - 1) {
-        		collection.add({value: ""});
+        		collection.add({value: "", type: "type_home"});
         	} else if (! inEvent.originator.value && inEvent.index !== collection.length - 1) {
         		collection.remove(collection.at(inEvent.index));
         	}
@@ -100,14 +97,14 @@ enyo.kind({
         {from: ".person.phoneNumbers", to: ".$.phoneRepeater.collection", transform: function (phoneNumbers) {
             console.log("phoneNumbers", phoneNumbers); 
             var c = new enyo.Collection(phoneNumbers);
-            c.add({value: ""});
+            c.add({value: "", type: "type_mobile"});
 //            console.log("phone collection", c);
             return c;
         }},
         {from: ".person.emails", to: ".$.emailRepeater.collection", transform: function (emails) {
             console.log("emails", emails); 
             var c = new enyo.Collection(emails);
-            c.add({value: ""});
+            c.add({value: "", type: "type_home"});
 //            console.log("email collection", c);
             return c;
         }},
@@ -121,7 +118,7 @@ enyo.kind({
         {from: ".person.addresses", to: ".$.addressRepeater.collection", transform: function (addresses) {
             console.log("addresses", addresses); 
             var c = new enyo.Collection(addresses);
-            c.add({streetAddress: "", locality: "", region: "", country: "", postalCode: ""});
+            c.add({streetAddress: "", locality: "", region: "", country: "", postalCode: "", type: "type_home"});
 //            console.log("email collection", c);
             return c;
         }},
@@ -143,7 +140,14 @@ enyo.kind({
 //            console.log("note collection", c);
             return c;
         }},
-        {from: ".person.birthday", to: ".$.birthdayInput.value"}
+        {from: ".person.birthday", to: ".$.birthdayInput.value"},
+        {from: ".person.relations", to: ".$.relationRepeater.collection", transform: function (relations) {
+            console.log("relations", relations);
+            var c = new enyo.Collection(relations);
+            c.add({value: "", type: "type_spouse"});
+//            console.log("IM collection", c);
+            return c;
+        }}
     ],
 	components: [
         {
@@ -233,7 +237,7 @@ enyo.kind({
 	                	                 {name: "type_zephr_item", content: $L("Zephr"), value: "type_zephr"},
 	                	                 {classes: "onyx-menu-divider"},   // after this are protocols we don't yet or can't support
 	                	              	 // incl. dead networks like .Mac, MobileMe, Windows Messenger Serv., TOC2
-	                	                 {name: "type_other_item", content: $L("Other"), value: "type_default"} ,  // should this be type_other?
+	                	                 {name: "type_other_item", content: $L("Other"), value: "type_other"},
 	                	                 {name: "type_imessage_item", content: $L("iMessage"), value: "type_imessage"},
 	                	                 {name: "type_linkedin_item", content: $L("LinkedIn"), value: "type_linkedin"},
 	                	                 {name: "type_skype_item", content: $L("Skype"), value: "type_skype"},   // we'd need more than the skype4pidgin plugin
@@ -249,8 +253,7 @@ enyo.kind({
                            ],
                            bindings: [
                                {from: ".model.value", to: ".$.imInput.value"},
-                               {from: ".model.type", to: ".$.imType.content", transform: function (type) {return type && type.length > 5 ? type.slice(5) : $L("Other");} },
-                               { from: ".model.type", to: ".$.imPicker.selected", transform: function (type) {
+                               {from: ".model.type", to: ".$.imPicker.selected", transform: function (type) {
                                		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
                                }}
                            ],
@@ -307,7 +310,6 @@ enyo.kind({
                                 {from: ".model.region", to: ".$.regionInput.value"},
                                 {from: ".model.country", to: ".$.countryInput.value"},
                                 {from: ".model.postalCode", to: ".$.postalCodeInput.value"},
-                                {from: ".model.type", to: ".$.addressType.content", transform: function (type) {return type && type.length > 5 ? type.slice(5) : $L("Other");} },
                                 { from: ".model.type", to: ".$.addressPicker.selected", transform: function (type) {
                               		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
                                 }}
@@ -317,7 +319,7 @@ enyo.kind({
                             	// Is there a better way to get the collection?
                             	// this.owner.$.addressRepeater.collection also works
 		          	        	if (inEvent.index === collection.length - 1 && inEvent.originator.value ) {
-		          	        		collection.add({streetAddress: "", locality: "", region: "", country: "", postalCode: ""});
+		          	        		collection.add({streetAddress: "", locality: "", region: "", country: "", postalCode: "", type: "type_home"});
 		          	        	} else {
 		          	        		if (inEvent.index !== collection.length - 1 && ! this.$.addressInput.value && 
 		          	        				! this.$.localityInput.value && ! this.$.regionInput.value && 
@@ -382,7 +384,53 @@ enyo.kind({
                     
                     // TODO: ringtone - can wait until we can receive phone calls
                 ]},
-                // TODO: relations - what are the type values?
+        	    {kind: "onyx.Groupbox", components: [
+        	        {name: "relationRepeater", kind: "enyo.DataRepeater", components: [
+        	            {   classes: "flex-row",
+                         components: [
+       	                    {kind: "onyx.InputDecorator", classes: "flex-auto", components: [
+                     	        {name: "relationInput", kind: "onyx.Input", type: "text", placeholder: $L("New relation"), onchange: "relationChange"}
+                     	    ]},
+                 	        {kind: "onyx.PickerDecorator", classes: "flex-none", components: [
+                	            {name: "relationType", style: "min-width: 10.3rem; text-transform: capitalize;"},
+                	            {name: "relationPicker", kind: "onyx.Picker", floating: true, maxHeight: Math.max((window.innerHeight-72)/2, 200), components: [
+                	                 {name: "type_assistant_item", content: $L("Assistant"), value: "type_assistant"},
+                	                 {name: "type_brother_item", content: $L("Brother"), value: "type_brother"},
+                	                 {name: "type_child_item", content: $L("Child"), value: "type_child"},
+                	                 {name: "type_domesticpartner_item", content: $L("Domestic Partner"), value: "type_domesticpartner"},
+                	                 {name: "type_father_item", content: $L("Father"), value: "type_father"},
+                	                 {name: "type_friend_item", content: $L("Friend"), value: "type_friend"},
+                	                 {name: "type_manager_item", content: $L("Manager"), value: "type_manager"},
+                	                 {name: "type_mother_item", content: $L("Mother"), value: "type_mother"},
+                	                 {name: "type_parent_item", content: $L("Parent"), value: "type_parent"},
+                	                 {name: "type_partner_item", content: $L("Partner"), value: "type_partner"},
+                	                 {name: "type_referredby_item", content: $L("Referred by"), value: "type_referredby"},
+                	                 {name: "type_relative_item", content: $L("Relative"), value: "type_relative"},
+                	                 {name: "type_sister_item", content: $L("Sister"), value: "type_sister"},
+                	                 {name: "type_spouse_item", content: $L("Spouse"), value: "type_spouse"},
+                	                 {name: "type_other_item", content: $L("Other"), value: "type_other"}
+                	            ]}
+                	        ]}                        	    
+                        ],
+                        bindings: [
+                            {from: ".model.value", to: ".$.relationInput.value"},
+                            {from: ".model.type", to: ".$.relationPicker.selected", transform: function (type) {
+                            		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
+                            }}
+                        ],
+                        relationChange: function (inSender, inEvent) {
+                        	   var collection = inEvent.child.parent.owner.collection;
+                        	   // Is there a better way to get the collection?
+                        	   // this.owner.$.addressRepeater.collection also works
+	          	        	if (inEvent.originator.value && inEvent.index === collection.length - 1) {
+	          	        		collection.add({value: "", type: "type_spouse"});
+	          	        	} else if (! inEvent.originator.value && inEvent.index !== collection.length - 1) {
+	          	        		collection.remove(collection.at(inEvent.index));
+	          	        	}
+	          	       }
+                     }
+                 ]}
+	            ]},
   	            {style: "height: 1rem;"}   // hack because scroller cuts off last item
             ]
         },
