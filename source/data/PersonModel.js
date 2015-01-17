@@ -13,11 +13,16 @@ enyo.kind({
     },
     defaults: {
         name: {},
+        birthday: "",
         nickname: "",
-        organization: {},
+        addresses: [],
+        organization: {department: "", name: "", title: ""},
         emails: [],
         ims: [],
-        phoneNumbers: []
+        phoneNumbers: [],
+        relations: [],
+        notes: [],
+        urls: []
     },
     // Only these listed properties are saved to DB8.
     // It may not matter whether undocumented fields are included here, so long as records are merged.
@@ -108,7 +113,7 @@ enyo.kind({
 	    	if (data.ims instanceof Array) {
 	    		for (i=0; i<data.ims.length; ++i) {
 	    			field = data.ims[i];
-	    			console.log(data.name && data.name.familyName, "IM", field, field.normalizedValue, field.value);
+//	    			console.log(data.name && data.name.familyName, "IM", field, field.normalizedValue, field.value);
 	    			if (field.normalizedValue) {
 	    				lowercaseName = field.normalizedValue.trim();
 	    			} else if (field.value) {
