@@ -25,19 +25,25 @@ enyo.kind({
 
     commit: function (rec, opts) {
         var i;
-        console.log("Storing ", rec);
 
         if (rec instanceof enyo.Model) {
-            for (i = 0; i < this.dataArray.length; i += 1) {
-                if (this.dataArray[i]._id === rec.get(rec.primaryKey)) {
-                    this.dataArray[i] = rec.raw();
-                    opts.success(this.dataArray[i]);   // commit is expected to return the new value
-                    return;
+        	if (rec.get("_kind") === "com.palm.person:1") {
+                for (i = 0; i < this.dataArray.length; i += 1) {
+                    if (this.dataArray[i]._id === rec.get(rec.primaryKey)) {
+                        console.log("commit: updating in array ", rec);
+                        this.dataArray[i] = rec.raw();
+                        opts.success(this.dataArray[i]);   // commit is expected to return the new value
+                        return;
+                    }
                 }
-            }
-
-            this.dataArray.push(rec.attributes);
-            opts.success(this.dataArray[this.dataArray.length - 1]);   // commit is expected to return the new value
+    
+                console.log("commit: adding to array ", rec);
+                this.dataArray.push(rec.raw());
+                opts.success(this.dataArray[this.dataArray.length - 1]);   // commit is expected to return the new value
+        	} else {   // we only store persons, not contacts
+                console.log("commit: pretending to store " + rec.get("_kind"), rec);
+                opts.success(rec.raw());   // commit is expected to return the new value
+        	}
         } else {
             console.log("Can't store collection... still makes me headaches.");
             opts.fail();
