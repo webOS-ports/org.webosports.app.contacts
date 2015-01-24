@@ -27,13 +27,17 @@ enyo.kind({
         bindings: [
        		{ from: ".container.inputType", to: ".$.detailInput.type" },   // TODO: Is there a better way to do this?
       		{ from: ".container.placeholder", to: ".$.detailInput.placeholder" },
-            { from: ".model.value", to: ".$.detailInput.value" },
-            { from: ".model.type", to: ".$.detailPicker.selected", transform: function (type) {
-            	return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
+            { from: ".model.value", to: ".$.detailInput.value", oneWay: false },
+            { from: ".model.type", to: ".$.detailPicker.selected", oneWay: false, transform: function (type, dir) {
+            	if (dir === "source") {
+            		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
+            	} else {
+            		return type.value;
+            	}
             }}
         ],
         textTypeChange: function (inSender, inEvent) {
-        	this.log(inEvent.child.parent.owner);
+        	console.log("textTypeChange", inEvent.child.parent.owner);
         	var collection = inEvent.child.parent.owner.collection;
         	// Is there a better way to get the collection?
         	// this.owner.$.addressRepeater.collection also works
@@ -84,7 +88,7 @@ enyo.kind({
             }
             return fullName.trim();
         }},
-        {from: ".person.nickname", to: ".$.nicknameInput.value"},
+        {from: ".person.nickname", to: ".$.nicknameInput.value", oneWay: false},
         {from: ".person.organization", to: ".$.jobTitleInput.value", transform: function (organization) {
         	return organization.title;
         }},
@@ -140,7 +144,7 @@ enyo.kind({
 //            console.log("note collection", c);
             return c;
         }},
-        {from: ".person.birthday", to: ".$.birthdayInput.value"},
+        {from: ".person.birthday", to: ".$.birthdayInput.value", oneWay: false},
         {from: ".person.relations", to: ".$.relationRepeater.collection", transform: function (relations) {
             console.log("relations", relations);
             var c = new enyo.Collection(relations);
@@ -252,9 +256,13 @@ enyo.kind({
 	                	        ]}                        	    
                            ],
                            bindings: [
-                               {from: ".model.value", to: ".$.imInput.value"},
-                               {from: ".model.type", to: ".$.imPicker.selected", transform: function (type) {
-                               		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
+                               {from: ".model.value", to: ".$.imInput.value", oneWay: false},
+                               {from: ".model.type", to: ".$.imPicker.selected", oneWay: false, transform: function (type, dir) {
+                            	   if (dir === "source") {
+										return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
+                            	   } else {
+                            		   return type.value;
+                            	   }
                                }}
                            ],
                            imChange: function (inSender, inEvent) {
@@ -305,13 +313,17 @@ enyo.kind({
               	                ]}
           	                ],
                             bindings: [
-                                {from: ".model.streetAddress", to: ".$.addressInput.value"},
-                                {from: ".model.locality", to: ".$.localityInput.value"},
-                                {from: ".model.region", to: ".$.regionInput.value"},
-                                {from: ".model.country", to: ".$.countryInput.value"},
-                                {from: ".model.postalCode", to: ".$.postalCodeInput.value"},
-                                { from: ".model.type", to: ".$.addressPicker.selected", transform: function (type) {
-                              		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
+                                {from: ".model.streetAddress", to: ".$.addressInput.value", oneWay: false},
+                                {from: ".model.locality", to: ".$.localityInput.value", oneWay: false},
+                                {from: ".model.region", to: ".$.regionInput.value", oneWay: false},
+                                {from: ".model.country", to: ".$.countryInput.value", oneWay: false},
+                                {from: ".model.postalCode", to: ".$.postalCodeInput.value", oneWay: false},
+                                { from: ".model.type", to: ".$.addressPicker.selected", oneWay: false, transform: function (type, dir) {
+                                	if (dir === "source") {
+                              			return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
+                                	} else {
+                                		return type.value;
+                                	}
                                 }}
                             ],
                             addressChange: function (inSender, inEvent) {
@@ -339,7 +351,7 @@ enyo.kind({
                        	    ]}
                         ],
                         bindings: [
-                            {from: ".model.value", to: ".$.urlInput.value"}
+                            {from: ".model.value", to: ".$.urlInput.value", oneWay: false}
                         ],
                         urlChange: function (inSender, inEvent) {
                            	var collection = inEvent.child.parent.owner.collection;
@@ -361,7 +373,7 @@ enyo.kind({
                        	    ]}    
                         ],
                         bindings: [
-                            {from: ".model.value", to: ".$.noteInput.value"}
+                            {from: ".model.value", to: ".$.noteInput.value", oneWay: false}
                         ],
                         noteChange: function (inSender, inEvent) {
                            	var collection = inEvent.child.parent.owner.collection;
@@ -413,9 +425,13 @@ enyo.kind({
                 	        ]}                        	    
                         ],
                         bindings: [
-                            {from: ".model.value", to: ".$.relationInput.value"},
-                            {from: ".model.type", to: ".$.relationPicker.selected", transform: function (type) {
+                            {from: ".model.value", to: ".$.relationInput.value", oneWay: false},
+                            {from: ".model.type", to: ".$.relationPicker.selected", oneWay: false, transform: function (type, dir) {
+                            	if (dir === "source") {
                             		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
+                            	} else {
+                            		return type.value;
+                            	}
                             }}
                         ],
                         relationChange: function (inSender, inEvent) {
@@ -445,9 +461,85 @@ enyo.kind({
             ]
         }
     ],
+    
+    showingChanged: function (inOld) {
+    	this.inherited (arguments);
+    	if (inOld === false && this.get("showing") === true) {
+    		this.$.scroller.scrollToTop();
+    	}
+    },
 
     doneTap: function (inSender, inEvent) {
-		this.log(this.person);
-    	this.doSave({person: this.person});
-    }
+    	// set attributes directly to avoid uselessly trigering the bindings
+    	// TODO: call set once, with all the displayName-affecting properties
+    	
+    	// TODO: when we implement individual name fields, parsing the full name field will happen in onchange
+    	this.parseName();
+    	
+    	// nickname is 2-way
+
+    	this.person.set("organization", {
+			title: this.$.jobTitleInput.get("value").trim(),
+			department: this.$.departmentInput.get("value").trim(),
+			name: this.$.organizationInput.get("value").trim()
+		});
+		// We use set, so displayName is updated
+		
+    	this.person.attributes.phoneNumbers = this.$.phoneRepeater.collection.raw().slice(0, -1);
+		
+    	this.person.set("emails", this.$.emailRepeater.collection.raw().slice(0, -1));
+		// We use set, so displayName is updated
+		
+		this.person.set("ims", this.$.imRepeater.collection.raw().slice(0, -1));
+		// We use set, so displayName is updated
+
+		this.person.attributes.addresses = this.$.addressRepeater.collection.raw().slice(0, -1);
+
+		this.person.attributes.urls = this.$.urlRepeater.collection.raw().slice(0, -1);
+		
+		this.person.attributes.notes = this.$.noteRepeater.collection.map(function (currentValue, index) {
+			return currentValue.get("value");
+		}).slice(0, -1);
+		
+		// birthday is 2-way
+
+		this.person.attributes.relations = this.$.relationRepeater.collection.raw().slice(0, -1);
+
+		this.doSave({person: this.person});
+    },
+    
+    parseName: function () {
+    	var honorificPrefix, givenName, middleName, familyName, honorificSuffix;
+    	var fullName = this.$.nameInput.value.trim();
+		honorificPrefix = givenName = middleName = familyName = honorificSuffix = "";
+		
+		this.prefixPatt.lastIndex = 0;
+		var prefixMatch = this.prefixPatt.exec(fullName);
+		if (prefixMatch) {
+			honorificPrefix = prefixMatch[0].trim();
+			fullName = fullName.slice(this.prefixPatt.lastIndex);
+		}
+		
+		this.suffixPatt.lastIndex = 0;
+		var suffixMatch = this.suffixPatt.exec(fullName);
+		if (suffixMatch) {
+			honorificSuffix = suffixMatch[0];
+			fullName = fullName.slice(0, suffixMatch.index);
+		}
+		
+		var names = fullName.split(/\s+/);
+		if (names.length >= 2) {
+			givenName = names.slice(0, names.length-1).join(" ");
+			familyName = names[names.length-1];
+		} else {
+			familyName = fullName;
+		}
+		this.person.set("name", {honorificPrefix: honorificPrefix, givenName: givenName, middleName: middleName, familyName: familyName, honorificSuffix: honorificSuffix});
+		// We use set, so displayName is updated
+    },
+    
+    // Add common honorifics for all languages and cultures to this pattern.
+    // Don't bother with noble honorifics.
+	prefixPatt: /^((Mr\.|Master|Ms\.|Mrs\.|Miss|Dr\.|(The\s+)?Reverend|Father|(The\s+)Hon(\.|orable)|Herr|Frau|Fräulein|Doktor|Professor)\s*)+/ig,
+	suffixPatt: /(,\s*(Ph\. ?D|Junior|Jr\.|II|III|jünger))+$/i
 });

@@ -15,11 +15,16 @@ enyo.kind({
         request.response(this.generalSuccess.bind(this, success, failure));
         request.error(this.generalFailure.bind(this, failure));
     },
-    generalFailure: function (failure, inSender, inResponse) {
-        console.log("Got failure: ", inSender, " did send ", inResponse);
+    generalFailure: function (failure, inSender, inError) {
+        console.log("db8Source failure:", inSender, " error:", inError);
+        var errMsg = this.errorMsgs[inError.errorCode] || $L("Please file a detailed bug report") + " [" + inError.errorCode + "]";
+        PalmSystem.addBannerMessage(errMsg, '{ }', "assets/header-icon-contacts.png", "alerts");
         if (failure) {
             failure();
         }
+    },
+    errorMsgs: {
+//        "-985": $L("Please file a detailed bug report") + " (-985)"   // schema validation
     },
     generalSuccess: function (success, failure, inSender, inResponse) {
         console.log("Got success: ", inSender, " did send ", inResponse);

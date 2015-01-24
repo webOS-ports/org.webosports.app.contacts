@@ -1,14 +1,13 @@
-/**
-    Define and instantiate your enyo.Application kind in this file.  Note,
-    application rendering should be deferred until DOM is ready by wrapping
-    it in a call to enyo.ready().
-*/
 /* exported app */
-
+/*jsl:import data/ContactModel.js*/
 enyo.kind({
     name: "contacts.Application",
     kind: "enyo.Application",
-    view: "contacts.MainView"
+    view: "contacts.MainView",
+    
+    create: function () {
+        this.inherited(arguments);
+    }
 });
 
 enyo.ready(function () {
