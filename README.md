@@ -11,8 +11,9 @@ When you're ready to install to a device, run `tools/deploy.sh -i`
 (Luna-Next will restart)
 
 TODO:
-* save new contact to DB8
+* can't select account when adding new contact
 * locale-specific code to parse a single address field into DB fields
+* edit name components
 * edit ringtones
 * type of new phone, IM, address or relation should be different than existing
 * db watches (currently => need to restart to get fresh data)

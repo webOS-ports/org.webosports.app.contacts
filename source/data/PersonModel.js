@@ -1,4 +1,7 @@
-enyo.kind({
+// PersonModel.js
+/*jsl:import ContactModel.js*/
+
+var PersonModel = enyo.kind({
     name: "PersonModel",
     kind: "enyo.Model",
     defaultSource: "db8",
@@ -8,21 +11,31 @@ enyo.kind({
     computed: {
         listPhoto: ["photos", {cached: true}],
         displayPhoto: ["photos", {cached: true}],
-        displayName: ["name", "nickname", "organization", "emails", "ims", "phoneNumbers", {cached: true}],
+        displayName: ["name", "nickname", "organization", "emails", "ims", {cached: true}],
         displayOrg: ["organization"]
     },
     defaults: {
+    	_kind: "com.palm.person:1",
+//    	launcherId: "",
+//    	favorite: false,
+    	contactIds: [],
+    	sortKey: "",   // required by DB8 schema
         name: {},
+        names: [],
         birthday: "",
         nickname: "",
         addresses: [],
         organization: {department: "", name: "", title: ""},
+        searchTerms: [],
         emails: [],
         ims: [],
         phoneNumbers: [],
+        photos: {},
         relations: [],
         notes: [],
-        urls: []
+        urls: [],
+        reminder: "",
+        ringtone: {name: "", location: ""}
     },
     // Only these listed properties are saved to DB8.
     // It may not matter whether undocumented fields are included here, so long as records are merged.
@@ -229,16 +242,7 @@ enyo.kind({
         }
 
         if (!displayName) {
-            for (i = 0; i < phoneNumbers.length; i += 1) {
-                displayName = phoneNumbers[i].value;
-                if (displayName) {
-                    break;
-                }
-            }
-        }
-
-        if (!displayName) {
-            displayName = "[No Name Available]";
+            displayName = $L("[No Name Available]");
         }
 
         return displayName.trim();
@@ -265,6 +269,26 @@ enyo.kind({
         }
 
         return result;
+    },
+    
+    toContactData: function () {
+    	return {
+//    		accountId: 
+    		name: enyo.clone(this.get("name")),
+    		nickname: this.get("nickname"),
+    		birthday: this.get("birthday"),
+    		anniversary: this.get("anniversary"),
+    		gender: this.get("gender"),
+    		note: this.get("notes").join("\n"),
+    		emails: enyo.clone(this.get("emails")),    // TODO: deep-clone
+    		urls: enyo.clone(this.get("urls")),   // TODO: deep-clone
+    		phoneNumbers: enyo.clone(this.get("phoneNumbers")),    // TODO: deep-clone
+    		ims: enyo.clone(this.get("ims")),    // TODO: deep-clone
+    		photos: enyo.clone(this.get("photos")),    // TODO: deep-clone
+    		addresses: enyo.clone(this.get("addresses")),    // TODO: deep-clone
+    		organizations: [enyo.clone(this.get("organization"))],
+    		relations: enyo.clone(this.get("relations"))    // TODO: deep-clone
+    	};
     }
 
 });

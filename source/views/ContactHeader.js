@@ -21,7 +21,7 @@ enyo.kind({
         { from: ".contactIds", to: ".$.profilesCount.content", transform: function (ids) {
             this.$.profiles.setOpen(false);
             this.$.profilesIndicator.removeClass("active", this.$.profiles.open);
-            if (! ids instanceof Array) { ids = []; }
+            if (! (ids instanceof Array)) { ids = []; }
             return ids.length === 1 ? $L("1 profile")  : ids.length + $L(" linked profiles");
         }}
     ],

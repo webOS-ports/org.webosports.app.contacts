@@ -1,5 +1,6 @@
 /* views.js - main view of org.webosports.app.contacts */
 /*global GlobalPersonCollection */
+/*jsl:import ../data/PersonModel.js*/
 
 //App
 enyo.kind({
@@ -94,6 +95,7 @@ enyo.kind({
 
         this.$.details.setPerson(inEvent.person);
     },
+    /** several fields, like favorite, reminder & ringtone, are only in person records */
     savePerson: function (inSender, inEvent) {
     	var contactsBar = this.$.contactsBar;
     	inEvent.person.commit({success: function (rec, opts, res) {
@@ -129,14 +131,31 @@ enyo.kind({
 //     	});
     	this.$.editContact.set("person", person);
     	this.setIndex(1);
-    },
+	},
     hideEdit: function (inSender, inEvent) {
     	this.setIndex(0);
     },
+    /** the contactlinker will create or update person records */
     saveContact: function (inSender, inEvent) {
-    	this.log(inEvent.person);
-    	this.setIndex(0);
-    },
+//    	this.log("person:", inEvent.person.attributes);
+    	// TODO: when DB8 watches are implemented, this may be redundant
+    	GlobalPersonCollection.add(inEvent.person);
+    	this.$.contactsBar.refilter();
+    	
+    	var contact = new ContactModel(inEvent.person.toContactData());
+    	this.log("contact:", contact);
+    	contact.commit();
+
+    	this.setIndex(0);   // hides edit pane
+    	
+    	if (inEvent.person.get("contactIds").length === 0) {   // is new
+    		// shows list where new contact will appear
+            if (enyo.Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
+                this.$.main.setIndex(0);
+            }
+    		this.$.contactsBar.showLastContact();
+    	}
+	},
     
     goBack: function () {
         if (enyo.Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
