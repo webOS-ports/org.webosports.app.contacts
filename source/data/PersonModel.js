@@ -4,7 +4,8 @@
 var PersonModel = enyo.kind({
     name: "PersonModel",
     kind: "enyo.Model",
-    defaultSource: "db8",
+    options: {parse: true},
+    source: "db8",
     dbKind: "com.palm.person:1",
     primaryKey: "_id",
     mixins: [enyo.ComputedSupport],
@@ -14,7 +15,7 @@ var PersonModel = enyo.kind({
         displayName: ["name", "nickname", "organization", "emails", "ims", {cached: true}],
         displayOrg: ["organization"]
     },
-    defaults: {
+    attributes: {
     	_kind: "com.palm.person:1",
 //    	launcherId: "",
 //    	favorite: false,

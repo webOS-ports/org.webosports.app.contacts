@@ -54,7 +54,7 @@ enyo.kind({
 
         if (rec instanceof enyo.Collection) {
             ids = [];
-            rec.records.forEach(function (m) {
+            rec.models.forEach(function (m) {
                 var i;
                 for (i = this.dataArray.length - 1; i >= 0; i -= 1) {
                     if (this.dataArray[i]._id === m.get(m.primaryKey)) {

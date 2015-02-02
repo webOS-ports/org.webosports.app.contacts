@@ -70,7 +70,7 @@ enyo.kind({
         {from: ".person.nickname", to: ".$.header.nickname" },
         {from: ".person.favorite", to: ".$.header.favorite", oneWay: false , transform: function (newFavorite, dir, binding) {
         	// Unfortunately, the xform function is the only one that knows which way the data is flowing.
-        	if (dir === "target") {
+        	if (dir & enyo.Binding.DIRTY_TO) {
         		// Allows person to be updated before firing event.
         		var contactDetails = this;
         		setTimeout(function(){
@@ -176,7 +176,7 @@ enyo.kind({
             i;
 
         if (newPerson) {
-            this.$.detailsCollection.destroyAllLocal();
+            this.$.detailsCollection.empty();
 
             for (i = 0; i < keysOrdered.length; i += 1) {
                 if (newPerson.get(keysOrdered[i])) {

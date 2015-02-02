@@ -134,7 +134,7 @@ enyo.kind({
 
         if (rec instanceof enyo.Collection) {
             ids = [];
-            rec.records.forEach(function (m) {
+            rec.models.forEach(function (m) {
                 ids.push(m.get(m.primaryKey));
             });
         } else {

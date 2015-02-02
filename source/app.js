@@ -14,10 +14,10 @@ enyo.ready(function () {
     if (window.PalmSystem) {
         window.PalmSystem.stageReady();
         //load contacts from db8:
-        enyo.store.addSources({db8: "db8Source"});
+        enyo.Source.create({name:'db8', kind:'db8Source'});
     } else {
         //use mocking source:
-        enyo.store.addSources({db8: "db8SourceMock"});
+    	enyo.Source.create({name:'db8', kind:'db8SourceMock'});
     }
     new contacts.Application({name: "app"});
 });
