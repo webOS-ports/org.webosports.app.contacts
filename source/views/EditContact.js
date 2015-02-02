@@ -1,4 +1,5 @@
 /* EditContact.js - Edit or add a contact - org.webosports.app.contact */
+/*jsl:import ../data/PersonModel.js */
 
 /** utility kind for several types of details
  * We ought to be able to adjust the menu items, but create methods fail with inexplicable errors here. */
@@ -29,7 +30,7 @@ enyo.kind({
       		{ from: ".container.placeholder", to: ".$.detailInput.placeholder" },
             { from: ".model.value", to: ".$.detailInput.value", oneWay: false },
             { from: ".model.type", to: ".$.detailPicker.selected", oneWay: false, transform: function (type, dir) {
-            	if (dir === "source") {
+            	if (dir & enyo.Binding.DIRTY_FROM) {
             		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
             	} else {
             		return type.value;
@@ -61,7 +62,7 @@ enyo.kind({
     },
     published: {
         title: "",
-        person: {}
+        person: new PersonModel()
     },
     bindings: [
         {from: ".title", to: ".$.titleText.content"},
@@ -258,7 +259,7 @@ enyo.kind({
                            bindings: [
                                {from: ".model.value", to: ".$.imInput.value", oneWay: false},
                                {from: ".model.type", to: ".$.imPicker.selected", oneWay: false, transform: function (type, dir) {
-                            	   if (dir === "source") {
+                            	   if (dir & enyo.Binding.DIRTY_FROM) {
 										return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
                             	   } else {
                             		   return type.value;
@@ -319,7 +320,7 @@ enyo.kind({
                                 {from: ".model.country", to: ".$.countryInput.value", oneWay: false},
                                 {from: ".model.postalCode", to: ".$.postalCodeInput.value", oneWay: false},
                                 { from: ".model.type", to: ".$.addressPicker.selected", oneWay: false, transform: function (type, dir) {
-                                	if (dir === "source") {
+                                	if (dir & enyo.Binding.DIRTY_FROM) {
                               			return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
                                 	} else {
                                 		return type.value;
@@ -427,7 +428,7 @@ enyo.kind({
                         bindings: [
                             {from: ".model.value", to: ".$.relationInput.value", oneWay: false},
                             {from: ".model.type", to: ".$.relationPicker.selected", oneWay: false, transform: function (type, dir) {
-                            	if (dir === "source") {
+                            	if (dir & enyo.Binding.DIRTY_FROM) {
                             		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
                             	} else {
                             		return type.value;

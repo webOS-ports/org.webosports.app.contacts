@@ -2,7 +2,7 @@ var PersonCollection = enyo.kind({
     name: "PersonCollection",
     kind: "enyo.Collection",
     model: "PersonModel",
-    defaultSource: "db8",
+    source: "db8",
     dbKind: "com.palm.person:1"
     //best is to not store this collection... might break things. urgs.
 });
@@ -26,7 +26,7 @@ var AllPersonCollection = enyo.kind({
     searchTextChanged: function () {
     	var searchText = this.searchText.trim().toLowerCase();
     	var searchLength = searchText.length;
-    	this.removeAll();
+    	this.empty();
     	this.add(GlobalPersonCollection.filter(function(item) {
     		var i, allSearchTerms, name;
     		try {
@@ -50,7 +50,7 @@ var FavoritePersonCollection = enyo.kind({
     dbKind: "com.palm.person:1",
     refilter: function () {
     	this.log(arguments);
-    	this.removeAll();
+    	this.empty();
     	this.add(GlobalPersonCollection.filter(function(item) {
     		return item.get("favorite");
     	}));
