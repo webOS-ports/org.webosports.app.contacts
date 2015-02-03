@@ -4,7 +4,7 @@ enyo.kind({
     dbService: "palm://com.palm.db",
 
     _doRequest: function (method, parameters, success, failure, subscribe) {
-        var request = new enyo.ServiceRequest({
+        var request = new weboslib.ServiceRequest({
             service: this.dbService,
             method: method,
             subscribe: !!subscribe,
@@ -75,7 +75,7 @@ enyo.kind({
         var parameters = {query: query, count: false, watch: false};
         console.log("db8Source fetch", rec, opts, parameters);
 
-        var request = new enyo.ServiceRequest({service: this.dbService, method: "find"});
+        var request = new weboslib.ServiceRequest({service: this.dbService, method: "find"});
         request.go(parameters);
 
         request.response(handleFindResponse.bind(this, opts.success, opts.fail));
@@ -101,7 +101,7 @@ enyo.kind({
             objects = rec.raw();
         }
 
-        var request = new enyo.ServiceRequest({ service: this.dbService, method: "merge"});
+        var request = new weboslib.ServiceRequest({ service: this.dbService, method: "merge"});
         request.go({objects: objects});
 
         request.response(handlePutResponse.bind(this, opts.success, opts.fail));

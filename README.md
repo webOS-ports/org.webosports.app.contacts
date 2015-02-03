@@ -20,6 +20,11 @@ All developers must provide their contributions as pull-request and github and a
 
 Please refer to http://www.webos-ports.org/wiki/Communications for information about how to contact the developers of this project.
 
+## API exposed to other apps
+luna-send -n 1 palm://com.palm.applicationManager/launch '{"id":"com.palm.app.contacts", "params": {"launchType": "newContact", "contact": {"nickname": "Madoka"}}}'
+
+see http://www.openwebosproject.org/docs/developer_reference/application_apis/add_contact/
+
 ## TODO
 * contact details displays address with locality, region, country and postal code on separate lines
 * ? contact details doesn't display type for IM addr
