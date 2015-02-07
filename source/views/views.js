@@ -137,12 +137,12 @@ enyo.kind({
     },
     /** the contactlinker will create or update person records */
     saveContact: function (inSender, inEvent) {
-//    	this.log("person:", inEvent.person.attributes);
+//    	this.log("person:", inEvent.person.attributes, inEvent.accountId, inEvent.dbkind);
     	// TODO: when DB8 watches are implemented, this may be redundant
     	GlobalPersonCollection.add(inEvent.person);
     	this.$.contactsBar.refilter();
     	
-    	var contact = new ContactModel(inEvent.person.toContactData());
+    	var contact = new ContactModel(inEvent.person.toContactData(inEvent.accountId, inEvent.dbkind));
     	this.log("contact:", contact);
     	contact.commit();
 

@@ -8,11 +8,10 @@ var ContactModel = enyo.kind({
     dbKind: "com.palm.contact:1",
     primaryKey: "remoteId",
     attributes: {
-    	// Set to proper sub-kind before committing, for contactlinker & Synergy Connector.
-    	_kind: "com.palm.contact.palmprofile:1", 
+    	// Set to proper sub-kind before committing, for contact linker & Synergy Connector.
+//    	_kind: "com.palm.contact:1", 
 //    	remoteId: "",
-    	// TODO: comment out here, after account picker is functional, so if it's not set, an error occurs
-    	accountId: "",
+//    	accountId: "",   // must be set before committing
     	name: {},
 //    	nickname: "",
 //    	birthday: "",

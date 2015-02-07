@@ -29,7 +29,6 @@ see http://www.openwebosproject.org/docs/developer_reference/application_apis/ad
 * contact details displays address with locality, region, country and postal code on separate lines
 * ? contact details doesn't display type for IM addr
 * tapping in list below items opens selected item pane
-* can't select account when adding new contact
 * db watches (currently => need to restart to get fresh data)
 * locale-specific code to parse a single address field into DB fields
 * edit name components

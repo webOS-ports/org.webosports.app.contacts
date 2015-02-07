@@ -272,9 +272,10 @@ var PersonModel = enyo.kind({
         return result;
     },
     
-    toContactData: function () {
+    toContactData: function (accountId, dbkind) {
     	return {
-//    		accountId: 
+    		accountId: accountId,
+    		_kind: dbkind,
     		name: enyo.clone(this.get("name")),
     		nickname: this.get("nickname"),
     		birthday: this.get("birthday"),
