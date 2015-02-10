@@ -18,8 +18,15 @@ enyo.kind({
             //I think that is what db8 does, isn't it?
             opts.success([]);
         } else {
-            //return all dataArray here:
-            opts.success(this.dataArray);
+        	if (opts.ids) {
+                opts.success(this.dataArray.filter(function (element) {
+                	return opts.ids.indexOf(element._id) > -1;
+                }));        		
+        	} else {
+                opts.success(this.dataArray.filter(function (element) {
+                	return element._kind === rec.dbKind;
+                }));
+        	}
         }
     },
 
@@ -148,7 +155,7 @@ enyo.kind({
                 "middleName": ""
             }, {
                 "_id": "15a",
-                "familyName": "",
+                "familyName": "Müller",
                 "givenName": "test-zu-owo",
                 "honorificPrefix": "",
                 "honorificSuffix": "",
@@ -871,6 +878,41 @@ enyo.kind({
             searchTerms: ["kringlekris", "kkringle"],
             sortKey: "kringle kris",
             urls: []
+        },
+        
+        // contact records
+        // There is no contact linker, so these must manually be kept in sync with persons.
+        {
+        	_id: "J1EcwYUFwGV",
+        	_kind: "com.palm.contact:1",
+        	name: {familyName: "schlubbeltub", givenName: "test-zu-owo"}
+        },
+        {
+        	_id: "J1EcwYUFYEg",
+        	_kind: "com.palm.contact:1",
+        	name: {familyName: "Müller", givenName: "test-zu-owo"}
+        },
+        {
+        	_id: "J1EcwYUG8r3",
+        	_kind: "com.palm.contact:1",
+        	name: {familyName: "Anders", givenName: "Was", middleName: "Gaaaanz"}
+        },
+        {
+        	_id: "ldfjadlkfjdkls",
+        	_kind: "com.palm.contact:1",
+        	name: {familyName: "Kringle", givenName: "Kris"}
+        },
+        {
+        	_id: "lkfjdlfjkads",
+        	_kind: "com.palm.contact:1",
+        	name: {familyName: "Claus", givenName: "Santa"},
+        	photos: [{localPath: "assets/kris_kringle.jpg"}]
+        },
+        {
+        	_id: "flkjafljds",
+        	_kind: "com.palm.contact:1",
+        	name: {givenName: "Nicholas", honorificPrefix: "St."},
+        	photos: [{value: "http://webos-ports.org/images/thumb/8/84/Luneos-logo-256.png/120px-Luneos-logo-256.png"}]
         }
     ]
 });

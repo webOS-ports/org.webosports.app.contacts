@@ -53,7 +53,13 @@ enyo.kind({
             method = "get";
             this._doRequest(method, parameters, opts.success, opts.fail, subscribe);
         } else {
-        	this._fetchFind(rec, opts);
+        	if (opts.ids) {
+                parameters = {ids: opts.ids};
+                method = "get";
+                this._doRequest(method, parameters, opts.success, opts.fail, subscribe);
+        	} else {
+        		this._fetchFind(rec, opts);
+        	}
         }
     },
     _fetchFind: function (rec, opts) {

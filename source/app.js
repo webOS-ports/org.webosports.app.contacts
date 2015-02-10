@@ -1,5 +1,8 @@
 /* exported app */
 /*jsl:import data/ContactModel.js*/
+
+var accountsHash = {};   // HACK: global so ContactModel can access it
+
 enyo.kind({
     name: "contacts.Application",
     kind: "enyo.Application",
@@ -17,6 +20,7 @@ enyo.kind({
     
     accountsResponse: function (inSender, inResponse) {
     	this.accounts = [];
+    	accountsHash = {};
     	inResponse.results.forEach(function (account) {
     		account.capabilityProviders.forEach(function (provider) {
     			if (provider.capability === "CONTACTS") {
@@ -26,13 +30,14 @@ enyo.kind({
     					dbkind: provider.dbkinds.contact,
     					icon32: account.icon.loc_32x32,
     					icon48: account.icon.loc_48x48,
-    					icon64: account.icon.loc_64x64,
-    					active: this.accounts.length === 0
+    					icon64: account.icon.loc_64x64
     				});
+    				accountsHash[account._id] = {icon: account.icon.loc_48x48 || account.icon.loc_64x64 || account.icon.loc_32x32};
     			}
     		}, this);
     	}, this);
-    	this.log(this.accounts);
+    	this.accounts[this.accounts.length > 1 ? 1 : 0].active = true;
+    	this.log(this.accounts, accountsHash);
     },
     accountsError: function (inSender, inError) {
     	this.error(inError, inError.errorText);

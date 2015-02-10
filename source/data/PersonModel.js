@@ -187,7 +187,6 @@ var PersonModel = enyo.kind({
             org = this.get("organization") || {},
             emails = this.get("emails") || {},
             ims = this.get("ims") || {},
-            phoneNumbers = this.get("phoneNumbers") || {},
             i;
 
         //TODO: get display properties from options..

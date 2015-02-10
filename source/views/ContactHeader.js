@@ -1,3 +1,5 @@
+/*jsl:import ../data/ContactModel.js */
+
 enyo.kind({
     name: "ContactHeader",
     kind: "enyo.FittableRows",
@@ -19,8 +21,11 @@ enyo.kind({
         { from: ".nickname", to: ".$.nickname.content", transform: function(path) {return path ? "“" + path + "”" : "";} },
         { from: ".job", to: ".$.job.content"},
         { from: ".contactIds", to: ".$.profilesCount.content", transform: function (ids) {
-            this.$.profiles.setOpen(false);
-            this.$.profilesIndicator.removeClass("active", this.$.profiles.open);
+        	this.$.profilesRptr.collection.empty();
+            this.$.profilesDrwr.setOpen(false);
+            this.$.profilesIndicator.removeClass("active", this.$.profilesDrwr.open);
+            // end side effects
+            // TODO: internationalize this
             if (! (ids instanceof Array)) { ids = []; }
             return ids.length === 1 ? $L("1 profile")  : ids.length + $L(" linked profiles");
         }}
@@ -53,7 +58,7 @@ enyo.kind({
 	                        name: "profilesButton",
 	                        kind: "onyx.Button",
 	                        classes: "profiles-button",
-		                    ontap: "openProfilesList",
+		                    ontap: "openProfilesDrwr",
 		                    components: [
 		                        {name: "profilesCount", content: "x Linked Profiles"},
 		                        {name: "profilesIndicator", kind: "onyx.Icon", src: "assets/btn_linked_profiles.png", classes: "profilesIndicator", style: "width: 13px; height: 20px; margin-left: 7px;"}
@@ -64,27 +69,50 @@ enyo.kind({
             ]
         },
         {
-            name: "profiles",
+            name: "profilesDrwr",
             kind: "enyo.Drawer",
             open: false,
             classes: "profiles",
             components: [
                 {
-                    name: "profilesList",
-                    kind: "enyo.List",
-                    components: [
-                        { name: "profile", kind: "ContactItem" }
-                    ]
+                    name: "profilesRptr",
+                    kind: "enyo.DataRepeater",
+                    collection: new ContactCollection(),
+                    components: [{
+                    	classes: "flex-row",
+                    	ontap: "showProfileDialog",
+                    	components: [
+               	            { classes: "icon", components: [
+                                { name: "profilePhoto", classes: "flex-none list-img", kind: "enyo.Image", sizing: "cover" },
+                                { classes: "list-mask"}
+                            ] },
+                        	{name: "profileDisplayName", classes: "flex-auto", content: ""},
+                        	{name: "profileAccountIcn", kind: "enyo.Image", sizing: "cover", classes: "flex-none", style: "width: 48px; height: 48px;", src: ""}
+                    	],
+                    	bindings: [
+                       	    {from: "model.listPhoto", to: "$.profilePhoto.src", transform: function(path) {return "'" + (path || "assets/bg_icon_favorite_img.png") + "'" ;}},
+                    	    {from: "model.displayName", to: "$.profileDisplayName.content"},
+                    	    {from: "model.accountIcon", to: "$.profileAccountIcn.src"}
+                    	]
+                    }]
                 },
-                { name: "linkProfile", content: "Link More Profiles..." }
+                {name: "linkProfile", content: "Link More Profiles...", style: "margin-left: 8px; line-height: 54px;", ontap: "linkMoreProfiles"}
             ]
         }
     ],
+    
+    openProfilesDrwr: function () {
+    	if (this.$.profilesRptr.collection.length === 0) {
+        	this.$.profilesRptr.collection.fetch({ids: this.contactIds});
+    	}
 
-    openProfilesList: function () {
-        // TODO: fetch records before opening
-        // consider fetching records when contactIds is set
-        this.$.profiles.setOpen(!this.$.profiles.open);
-        this.$.profilesIndicator.addRemoveClass("active", this.$.profiles.open);
+    	this.$.profilesDrwr.setOpen(!this.$.profilesDrwr.open);
+        this.$.profilesIndicator.addRemoveClass("active", this.$.profilesDrwr.open);
+    },
+    showProfileDialog: function (inSender, inEvent) {
+		window.PalmSystem.addBannerMessage($L("Profile dialog not yet implemented"));
+    },
+    linkMoreProfiles: function (inSender, inEvent) {
+		window.PalmSystem.addBannerMessage($L("Manual linking not yet implemented"));
     }
 });
