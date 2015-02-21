@@ -164,9 +164,7 @@ enyo.kind({
                 {name: "titleText", fit: true, content: "", style: "text-align:center"},
                 {kind: "onyx.PickerDecorator", components: [
 		 		    {},   // PickerButton
-		 		    {name: "accountPicker", kind: "onyx.Picker", components: [  // TODO: use this
-		 		        {content: "first account", active: true},
-		 		        {content: "second account"}
+		 		    {name: "accountPicker", kind: "onyx.Picker", components: [
 		 		    ]}
 		 		]}
             ]
@@ -467,6 +465,9 @@ enyo.kind({
     	this.inherited (arguments);
     	if (inOld === false && this.get("showing") === true) {
     		this.$.scroller.scrollToTop();
+    		if (this.$.accountPicker.getComponents().length === 1) {   // only has scroller
+    			this.$.accountPicker.createComponents(this.app.accounts);
+    		}
     	}
     },
 
@@ -506,7 +507,10 @@ enyo.kind({
 
 		this.person.attributes.relations = this.$.relationRepeater.collection.raw().slice(0, -1);
 
-		this.doSave({person: this.person});
+		// account fields for contact records
+    	var accountCtrl = this.$.accountPicker.get("selected");
+    	
+		this.doSave({person: this.person, accountId: accountCtrl.accountId, dbkind: accountCtrl.dbkind});
     },
     
     parseName: function () {

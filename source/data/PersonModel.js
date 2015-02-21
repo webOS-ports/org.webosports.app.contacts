@@ -187,7 +187,6 @@ var PersonModel = enyo.kind({
             org = this.get("organization") || {},
             emails = this.get("emails") || {},
             ims = this.get("ims") || {},
-            phoneNumbers = this.get("phoneNumbers") || {},
             i;
 
         //TODO: get display properties from options..
@@ -272,9 +271,20 @@ var PersonModel = enyo.kind({
         return result;
     },
     
-    toContactData: function () {
+    toContactData: function (accountId, dbkind) {
+    	var organization = this.get("organization"), orgArr = [];
+    	if (organization.name || organization.department || organization.title || organization.description) {
+    		orgArr.push(enyo.clone(organization));   // TODO: deep-clone
+    	}
+    	
+    	var photos = this.get("photos"), photoArr = [];
+    	if (photos.bigPhotoId || photos.bigPhotoPath || photos.listPhotoPath ||
+    			photos.squarePhotoId || photos.squarePhotoPath) {
+    		photoArr.push(enyo.clone(photos));
+    	}
     	return {
-//    		accountId: 
+    		accountId: accountId,
+    		_kind: dbkind,
     		name: enyo.clone(this.get("name")),
     		nickname: this.get("nickname"),
     		birthday: this.get("birthday"),
@@ -285,9 +295,9 @@ var PersonModel = enyo.kind({
     		urls: enyo.clone(this.get("urls")),   // TODO: deep-clone
     		phoneNumbers: enyo.clone(this.get("phoneNumbers")),    // TODO: deep-clone
     		ims: enyo.clone(this.get("ims")),    // TODO: deep-clone
-    		photos: enyo.clone(this.get("photos")),    // TODO: deep-clone
+    		photos: photoArr,
     		addresses: enyo.clone(this.get("addresses")),    // TODO: deep-clone
-    		organizations: [enyo.clone(this.get("organization"))],
+    		organizations: orgArr,
     		relations: enyo.clone(this.get("relations"))    // TODO: deep-clone
     	};
     }
