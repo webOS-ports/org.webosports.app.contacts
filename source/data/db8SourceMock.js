@@ -665,7 +665,7 @@ enyo.kind({
             reminder: "",
             ringtone: [],
             searchTerms: ["schmidtjohn", "jschmidt"],
-            sortKey: "",
+            sortKey: "schmidt\tjohn",
             urls: []
         },
         // hyphenated family name; should be searchable by either part
@@ -693,7 +693,7 @@ enyo.kind({
             reminder: "",
             ringtone: [],
             searchTerms: ["csmythe-jones", "smythe-jonescecil"],
-            sortKey: "smythe-jones cecil",
+            sortKey: "smythe-jones\tcecil",
             urls: []
         },
         // prefix & given name; should not be searchable by prefix
@@ -753,7 +753,7 @@ enyo.kind({
             reminder: "",
             ringtone: [],
             searchTerms: ["notesmary ann", "mnotes"],
-            sortKey: "notes mary ann",
+            sortKey: "notes\tmary ann",
             urls: []
         },
         // nickname but no formal name - should be displayed and searchable by nickname (or IM)
@@ -811,7 +811,7 @@ enyo.kind({
             reminder: "",
             ringtone: [],
             searchTerms: ["孙七", "七孙"],
-            sortKey: "孙 七",
+            sortKey: "孙\t七",
             urls: []
         },
         // compound surnames should be searchable by any word
@@ -840,7 +840,7 @@ enyo.kind({
             reminder: "",
             ringtone: [],
             searchTerms: ["lopez perez de ramirezmaria", "mlopez perez de ramirez"],
-            sortKey: "lopez perez de ramirez maria",
+            sortKey: "lopez perez de ramirez\tmaria",
             urls: []
         },
         // a favorite, with multiple names. Should be searchable by any name
@@ -876,7 +876,7 @@ enyo.kind({
             reminder: "",
             ringtone: [],
             searchTerms: ["kringlekris", "kkringle"],
-            sortKey: "kringle kris",
+            sortKey: "kringle\tkris",
             urls: []
         },
         

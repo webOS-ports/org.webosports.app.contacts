@@ -103,11 +103,6 @@ enyo.kind({
     	} else {
     		this.$.favContactsList.scrollToIndex(0);
     	}
-    },
+    }
     
-    showLastContact: function () {
-        this.$.panes.setIndex(0);
-        this.$.searchInput.set('value', '');
-		this.$.allContactsList.scrollToIndex(this.$.allContactsList.data().length - 1);
-   }
 });

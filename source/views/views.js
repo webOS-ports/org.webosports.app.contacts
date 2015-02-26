@@ -78,6 +78,8 @@ enyo.kind({
         this.log("==========> Telling global list to fetch contacts...");
     	var contactsBar = this.$.contactsBar;
         GlobalPersonCollection.fetch({strategy: "merge", orderBy: "sortKey", success: function (collection, opts, records) {
+        	// This function is called whenever persons in the DB change, thanks to the watch.
+        	console.log("views fetch complete - now " + collection.length + " items");
         	contactsBar.refilter();
         }});
     },
@@ -99,7 +101,7 @@ enyo.kind({
     savePerson: function (inSender, inEvent) {
     	var contactsBar = this.$.contactsBar;
     	inEvent.person.commit({success: function (rec, opts, res) {
-        	contactsBar.refilter();   // commit does not always trigger the fetch above    		
+    		// The fetch above handles updating the UI.
     	}});
     },
     
@@ -138,23 +140,12 @@ enyo.kind({
     /** the contactlinker will create or update person records */
     saveContact: function (inSender, inEvent) {
 //    	this.log("person:", inEvent.person.attributes, inEvent.accountId, inEvent.dbkind);
-    	// TODO: when DB8 watches are implemented, this may be redundant
-    	GlobalPersonCollection.add(inEvent.person);
-    	this.$.contactsBar.refilter();
     	
     	var contact = new ContactModel(inEvent.person.toContactData(inEvent.accountId, inEvent.dbkind));
     	this.log("contact:", contact);
     	contact.commit();
-
-    	this.setIndex(0);   // hides edit pane
     	
-    	if (inEvent.person.get("contactIds").length === 0) {   // is new
-    		// shows list where new contact will appear
-            if (enyo.Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
-                this.$.main.setIndex(0);
-            }
-    		this.$.contactsBar.showLastContact();
-    	}
+    	this.setIndex(0);   // hides edit/create pane
 	},
     
     goBack: function () {
