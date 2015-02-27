@@ -29,7 +29,8 @@ enyo.kind({
         {
             name: "panes",
             kind: "enyo.Panels",
-            arrangerKind: "enyo.LeftRightArranger",
+            arrangerKind: "enyo.CardArranger",
+            draggable: false,
             onTransitionFinish: "tabChange",
             margin: 0,
             fit: true,

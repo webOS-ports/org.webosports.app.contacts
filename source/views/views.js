@@ -7,6 +7,7 @@ enyo.kind({
     name: "contacts.MainView",
 	kind: "enyo.Panels",
 	arrangerKind: "enyo.CardArranger",
+	draggable: false,
     components: [
         {
 			name: "supermain",
@@ -17,9 +18,7 @@ enyo.kind({
 		            kind: "enyo.Panels",
 		            arrangerKind: "enyo.CollapsingArranger",
 		            draggable: false,
-		            classes: "app-panels",
 		            fit: true,
-		            narrowFit: true, //collapses to one panel only if width < 800px
 		            components: [
 		                { name: "contactsBar", kind: "ContactsBar", onSelected: "showPerson" },
 		                {
@@ -86,13 +85,12 @@ enyo.kind({
     
     showPerson: function (inSender, inEvent) {
         if (inEvent.person) {
-            this.$.detailsPanel.setIndex(1);
+            this.$.detailsPanel.setIndex(1);   // ContactDetails
+            if (enyo.Panels.isScreenNarrow()) {
+                this.$.main.setIndex(1);
+            }
         } else {
-            this.$.detailsPanel.setIndex(0);
-        }
-
-        if (enyo.Panels.isScreenNarrow()) {
-            this.$.main.setIndex(1);
+            this.$.detailsPanel.setIndex(0);   // empty
         }
 
         this.$.details.setPerson(inEvent.person);
@@ -132,10 +130,10 @@ enyo.kind({
 //            urls: [{value: "http://mickey.disney.com/"}]
 //     	});
     	this.$.editContact.set("person", person);
-    	this.setIndex(1);
+    	this.setIndex(1);   // show Edit/Create
 	},
     hideEdit: function (inSender, inEvent) {
-    	this.setIndex(0);
+    	this.setIndex(0);   // hide Edit/Create
     },
     /** the contactlinker will create or update person records */
     saveContact: function (inSender, inEvent) {
@@ -149,7 +147,9 @@ enyo.kind({
 	},
     
     goBack: function () {
-        if (enyo.Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
+    	if (this.get("index") > 0) {
+    		this.set("index", 0);   // hide Edit/Create
+    	} else if (enyo.Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
             this.$.main.setIndex(0);
         } else {
         	switch (this.$.main.get("index")) {

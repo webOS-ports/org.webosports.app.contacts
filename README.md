@@ -28,7 +28,6 @@ see http://www.openwebosproject.org/docs/developer_reference/application_apis/ad
 ## TODO
 * contact details displays address with locality, region, country and postal code on separate lines
 * ? contact details doesn't display type for IM addr
-* tapping in list below items opens selected item pane
 * locale-specific code to parse a single address field into DB fields
 * edit name components
 * type of new phone, IM, address or relation should be different than existing
