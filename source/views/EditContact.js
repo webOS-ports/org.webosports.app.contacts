@@ -62,10 +62,12 @@ enyo.kind({
     },
     published: {
         title: "",
+        doneLabel: "",
         person: new PersonModel()
     },
     bindings: [
         {from: ".title", to: ".$.titleText.content"},
+        {from: ".doneLabel", to: ".$.doneBtn.content"},
         {from: ".person.name", to: ".$.nameInput.value", transform: function (name) {
         	var fullName = "";
             if (name.honorificPrefix) {
@@ -162,7 +164,7 @@ enyo.kind({
             components: [
                  // TODO: center title text in window
                 {name: "titleText", fit: true, content: "", style: "text-align:center"},
-                {kind: "onyx.PickerDecorator", components: [
+                {kind: "onyx.PickerDecorator", style: "max-width: 55%;", components: [
 		 		    {},   // PickerButton
 		 		    {name: "accountPicker", kind: "onyx.Picker", components: [
 		 		    ]}
@@ -178,7 +180,7 @@ enyo.kind({
         	style: "",
         	components: [
         	    {
-        	    	kind: "FittableColumns",
+        	    	kind: "FittableColumns",   // TODO: reposition avatar on phone-size screens using flexbox wrap
         	    	components: [
     	                {
     	                    classes: "avatar",
@@ -456,7 +458,7 @@ enyo.kind({
             components: [
                 {kind: "onyx.Button", content: $L("Cancel"), classes: "onyx-negative", style: "width: 10rem;", ontap: "doCancel"},
                 {fit: true},
-                {kind: "onyx.Button", content: $L("Done"), classes: "onyx-affirmative", style: "width: 10rem;", ontap: "doneTap"}
+                {name: "doneBtn", kind: "onyx.Button", content: "", classes: "onyx-affirmative", style: "width: 10rem;", ontap: "doneTap"}
             ]
         }
     ],

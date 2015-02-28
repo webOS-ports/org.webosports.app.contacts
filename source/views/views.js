@@ -104,7 +104,8 @@ enyo.kind({
     },
     
     showAdd: function (inSender, inEvent) {
-    	this.$.editContact.set("title", $L("Create New Contact"));
+    	this.$.editContact.set("title", $L("New Contact"));
+    	this.$.editContact.set("doneLabel", $L("Create"));
     	var person = new PersonModel();
 //    	person = new PersonModel({
 //    		addresses: [{
@@ -165,7 +166,8 @@ enyo.kind({
     processLaunchParam: function (inSender, launchParam) {
     	this.log(typeof launchParam, launchParam);
     	if (launchParam.launchType === "newContact") {
-        	this.$.editContact.set("title", $L("Create New Contact"));
+        	this.$.editContact.set("title", $L("New Contact"));
+        	this.$.editContact.set("doneLabel", $L("Create"));
         	var person = new PersonModel(launchParam.contact);
         	this.$.editContact.set("person", person);
         	this.setIndex(1);
