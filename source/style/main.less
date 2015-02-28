@@ -5,11 +5,6 @@
 
 //handle smaller screens:
 @media all and (max-width: 800px) {
-    .app-panels > * {
-        min-width: 100%;
-        max-width: 100%;
-    }
-
     .contacts-list .contacts-item .name {
         max-width: 100%;
     }
@@ -345,13 +340,14 @@ img {
 
 .avatar {
     width: 222px;
+    max-width: 35%;
     position: relative;
     height: 222px;
 }
 
 .avatar .img {
     height: 196px;
-    width: 196px;
+    width: 88.3%;
     top: 13px;
     position: absolute;
     left: 13px;
@@ -367,6 +363,15 @@ img {
     height: 100%;
     width: 100%;
     background: url(../../assets/bg_avatar_mask.png) no-repeat 0 0;
+    background-size: 100% 100%;
+}
+@media all and (max-width: 599px) {
+	.avatar .img {
+	   border-radius: 7px;
+	}
+	.avatar .mask {
+	   display: none;
+	}
 }
 
 /* Edit */

@@ -7,8 +7,8 @@ var PersonCollection = enyo.kind({
     //best is to not store this collection... might break things. urgs.
 });
 
-// TODO: this should be a property of the contacts.Application component (accessible as this.app)
-var GlobalPersonCollection = new PersonCollection({instanceAllRecords: false});
+// TODO: this should be a property of the contacts.Application component (accessible as this.app) or the contacts namespace
+var GlobalPersonCollection = new PersonCollection({options: {}});
 
 /* For Enyo 2.4, we use the strategy of loading all records into
  * GlobalPersonCollection, and manually filtering into a source-less Collection

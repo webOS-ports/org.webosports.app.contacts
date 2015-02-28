@@ -7,6 +7,7 @@ enyo.kind({
     name: "contacts.MainView",
 	kind: "enyo.Panels",
 	arrangerKind: "enyo.CardArranger",
+	draggable: false,
     components: [
         {
 			name: "supermain",
@@ -17,9 +18,7 @@ enyo.kind({
 		            kind: "enyo.Panels",
 		            arrangerKind: "enyo.CollapsingArranger",
 		            draggable: false,
-		            classes: "app-panels",
 		            fit: true,
-		            narrowFit: true, //collapses to one panel only if width < 800px
 		            components: [
 		                { name: "contactsBar", kind: "ContactsBar", onSelected: "showPerson" },
 		                {
@@ -78,19 +77,20 @@ enyo.kind({
         this.log("==========> Telling global list to fetch contacts...");
     	var contactsBar = this.$.contactsBar;
         GlobalPersonCollection.fetch({strategy: "merge", orderBy: "sortKey", success: function (collection, opts, records) {
+        	// This function is called whenever persons in the DB change, thanks to the watch.
+        	console.log("views fetch complete - now " + collection.length + " items");
         	contactsBar.refilter();
         }});
     },
     
     showPerson: function (inSender, inEvent) {
         if (inEvent.person) {
-            this.$.detailsPanel.setIndex(1);
+            this.$.detailsPanel.setIndex(1);   // ContactDetails
+            if (enyo.Panels.isScreenNarrow()) {
+                this.$.main.setIndex(1);
+            }
         } else {
-            this.$.detailsPanel.setIndex(0);
-        }
-
-        if (enyo.Panels.isScreenNarrow()) {
-            this.$.main.setIndex(1);
+            this.$.detailsPanel.setIndex(0);   // empty
         }
 
         this.$.details.setPerson(inEvent.person);
@@ -99,12 +99,13 @@ enyo.kind({
     savePerson: function (inSender, inEvent) {
     	var contactsBar = this.$.contactsBar;
     	inEvent.person.commit({success: function (rec, opts, res) {
-        	contactsBar.refilter();   // commit does not always trigger the fetch above    		
+    		// The fetch above handles updating the UI.
     	}});
     },
     
     showAdd: function (inSender, inEvent) {
-    	this.$.editContact.set("title", $L("Create New Contact"));
+    	this.$.editContact.set("title", $L("New Contact"));
+    	this.$.editContact.set("doneLabel", $L("Create"));
     	var person = new PersonModel();
 //    	person = new PersonModel({
 //    		addresses: [{
@@ -130,35 +131,26 @@ enyo.kind({
 //            urls: [{value: "http://mickey.disney.com/"}]
 //     	});
     	this.$.editContact.set("person", person);
-    	this.setIndex(1);
+    	this.setIndex(1);   // show Edit/Create
 	},
     hideEdit: function (inSender, inEvent) {
-    	this.setIndex(0);
+    	this.setIndex(0);   // hide Edit/Create
     },
     /** the contactlinker will create or update person records */
     saveContact: function (inSender, inEvent) {
 //    	this.log("person:", inEvent.person.attributes, inEvent.accountId, inEvent.dbkind);
-    	// TODO: when DB8 watches are implemented, this may be redundant
-    	GlobalPersonCollection.add(inEvent.person);
-    	this.$.contactsBar.refilter();
     	
     	var contact = new ContactModel(inEvent.person.toContactData(inEvent.accountId, inEvent.dbkind));
     	this.log("contact:", contact);
     	contact.commit();
-
-    	this.setIndex(0);   // hides edit pane
     	
-    	if (inEvent.person.get("contactIds").length === 0) {   // is new
-    		// shows list where new contact will appear
-            if (enyo.Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
-                this.$.main.setIndex(0);
-            }
-    		this.$.contactsBar.showLastContact();
-    	}
+    	this.setIndex(0);   // hides edit/create pane
 	},
     
     goBack: function () {
-        if (enyo.Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
+    	if (this.get("index") > 0) {
+    		this.set("index", 0);   // hide Edit/Create
+    	} else if (enyo.Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
             this.$.main.setIndex(0);
         } else {
         	switch (this.$.main.get("index")) {
@@ -174,7 +166,8 @@ enyo.kind({
     processLaunchParam: function (inSender, launchParam) {
     	this.log(typeof launchParam, launchParam);
     	if (launchParam.launchType === "newContact") {
-        	this.$.editContact.set("title", $L("Create New Contact"));
+        	this.$.editContact.set("title", $L("New Contact"));
+        	this.$.editContact.set("doneLabel", $L("Create"));
         	var person = new PersonModel(launchParam.contact);
         	this.$.editContact.set("person", person);
         	this.setIndex(1);

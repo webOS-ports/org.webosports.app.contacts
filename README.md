@@ -28,16 +28,18 @@ see http://www.openwebosproject.org/docs/developer_reference/application_apis/ad
 ## TODO
 * contact details displays address with locality, region, country and postal code on separate lines
 * ? contact details doesn't display type for IM addr
-* tapping in list below items opens selected item pane
-* db watches (currently => need to restart to get fresh data)
 * locale-specific code to parse a single address field into DB fields
 * edit name components
 * type of new phone, IM, address or relation should be different than existing
 * allow contact editing
 * allow deleting records
+* edit photos
 * edit ringtones
 * request dialing phone number
 * request sending email
 * request sending IM
 * request open browser to URL
+* replace account picker in EditContact w/ icon btn & custom Menu
+* re-think edit & detail layout to work properly on both phone- and tablet-sized screens
+* handle users w/ more than 500 contacts (probably by loading them all into GlobalPersonCollection)
 

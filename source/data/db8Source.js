@@ -2,6 +2,7 @@ enyo.kind({
     name: "db8Source",
     kind: "enyo.Source",
     dbService: "palm://com.palm.db",
+    requests: [],
 
     _doRequest: function (method, parameters, success, failure, subscribe) {
         var request = new enyo.ServiceRequest({
@@ -62,15 +63,14 @@ enyo.kind({
         	}
         }
     },
-    _fetchFind: function (rec, opts) {
+    _fetchFind: function (collection, opts) {
         //if more than 500 contacts need to implement paging
-        //if something changes, need to update collection. TODO: test this!
     	// http://www.openwebosproject.org/docs/developer_reference/data_types/db8#Query
     	// It's okay to call opts.success multiple times, but be sure processing the previous
     	// call has finished before calling again (probably using enyo.job()).
     	var query = {
     		select: opts.select,
-    		from: rec.dbKind,
+    		from: collection.dbKind,
     		where: opts.where,
     		orderBy: opts.orderBy,
     		desc: opts.desc,
@@ -78,23 +78,37 @@ enyo.kind({
     		limit: opts.limit,
     		page: opts.page
     	};
-        var parameters = {query: query, count: false, watch: false};
-        console.log("db8Source fetch", rec, opts, parameters);
+        var parameters = {query: query, count: false, watch: true};
+        console.log("db8Source fetch", collection, opts, parameters);
 
-        var request = new enyo.ServiceRequest({service: this.dbService, method: "find"});
+        var request = new enyo.ServiceRequest({service: this.dbService, method: "find", subscribe: true});
         request.go(parameters);
 
         request.response(handleFindResponse.bind(this, opts.success, opts.fail));
         request.error(this.generalFailure.bind(this, opts.fail));
+        
+        this.requests.push(request);
 
         function handleFindResponse(success, failure, inSender, inResponse) {
-        	console.log("fetch (find) handleFindResponse:", inResponse.results.length, "records", inResponse);
-        	// Do we need to store inResponse.next so it can be passed as opts.page?
-        	// If we set parameters.count=true, can we make use of inResponse.count?
+        	if (inResponse.results) {
+            	console.log("fetch (find) handleFindResponse:", inResponse.results.length, "records", inResponse);
 
-        	// Only records can be passed to the success callback.
-        	// Never pass anything PalmBus- or DB8-specific.
-        	success(inResponse.results);
+            	// Do we need to store inResponse.next so it can be passed as opts.page?
+            	// If we set parameters.count=true, can we make use of inResponse.count?
+    			collection.empty();   // replaces all models so sort order is used
+            	// Only records can be passed to the success callback.
+            	// Never pass anything PalmBus- or DB8-specific.
+            	success(inResponse.results);
+        	} else if (inResponse.fired) {   // watch
+        		console.log("fetch (find) handleFindResponse watch fired:", inResponse);
+
+        		var requestInd = this.requests.findIndex( function (element) { return element === request;} );
+				this.requests.splice(requestInd, 1);
+				
+				this._fetchFind(collection, opts);
+        	} else {
+        		console.error("fetch (find) handleFindResponse weird response:", inResponse);
+        	}
         }
     },
     
