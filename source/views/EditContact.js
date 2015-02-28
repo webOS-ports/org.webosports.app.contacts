@@ -174,11 +174,9 @@ enyo.kind({
         {
         	fit: true,
         	kind: "enyo.Scroller", 
-        	horizontal: "hidden",
-        	strategyKind: "TranslateScrollStrategy",
-        	classes: "edit-main",
-        	style: "",
+        	touch: true,
         	components: [
+        	    { classes: "edit-main", components: [
         	    {
         	    	kind: "FittableColumns",   // TODO: reposition avatar on phone-size screens using flexbox wrap
         	    	components: [
@@ -449,7 +447,7 @@ enyo.kind({
                  ]}
 	            ]},
   	            {style: "height: 1rem;"}   // hack because scroller cuts off last item
-            ]
+            ]}]
         },
         {
             name: "bottomToolbar",
