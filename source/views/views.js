@@ -10,51 +10,42 @@ enyo.kind({
 	draggable: false,
     components: [
         {
-			name: "supermain",
-            kind: "FittableRows",
-			components: [
-		        {
-		            name: "main",
-		            kind: "enyo.Panels",
-		            arrangerKind: "enyo.CollapsingArranger",
-		            draggable: false,
-		            fit: true,
-		            components: [
-		                { name: "contactsBar", kind: "ContactsBar", onSelected: "showPerson" },
-		                {
-		                    kind: "enyo.Panels",
-		                    fit: true,
-		                    name: "detailsPanel",
-		                    draggable: false,
-		                    classes: "details",
-		                    components: [
-		                        {
-		                            name: "empty",
-		                            components: [
-		                                {
-		                                    kind: "enyo.Image",
-		                                    src: "assets/first-launch-contacts.png",
-		                                    style: "display: block; margin: auto; padding-top: 30%;"
-		                                },
-		                                {
-		                                    style: "display: block; margin: 10px auto; text-align: center;",
-		                                    content: "Please select a contact on the left to see more information."
-		                                }
-		                            ]
-		                        },
-		                        { name: "details", kind: "ContactDetails", fit: true, onPersonChanged: "savePerson" }
-		                    ]
-		                }
-		            ]
-		        },
-		        {
-		            name: "BottomToolbar",
-		            kind: "onyx.Toolbar",
-		            components: [
-		                { kind: "onyx.Button", content: $L("Add Contact"), ontap: "showAdd"}
-		            ]
-		        }
-		    ]
+            name: "main",
+            kind: "enyo.Panels",
+            arrangerKind: "enyo.CollapsingArranger",
+            draggable: false,
+            fit: true,
+            components: [
+                { style: "width: 38.2%;" /* golden ratio */, components: [
+                	{ name: "contactsBar", kind: "ContactsBar", classes: "enyo-fit", onSelected: "showPerson" },
+                    { name: "addContactBtn", kind: "onyx.Button", /*content: $L("Add Contact"),*/ style: "position: absolute; right: 0.5rem; bottom: 0.5rem;", ontap: "showAdd", components: [
+                        {kind: "onyx.Icon", src: "assets/bg_field_new.png", style: "width: 18px; background-position: center center;"}
+                    ]}
+                ]},
+                {
+                    kind: "enyo.Panels",
+                    name: "detailsPanel",
+                    draggable: false,
+                    classes: "details",
+                    components: [
+                        {
+                            name: "empty",
+                            components: [
+                                {
+                                    kind: "enyo.Image",
+                                    src: "assets/first-launch-contacts.png",
+                                    style: "display: block; margin: auto; padding-top: 30%;"
+                                },
+                                {
+                                    style: "display: block; margin: 10px auto; text-align: center;",
+                                    content: "Please select a contact on the left to see more information."
+                                }
+                            ]
+                        },
+                        { name: "details", kind: "ContactDetails", fit: true, onPersonChanged: "savePerson" }
+                    ]
+                }
+            ]
         },
         {
         	kind: "contacts.EditContact",
@@ -69,6 +60,7 @@ enyo.kind({
     ],
     create: function () {
         this.inherited(arguments);
+        this.handleResize();
         
         if (window.PalmSystem) {
         	this.processLaunchParam(null, JSON.parse(window.PalmSystem.launchParams));
@@ -81,6 +73,11 @@ enyo.kind({
         	console.log("views fetch complete - now " + collection.length + " items");
         	contactsBar.refilter();
         }});
+    },
+    handleResize: function () {
+    	// We don't need to call this.inherited(arguments);
+
+    	// TODO: tweak spacing, etc.
     },
     
     showPerson: function (inSender, inEvent) {
