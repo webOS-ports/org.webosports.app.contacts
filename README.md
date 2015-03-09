@@ -27,11 +27,11 @@ see http://www.openwebosproject.org/docs/developer_reference/application_apis/ad
 
 ## TODO
 * contact details displays address with locality, region, country and postal code on separate lines
-* ? contact details doesn't display type for IM addr
+* contact details doesn't display type "other" for IM addr
 * locale-specific code to parse a single address field into DB fields
 * edit name components
 * type of new phone, IM, address or relation should be different than existing
-* allow contact editing
+* fix race condition between launchParam & accountPicker
 * allow deleting records
 * edit photos
 * edit ringtones
@@ -42,4 +42,5 @@ see http://www.openwebosproject.org/docs/developer_reference/application_apis/ad
 * replace account picker in EditContact w/ icon btn & custom Menu
 * re-think edit & detail layout to work properly on both phone- and tablet-sized screens
 * handle users w/ more than 500 contacts (probably by loading them all into GlobalPersonCollection)
+* when user is edited, make the list of linked contacts update
 

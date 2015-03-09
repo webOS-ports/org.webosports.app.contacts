@@ -22,14 +22,15 @@ enyo.kind({
 
 enyo.kind({
     name: "ContactDetails",
-    kind: "enyo.Scroller",
+    kind: "Control",
     touch: true,
     classes: "details",
     published: {
         person: null
     },
     events: {
-    	onPersonChanged: ""
+    	onPersonChanged: "",
+    	onEdit: ""
     },
     components: [
         {
@@ -38,17 +39,17 @@ enyo.kind({
             model: "DetailsModel",
             instanceAllRecords: true
         },
-        {
-            name: "container",
-            classes: "container",
-            components: [
-                {
-                    name: "content",
-                    classes: "content",
-                    kind: "enyo.FittableRows",
-                    components: [
-                        { name: "header", kind: "ContactHeader"},
-                        //{ kind: "enyo.Scroller", fit: true, components: [
+        { kind: "enyo.Scroller", touch: true, classes: "enyo-fit", components: [
+            {
+                name: "container",
+                classes: "container",
+                components: [
+                    {
+                        name: "content",
+                        classes: "content",
+                        kind: "enyo.FittableRows",
+                        components: [
+                            { name: "header", kind: "ContactHeader"},
                             {
                                 name: "details",
                                 kind: "enyo.DataRepeater",
@@ -58,11 +59,15 @@ enyo.kind({
                                     { kind: "Detail", classes: "contacts-item" }
                                 ]
                             }
-                        //]}
-                    ]
-                }
-            ]
-        }
+                        ]
+                    }
+                ]
+            }]
+        },
+        { name: "editContactBtn", kind: "onyx.Button", style: "position: absolute; right: 0.5rem; bottom: 0.5rem;", ontap: "doEdit", components: [
+            {kind: "onyx.Icon", src: "assets/btn_edit.png"}
+        ]}
+
     ],
     bindings: [
         //details stuff:
