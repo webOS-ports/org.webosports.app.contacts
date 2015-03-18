@@ -15,12 +15,12 @@ enyo.kind({
     bindings: [
         // Quotes are needed to work around a bug in Black Eye when using sizing "cover".
         // The should not be needed (and are not needed in Safari 7.1).
-        { from: ".displayPhoto", to: ".$.photo.src", transform: function(path) {return "'" + (path || "assets/bg_icon_favorite_img.png") + "'" ;} },
-        { from: ".favorite", to: ".$.favourite.value", oneWay: false},
-        { from: ".displayName", to: ".$.displayName.content"},
-        { from: ".nickname", to: ".$.nickname.content", transform: function(path) {return path ? "“" + path + "”" : "";} },
-        { from: ".job", to: ".$.job.content"},
-        { from: ".contactIds", to: ".$.profilesCount.content", transform: function (ids) {
+        { from: "displayPhoto", to: "$.photo.src", transform: function(path) {return "'" + (path || "assets/bg_icon_favorite_img.png") + "'" ;} },
+        { from: "favorite", to: "$.favourite.value", oneWay: false},
+        { from: "displayName", to: "$.displayName.content"},
+        { from: "nickname", to: "$.nickname.content", transform: function(path) {return path ? "“" + path + "”" : "";} },
+        { from: "job", to: "$.job.content"},
+        { from: "contactIds", to: "$.profilesCount.content", transform: function (ids) {
         	this.$.profilesRptr.collection.empty();
             this.$.profilesDrwr.setOpen(false);
             this.$.profilesIndicator.removeClass("active", this.$.profilesDrwr.open);

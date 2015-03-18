@@ -26,10 +26,10 @@ enyo.kind({
 	        ]}
  	    ],
         bindings: [
-       		{ from: ".container.inputType", to: ".$.detailInput.type" },   // TODO: Is there a better way to do this?
-      		{ from: ".container.placeholder", to: ".$.detailInput.placeholder" },
-            { from: ".model.value", to: ".$.detailInput.value", oneWay: false },
-            { from: ".model.type", to: ".$.detailPicker.selected", oneWay: false, transform: function (type, dir) {
+       		{ from: "container.inputType", to: "$.detailInput.type" },   // TODO: Is there a better way to do this?
+      		{ from: "container.placeholder", to: "$.detailInput.placeholder" },
+            { from: "model.value", to: "$.detailInput.value", oneWay: false },
+            { from: "model.type", to: "$.detailPicker.selected", oneWay: false, transform: function (type, dir) {
             	if (dir & enyo.Binding.DIRTY_FROM) {
             		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
             	} else {
@@ -67,12 +67,12 @@ enyo.kind({
         newPerson: null
     },
     bindings: [
-        {from: ".title", to: ".$.titleText.content"},
-        {from: ".doneLabel", to: ".$.doneBtn.content"},
+        {from: "title", to: "$.titleText.content"},
+        {from: "doneLabel", to: "$.doneBtn.content"},
         {from: "oldPerson", to: "newPerson", transform: function (person) {
         	return new PersonModel(person.raw());
         }},
-        {from: "newPerson.name", to: ".$.nameInput.value", transform: function (name) {
+        {from: "newPerson.name", to: "$.nameInput.value", transform: function (name) {
         	var fullName = "";
             if (name.honorificPrefix) {
                 fullName += name.honorificPrefix + " ";
@@ -95,52 +95,52 @@ enyo.kind({
             }
             return fullName.trim();
         }},
-        {from: "newPerson.nickname", to: ".$.nicknameInput.value", oneWay: false},
-        {from: "newPerson.organization", to: ".$.jobTitleInput.value", transform: function (organization) {
+        {from: "newPerson.nickname", to: "$.nicknameInput.value", oneWay: false},
+        {from: "newPerson.organization", to: "$.jobTitleInput.value", transform: function (organization) {
         	return organization.title;
         }},
-        {from: "newPerson.organization", to: ".$.departmentInput.value", transform: function (organization) {
+        {from: "newPerson.organization", to: "$.departmentInput.value", transform: function (organization) {
         	return organization.department;
         }},
-        {from: "newPerson.organization", to: ".$.organizationInput.value", transform: function (organization) {
+        {from: "newPerson.organization", to: "$.organizationInput.value", transform: function (organization) {
         	return organization.name;
         }},
-        {from: "newPerson.phoneNumbers", to: ".$.phoneRepeater.collection", transform: function (phoneNumbers) {
+        {from: "newPerson.phoneNumbers", to: "$.phoneRepeater.collection", transform: function (phoneNumbers) {
             console.log("phoneNumbers", phoneNumbers); 
             var c = new enyo.Collection(phoneNumbers);
             c.add({value: "", type: "type_mobile", favoriteData: {}, normalizedValue: ""});
 //            console.log("phone collection", c);
             return c;
         }},
-        {from: "newPerson.emails", to: ".$.emailRepeater.collection", transform: function (emails) {
+        {from: "newPerson.emails", to: "$.emailRepeater.collection", transform: function (emails) {
             console.log("emails", emails); 
             var c = new enyo.Collection(emails);
             c.add({value: "", type: "type_home", favoriteData: {}, normalizedValue: ""});
 //            console.log("email collection", c);
             return c;
         }},
-        {from: "newPerson.ims", to: ".$.imRepeater.collection", transform: function (ims) {
+        {from: "newPerson.ims", to: "$.imRepeater.collection", transform: function (ims) {
             console.log("ims", ims); 
             var c = new enyo.Collection(ims);
             c.add({value: "", favoriteData: {}, normalizedValue: ""});
 //            console.log("IM collection", c);
             return c;
         }},
-        {from: "newPerson.addresses", to: ".$.addressRepeater.collection", transform: function (addresses) {
+        {from: "newPerson.addresses", to: "$.addressRepeater.collection", transform: function (addresses) {
             console.log("addresses", addresses); 
             var c = new enyo.Collection(addresses);
             c.add({streetAddress: "", locality: "", region: "", country: "", postalCode: "", type: "type_home"});
 //            console.log("email collection", c);
             return c;
         }},
-        {from: "newPerson.urls", to: ".$.urlRepeater.collection", transform: function (urls) {
+        {from: "newPerson.urls", to: "$.urlRepeater.collection", transform: function (urls) {
             console.log("urls", urls); 
             var c = new enyo.Collection(urls);
             c.add({value: ""});
 //            console.log("url collection", c);
             return c;
         }},
-        {from: "newPerson.notes", to: ".$.noteRepeater.collection", transform: function (notes) {
+        {from: "newPerson.notes", to: "$.noteRepeater.collection", transform: function (notes) {
             console.log("notes", notes); 
         	// person.notes is an array of strings; Collections accepts only objects & arrays of objects
             var c = new enyo.Collection();
@@ -151,8 +151,8 @@ enyo.kind({
 //            console.log("note collection", c);
             return c;
         }},
-        {from: "newPerson.birthday", to: ".$.birthdayInput.value", oneWay: false},
-        {from: "newPerson.relations", to: ".$.relationRepeater.collection", transform: function (relations) {
+        {from: "newPerson.birthday", to: "$.birthdayInput.value", oneWay: false},
+        {from: "newPerson.relations", to: "$.relationRepeater.collection", transform: function (relations) {
             console.log("relations", relations);
             var c = new enyo.Collection(relations);
             c.add({value: "", type: "type_spouse"});
@@ -259,8 +259,8 @@ enyo.kind({
 	                	        ]}                        	    
                            ],
                            bindings: [
-                               {from: ".model.value", to: ".$.imInput.value", oneWay: false},
-                               {from: ".model.type", to: ".$.imPicker.selected", oneWay: false, transform: function (type, dir) {
+                               {from: "model.value", to: "$.imInput.value", oneWay: false},
+                               {from: "model.type", to: "$.imPicker.selected", oneWay: false, transform: function (type, dir) {
                             	   if (dir & enyo.Binding.DIRTY_FROM) {
 										return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
                             	   } else {
@@ -316,12 +316,12 @@ enyo.kind({
               	                ]}
           	                ],
                             bindings: [
-                                {from: ".model.streetAddress", to: ".$.addressInput.value", oneWay: false},
-                                {from: ".model.locality", to: ".$.localityInput.value", oneWay: false},
-                                {from: ".model.region", to: ".$.regionInput.value", oneWay: false},
-                                {from: ".model.country", to: ".$.countryInput.value", oneWay: false},
-                                {from: ".model.postalCode", to: ".$.postalCodeInput.value", oneWay: false},
-                                { from: ".model.type", to: ".$.addressPicker.selected", oneWay: false, transform: function (type, dir) {
+                                {from: "model.streetAddress", to: "$.addressInput.value", oneWay: false},
+                                {from: "model.locality", to: "$.localityInput.value", oneWay: false},
+                                {from: "model.region", to: "$.regionInput.value", oneWay: false},
+                                {from: "model.country", to: "$.countryInput.value", oneWay: false},
+                                {from: "model.postalCode", to: "$.postalCodeInput.value", oneWay: false},
+                                { from: "model.type", to: "$.addressPicker.selected", oneWay: false, transform: function (type, dir) {
                                 	if (dir & enyo.Binding.DIRTY_FROM) {
                               			return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
                                 	} else {
@@ -354,7 +354,7 @@ enyo.kind({
                        	    ]}
                         ],
                         bindings: [
-                            {from: ".model.value", to: ".$.urlInput.value", oneWay: false}
+                            {from: "model.value", to: "$.urlInput.value", oneWay: false}
                         ],
                         urlChange: function (inSender, inEvent) {
                            	var collection = inEvent.child.parent.owner.collection;
@@ -376,7 +376,7 @@ enyo.kind({
                        	    ]}    
                         ],
                         bindings: [
-                            {from: ".model.value", to: ".$.noteInput.value", oneWay: false}
+                            {from: "model.value", to: "$.noteInput.value", oneWay: false}
                         ],
                         noteChange: function (inSender, inEvent) {
                            	var collection = inEvent.child.parent.owner.collection;
@@ -428,8 +428,8 @@ enyo.kind({
                 	        ]}                        	    
                         ],
                         bindings: [
-                            {from: ".model.value", to: ".$.relationInput.value", oneWay: false},
-                            {from: ".model.type", to: ".$.relationPicker.selected", oneWay: false, transform: function (type, dir) {
+                            {from: "model.value", to: "$.relationInput.value", oneWay: false},
+                            {from: "model.type", to: "$.relationPicker.selected", oneWay: false, transform: function (type, dir) {
                             	if (dir & enyo.Binding.DIRTY_FROM) {
                             		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
                             	} else {
@@ -517,7 +517,7 @@ enyo.kind({
     			address.locality && /\S/.test(address.locality) ||
     			address.region && /\S/.test(address.region) ||
     			address.country && /\S/.test(address.country) ||
-    			address.postalCode && /\S/.test(address.postalCode);
+    			address.postalCode && /[0-9A-Za-z]/.test(address.postalCode);
     	});
 
 		this.newPerson.attributes.urls = this.$.urlRepeater.collection.raw().filter(function (url) {

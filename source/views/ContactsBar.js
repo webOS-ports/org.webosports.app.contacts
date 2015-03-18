@@ -68,7 +68,7 @@ enyo.kind({
     ],
 
     bindings: [
-        {from: ".$.searchInput.value", to: ".$.allContactsList.collection.searchText"}
+        {from: "$.searchInput.value", to: "$.allContactsList.collection.searchText"}
     ],
 
     paneChange: function (inSender, inEvent) {

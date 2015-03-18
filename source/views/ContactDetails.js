@@ -6,8 +6,8 @@ enyo.kind({
         { tag: "p", name: "label", classes: "label" }
     ],
     bindings: [
-        {from: ".model.value", to: ".$.value.content"},
-        {from: ".model.label", to: ".$.label.content"}
+        {from: "model.value", to: "$.value.content"},
+        {from: "model.label", to: "$.label.content"}
     ]
 });
 
@@ -71,9 +71,9 @@ enyo.kind({
     ],
     bindings: [
         //details stuff:
-        {from: ".person.displayPhoto", to: ".$.header.displayPhoto"},
-        {from: ".person.nickname", to: ".$.header.nickname" },
-        {from: ".person.favorite", to: ".$.header.favorite", oneWay: false , transform: function (newFavorite, dir, binding) {
+        {from: "person.displayPhoto", to: "$.header.displayPhoto"},
+        {from: "person.nickname", to: "$.header.nickname" },
+        {from: "person.favorite", to: "$.header.favorite", oneWay: false , transform: function (newFavorite, dir, binding) {
         	// Unfortunately, the xform function is the only one that knows which way the data is flowing.
         	if (dir & enyo.Binding.DIRTY_TO) {
         		// Allows person to be updated before firing event.
@@ -84,9 +84,9 @@ enyo.kind({
         	}
         	return newFavorite;
         } },
-        {from: ".person.displayName", to: ".$.header.displayName"},
-        {from: ".person.displayOrg", to: ".$.header.job"},
-        {from: ".person.contactIds", to: ".$.header.contactIds"}
+        {from: "person.displayName", to: "$.header.displayName"},
+        {from: "person.displayOrg", to: "$.header.job"},
+        {from: "person.contactIds", to: "$.header.contactIds"}
     ],
     create: function () {
         this.inherited(arguments);

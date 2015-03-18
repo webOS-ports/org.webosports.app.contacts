@@ -39,6 +39,7 @@ see http://www.openwebosproject.org/docs/developer_reference/application_apis/ad
 * request sending email
 * request sending IM
 * request open browser to URL
+* display and edit notes as single concatenated field
 * replace account picker in EditContact w/ icon btn & custom Menu
 * re-think edit & detail layout to work properly on both phone- and tablet-sized screens
 * handle users w/ more than 500 contacts (probably by loading them all into GlobalPersonCollection)

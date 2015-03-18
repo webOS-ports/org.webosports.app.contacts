@@ -7,11 +7,11 @@ enyo.kind({
         }
     },
     bindings: [
-        {from: ".model.displayName", to: ".$.name.content"},
+        {from: "model.displayName", to: "$.name.content"},
         // Quotes are needed to work around a bug in Black Eye when using sizing "cover".
         // The should not be needed (and are not needed in Safari 7.1).
-        {from: ".model.listPhoto", to: ".$.photo.src", transform: function(path) {return "'" + (path || "assets/bg_icon_img.png") + "'" ;}},
-        {from: ".model.favorite", to: ".$.favCell.showing"}
+        {from: "model.listPhoto", to: "$.photo.src", transform: function(path) {return "'" + (path || "assets/bg_icon_img.png") + "'" ;}},
+        {from: "model.favorite", to: "$.favCell.showing"}
     ],
     components: [
         //{ name: "profilePicture", kind: "Image", src: "assets/bg_icon_img.png" },
