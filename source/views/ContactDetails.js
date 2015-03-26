@@ -6,8 +6,8 @@ enyo.kind({
         { tag: "p", name: "label", classes: "label" }
     ],
     bindings: [
-        {from: ".model.value", to: ".$.value.content"},
-        {from: ".model.label", to: ".$.label.content"}
+        {from: "model.value", to: "$.value.content"},
+        {from: "model.label", to: "$.label.content"}
     ]
 });
 
@@ -22,14 +22,15 @@ enyo.kind({
 
 enyo.kind({
     name: "ContactDetails",
-    kind: "enyo.Scroller",
+    kind: "Control",
     touch: true,
     classes: "details",
     published: {
         person: null
     },
     events: {
-    	onPersonChanged: ""
+    	onPersonChanged: "",
+    	onEdit: ""
     },
     components: [
         {
@@ -38,17 +39,17 @@ enyo.kind({
             model: "DetailsModel",
             instanceAllRecords: true
         },
-        {
-            name: "container",
-            classes: "container",
-            components: [
-                {
-                    name: "content",
-                    classes: "content",
-                    kind: "enyo.FittableRows",
-                    components: [
-                        { name: "header", kind: "ContactHeader"},
-                        //{ kind: "enyo.Scroller", fit: true, components: [
+        { kind: "enyo.Scroller", touch: true, classes: "enyo-fit", components: [
+            {
+                name: "container",
+                classes: "container",
+                components: [
+                    {
+                        name: "content",
+                        classes: "content",
+                        kind: "enyo.FittableRows",
+                        components: [
+                            { name: "header", kind: "ContactHeader"},
                             {
                                 name: "details",
                                 kind: "enyo.DataRepeater",
@@ -58,17 +59,21 @@ enyo.kind({
                                     { kind: "Detail", classes: "contacts-item" }
                                 ]
                             }
-                        //]}
-                    ]
-                }
-            ]
-        }
+                        ]
+                    }
+                ]
+            }]
+        },
+        { name: "editContactBtn", kind: "onyx.Button", style: "position: absolute; right: 0.5rem; bottom: 0.5rem;", ontap: "doEdit", components: [
+            {kind: "onyx.Icon", src: "assets/btn_edit.png"}
+        ]}
+
     ],
     bindings: [
         //details stuff:
-        {from: ".person.displayPhoto", to: ".$.header.displayPhoto"},
-        {from: ".person.nickname", to: ".$.header.nickname" },
-        {from: ".person.favorite", to: ".$.header.favorite", oneWay: false , transform: function (newFavorite, dir, binding) {
+        {from: "person.displayPhoto", to: "$.header.displayPhoto"},
+        {from: "person.nickname", to: "$.header.nickname" },
+        {from: "person.favorite", to: "$.header.favorite", oneWay: false , transform: function (newFavorite, dir, binding) {
         	// Unfortunately, the xform function is the only one that knows which way the data is flowing.
         	if (dir & enyo.Binding.DIRTY_TO) {
         		// Allows person to be updated before firing event.
@@ -79,9 +84,9 @@ enyo.kind({
         	}
         	return newFavorite;
         } },
-        {from: ".person.displayName", to: ".$.header.displayName"},
-        {from: ".person.displayOrg", to: ".$.header.job"},
-        {from: ".person.contactIds", to: ".$.header.contactIds"}
+        {from: "person.displayName", to: "$.header.displayName"},
+        {from: "person.displayOrg", to: "$.header.job"},
+        {from: "person.contactIds", to: "$.header.contactIds"}
     ],
     create: function () {
         this.inherited(arguments);

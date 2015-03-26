@@ -26,10 +26,10 @@ enyo.kind({
 	        ]}
  	    ],
         bindings: [
-       		{ from: ".container.inputType", to: ".$.detailInput.type" },   // TODO: Is there a better way to do this?
-      		{ from: ".container.placeholder", to: ".$.detailInput.placeholder" },
-            { from: ".model.value", to: ".$.detailInput.value", oneWay: false },
-            { from: ".model.type", to: ".$.detailPicker.selected", oneWay: false, transform: function (type, dir) {
+       		{ from: "container.inputType", to: "$.detailInput.type" },   // TODO: Is there a better way to do this?
+      		{ from: "container.placeholder", to: "$.detailInput.placeholder" },
+            { from: "model.value", to: "$.detailInput.value", oneWay: false },
+            { from: "model.type", to: "$.detailPicker.selected", oneWay: false, transform: function (type, dir) {
             	if (dir & enyo.Binding.DIRTY_FROM) {
             		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
             	} else {
@@ -63,12 +63,16 @@ enyo.kind({
     published: {
         title: "",
         doneLabel: "",
-        person: new PersonModel()
+        oldPerson: new PersonModel(),
+        newPerson: null
     },
     bindings: [
-        {from: ".title", to: ".$.titleText.content"},
-        {from: ".doneLabel", to: ".$.doneBtn.content"},
-        {from: ".person.name", to: ".$.nameInput.value", transform: function (name) {
+        {from: "title", to: "$.titleText.content"},
+        {from: "doneLabel", to: "$.doneBtn.content"},
+        {from: "oldPerson", to: "newPerson", transform: function (person) {
+        	return new PersonModel(person.raw());
+        }},
+        {from: "newPerson.name", to: "$.nameInput.value", transform: function (name) {
         	var fullName = "";
             if (name.honorificPrefix) {
                 fullName += name.honorificPrefix + " ";
@@ -91,52 +95,52 @@ enyo.kind({
             }
             return fullName.trim();
         }},
-        {from: ".person.nickname", to: ".$.nicknameInput.value", oneWay: false},
-        {from: ".person.organization", to: ".$.jobTitleInput.value", transform: function (organization) {
+        {from: "newPerson.nickname", to: "$.nicknameInput.value", oneWay: false},
+        {from: "newPerson.organization", to: "$.jobTitleInput.value", transform: function (organization) {
         	return organization.title;
         }},
-        {from: ".person.organization", to: ".$.departmentInput.value", transform: function (organization) {
+        {from: "newPerson.organization", to: "$.departmentInput.value", transform: function (organization) {
         	return organization.department;
         }},
-        {from: ".person.organization", to: ".$.organizationInput.value", transform: function (organization) {
+        {from: "newPerson.organization", to: "$.organizationInput.value", transform: function (organization) {
         	return organization.name;
         }},
-        {from: ".person.phoneNumbers", to: ".$.phoneRepeater.collection", transform: function (phoneNumbers) {
+        {from: "newPerson.phoneNumbers", to: "$.phoneRepeater.collection", transform: function (phoneNumbers) {
             console.log("phoneNumbers", phoneNumbers); 
             var c = new enyo.Collection(phoneNumbers);
             c.add({value: "", type: "type_mobile", favoriteData: {}, normalizedValue: ""});
 //            console.log("phone collection", c);
             return c;
         }},
-        {from: ".person.emails", to: ".$.emailRepeater.collection", transform: function (emails) {
+        {from: "newPerson.emails", to: "$.emailRepeater.collection", transform: function (emails) {
             console.log("emails", emails); 
             var c = new enyo.Collection(emails);
             c.add({value: "", type: "type_home", favoriteData: {}, normalizedValue: ""});
 //            console.log("email collection", c);
             return c;
         }},
-        {from: ".person.ims", to: ".$.imRepeater.collection", transform: function (ims) {
+        {from: "newPerson.ims", to: "$.imRepeater.collection", transform: function (ims) {
             console.log("ims", ims); 
             var c = new enyo.Collection(ims);
             c.add({value: "", favoriteData: {}, normalizedValue: ""});
 //            console.log("IM collection", c);
             return c;
         }},
-        {from: ".person.addresses", to: ".$.addressRepeater.collection", transform: function (addresses) {
+        {from: "newPerson.addresses", to: "$.addressRepeater.collection", transform: function (addresses) {
             console.log("addresses", addresses); 
             var c = new enyo.Collection(addresses);
             c.add({streetAddress: "", locality: "", region: "", country: "", postalCode: "", type: "type_home"});
 //            console.log("email collection", c);
             return c;
         }},
-        {from: ".person.urls", to: ".$.urlRepeater.collection", transform: function (urls) {
+        {from: "newPerson.urls", to: "$.urlRepeater.collection", transform: function (urls) {
             console.log("urls", urls); 
             var c = new enyo.Collection(urls);
             c.add({value: ""});
 //            console.log("url collection", c);
             return c;
         }},
-        {from: ".person.notes", to: ".$.noteRepeater.collection", transform: function (notes) {
+        {from: "newPerson.notes", to: "$.noteRepeater.collection", transform: function (notes) {
             console.log("notes", notes); 
         	// person.notes is an array of strings; Collections accepts only objects & arrays of objects
             var c = new enyo.Collection();
@@ -147,8 +151,8 @@ enyo.kind({
 //            console.log("note collection", c);
             return c;
         }},
-        {from: ".person.birthday", to: ".$.birthdayInput.value", oneWay: false},
-        {from: ".person.relations", to: ".$.relationRepeater.collection", transform: function (relations) {
+        {from: "newPerson.birthday", to: "$.birthdayInput.value", oneWay: false},
+        {from: "newPerson.relations", to: "$.relationRepeater.collection", transform: function (relations) {
             console.log("relations", relations);
             var c = new enyo.Collection(relations);
             c.add({value: "", type: "type_spouse"});
@@ -164,7 +168,7 @@ enyo.kind({
             components: [
                  // TODO: center title text in window
                 {name: "titleText", fit: true, content: "", style: "text-align:center"},
-                {kind: "onyx.PickerDecorator", style: "max-width: 55%;", components: [
+                {name: "accountPkrDcrtr", kind: "onyx.PickerDecorator", style: "max-width: 55%;", components: [
 		 		    {},   // PickerButton
 		 		    {name: "accountPicker", kind: "onyx.Picker", components: [
 		 		    ]}
@@ -255,8 +259,8 @@ enyo.kind({
 	                	        ]}                        	    
                            ],
                            bindings: [
-                               {from: ".model.value", to: ".$.imInput.value", oneWay: false},
-                               {from: ".model.type", to: ".$.imPicker.selected", oneWay: false, transform: function (type, dir) {
+                               {from: "model.value", to: "$.imInput.value", oneWay: false},
+                               {from: "model.type", to: "$.imPicker.selected", oneWay: false, transform: function (type, dir) {
                             	   if (dir & enyo.Binding.DIRTY_FROM) {
 										return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
                             	   } else {
@@ -312,12 +316,12 @@ enyo.kind({
               	                ]}
           	                ],
                             bindings: [
-                                {from: ".model.streetAddress", to: ".$.addressInput.value", oneWay: false},
-                                {from: ".model.locality", to: ".$.localityInput.value", oneWay: false},
-                                {from: ".model.region", to: ".$.regionInput.value", oneWay: false},
-                                {from: ".model.country", to: ".$.countryInput.value", oneWay: false},
-                                {from: ".model.postalCode", to: ".$.postalCodeInput.value", oneWay: false},
-                                { from: ".model.type", to: ".$.addressPicker.selected", oneWay: false, transform: function (type, dir) {
+                                {from: "model.streetAddress", to: "$.addressInput.value", oneWay: false},
+                                {from: "model.locality", to: "$.localityInput.value", oneWay: false},
+                                {from: "model.region", to: "$.regionInput.value", oneWay: false},
+                                {from: "model.country", to: "$.countryInput.value", oneWay: false},
+                                {from: "model.postalCode", to: "$.postalCodeInput.value", oneWay: false},
+                                { from: "model.type", to: "$.addressPicker.selected", oneWay: false, transform: function (type, dir) {
                                 	if (dir & enyo.Binding.DIRTY_FROM) {
                               			return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
                                 	} else {
@@ -350,7 +354,7 @@ enyo.kind({
                        	    ]}
                         ],
                         bindings: [
-                            {from: ".model.value", to: ".$.urlInput.value", oneWay: false}
+                            {from: "model.value", to: "$.urlInput.value", oneWay: false}
                         ],
                         urlChange: function (inSender, inEvent) {
                            	var collection = inEvent.child.parent.owner.collection;
@@ -372,7 +376,7 @@ enyo.kind({
                        	    ]}    
                         ],
                         bindings: [
-                            {from: ".model.value", to: ".$.noteInput.value", oneWay: false}
+                            {from: "model.value", to: "$.noteInput.value", oneWay: false}
                         ],
                         noteChange: function (inSender, inEvent) {
                            	var collection = inEvent.child.parent.owner.collection;
@@ -424,8 +428,8 @@ enyo.kind({
                 	        ]}                        	    
                         ],
                         bindings: [
-                            {from: ".model.value", to: ".$.relationInput.value", oneWay: false},
-                            {from: ".model.type", to: ".$.relationPicker.selected", oneWay: false, transform: function (type, dir) {
+                            {from: "model.value", to: "$.relationInput.value", oneWay: false},
+                            {from: "model.type", to: "$.relationPicker.selected", oneWay: false, transform: function (type, dir) {
                             	if (dir & enyo.Binding.DIRTY_FROM) {
                             		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
                             	} else {
@@ -454,7 +458,7 @@ enyo.kind({
             kind: "onyx.Toolbar",
             layoutKind: "FittableHeaderLayout",
             components: [
-                {kind: "onyx.Button", content: $L("Cancel"), classes: "onyx-negative", style: "width: 10rem;", ontap: "doCancel"},
+                {kind: "onyx.Button", content: $L("Cancel"), classes: "onyx-negative", style: "width: 10rem;", ontap: "cancelTap"},
                 {fit: true},
                 {name: "doneBtn", kind: "onyx.Button", content: "", classes: "onyx-affirmative", style: "width: 10rem;", ontap: "doneTap"}
             ]
@@ -469,6 +473,12 @@ enyo.kind({
     			this.$.accountPicker.createComponents(this.app.accounts);
     		}
     	}
+		this.$.accountPkrDcrtr.set("showing", this.newPerson.get("contactIds").length === 0);
+    },
+    
+    cancelTap: function (inSender, inEvent) {
+    	this.set("oldPerson", new PersonModel());
+    	this.doCancel();
     },
 
     doneTap: function (inSender, inEvent) {
@@ -476,41 +486,60 @@ enyo.kind({
     	// TODO: call set once, with all the displayName-affecting properties
     	
     	// TODO: when we implement individual name fields, parsing the full name field will happen in onchange
+    	// TODO: if field not edited, don't set "name" in model
     	this.parseName();
     	
     	// nickname is 2-way
 
-    	this.person.set("organization", {
+    	this.newPerson.set("organization", {
 			title: this.$.jobTitleInput.get("value").trim(),
 			department: this.$.departmentInput.get("value").trim(),
 			name: this.$.organizationInput.get("value").trim()
 		});
 		// We use set, so displayName is updated
 		
-    	this.person.attributes.phoneNumbers = this.$.phoneRepeater.collection.raw().slice(0, -1);
-		
-    	this.person.set("emails", this.$.emailRepeater.collection.raw().slice(0, -1));
+    	this.newPerson.attributes.phoneNumbers = this.$.phoneRepeater.collection.raw().filter(function (phone) {
+    		return phone.value && /[0-9#*A-PR-Ya-pr-y]/.test(phone.value);
+    	});
+    	
+    	this.newPerson.set("emails", this.$.emailRepeater.collection.raw().filter(function (email) {
+    		return email.value && /\S/.test(email.value);
+    	}));
 		// We use set, so displayName is updated
 		
-		this.person.set("ims", this.$.imRepeater.collection.raw().slice(0, -1));
+		this.newPerson.set("ims", this.$.imRepeater.collection.raw().filter(function (im) {
+    		return im.value && /\S/.test(im.value);
+    	}));
 		// We use set, so displayName is updated
 
-		this.person.attributes.addresses = this.$.addressRepeater.collection.raw().slice(0, -1);
+		this.newPerson.attributes.addresses = this.$.addressRepeater.collection.raw().filter(function (address) {
+    		return address.streetAddress && /\S/.test(address.streetAddress) ||
+    			address.locality && /\S/.test(address.locality) ||
+    			address.region && /\S/.test(address.region) ||
+    			address.country && /\S/.test(address.country) ||
+    			address.postalCode && /[0-9A-Za-z]/.test(address.postalCode);
+    	});
 
-		this.person.attributes.urls = this.$.urlRepeater.collection.raw().slice(0, -1);
+		this.newPerson.attributes.urls = this.$.urlRepeater.collection.raw().filter(function (url) {
+    		return url.value && /\S/.test(url.value);
+    	});
 		
-		this.person.attributes.notes = this.$.noteRepeater.collection.map(function (currentValue, index) {
+		this.newPerson.attributes.notes = this.$.noteRepeater.collection.map(function (currentValue, index) {
 			return currentValue.get("value");
-		}).slice(0, -1);
+		}).filter(function (note) {
+    		return /\S/.test(note);
+    	});
 		
 		// birthday is 2-way
 
-		this.person.attributes.relations = this.$.relationRepeater.collection.raw().slice(0, -1);
+		this.newPerson.attributes.relations = this.$.relationRepeater.collection.raw().filter(function (relation) {
+    		return relation.value && /\S/.test(relation.value);
+    	});
 
 		// account fields for contact records
-    	var accountCtrl = this.$.accountPicker.get("selected");
+    	var accountCtrl = this.$.accountPicker.get("selected") || {};
     	
-		this.doSave({person: this.person, accountId: accountCtrl.accountId, dbkind: accountCtrl.dbkind});
+		this.doSave({oldPerson: this.oldPerson, newPerson: this.newPerson, accountId: accountCtrl.accountId, dbkind: accountCtrl.dbkind});
     },
     
     parseName: function () {
@@ -539,12 +568,12 @@ enyo.kind({
 		} else {
 			familyName = fullName;
 		}
-		this.person.set("name", {honorificPrefix: honorificPrefix, givenName: givenName, middleName: middleName, familyName: familyName, honorificSuffix: honorificSuffix});
+		this.newPerson.set("name", {honorificPrefix: honorificPrefix, givenName: givenName, middleName: middleName, familyName: familyName, honorificSuffix: honorificSuffix});
 		// We use set, so displayName is updated
     },
     
     // Add common honorifics for all languages and cultures to this pattern.
     // Don't bother with noble honorifics.
 	prefixPatt: /^((Mr\.|Master|Ms\.|Mrs\.|Miss|Dr\.|(The\s+)?Reverend|Father|(The\s+)Hon(\.|orable)|Herr|Frau|Fräulein|Doktor|Professor)\s*)+/ig,
-	suffixPatt: /(,\s*(Ph\. ?D|Junior|Jr\.|II|III|jünger))+$/i
+	suffixPatt: /(,\s*(Ph\. ?D\.?|Junior|Jr\.|II|III|jünger))+$/i
 });

@@ -734,7 +734,7 @@ enyo.kind({
             addresses: [],
             anniversary: "",
             birthday: "",
-            contactIds: [],
+            contactIds: ["oriueoirueoiuqeo"],
             emails: [{normalizedValue: "m_a_notes@example.com", value: "m_a_notes@example.com"}],
             favorite: false,
             gender: "undisclosed",
@@ -896,6 +896,11 @@ enyo.kind({
         	_id: "J1EcwYUG8r3",
         	_kind: "com.palm.contact:1",
         	name: {familyName: "Anders", givenName: "Was", middleName: "Gaaaanz"}
+        },
+        {
+        	_id: "oriueoirueoiuqeo",
+        	_kind: "com.palm.contact:1",
+        	name: {familyName: "Notes", givenName: "Mary Ann"}
         },
         {
         	_id: "ldfjadlkfjdkls",
