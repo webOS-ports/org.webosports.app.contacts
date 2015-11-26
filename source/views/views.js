@@ -55,7 +55,7 @@ enyo.kind({
         {
             kind: "enyo.Signals",
             onbackbutton: "goBack",
-            onrelaunch: "processLaunchParam"
+            onwebOSRelaunch: "processLaunchParam"
         }
     ],
     create: function () {
@@ -286,7 +286,9 @@ enyo.kind({
         }
     },
     
-    processLaunchParam: function (inSender, launchParam) {
+    processLaunchParam: function (inSender, evt) {
+        if (!evt || !evt.detail) return;
+        var launchParam = evt.detail;
     	this.log(typeof launchParam, launchParam);
     	if (launchParam.launchType === "newContact") {
         	this.$.editContact.set("title", $L("New Contact"));
