@@ -1,0 +1,19 @@
+{
+  "name": "org.webosports.app.contacts",
+  "main": "index.js",
+  "assets": [
+    "assets/*.png",
+    "assets/icon.ico",
+    "appinfo.json",
+    "icon.png"
+  ],
+  "styles": [
+    "src/style/main.less"
+  ],
+  "devAssets": [
+    "assets/kris_kringle.jpg",
+    "mock/com.palm.service.accounts/*.json",
+    "mock/com.palm.service.accounts/*.png"
+  ],
+  "moduleDir": "src"
+}
