@@ -9,6 +9,13 @@ Typically, most data is supplied by Synergy Connectors, but it also allows local
 You can develop in the browser like a normal Enyo 2 app - 
 Contacts will use the data in db8SourceMock.js and the mock directory.
 
+To rebuild on any change (for developing in the browser), run this command once in the app directory:
+`enyo pack --watch`
+
+
+To rebuild and install on a device attached via USB, run this command in the app directory:
+`enyo pack; adb push dist /usr/palm/applications/com.palm.app.contacts; adb shell systemctl restart luna-next; adb forward tcp:1122 tcp:1122`
+
 
 ## Contributing
 

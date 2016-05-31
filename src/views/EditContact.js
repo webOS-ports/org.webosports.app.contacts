@@ -20,6 +20,7 @@ var
 	Image = require('enyo/Image'),
 	Groupbox = require('onyx/Groupbox'),
 	Binding = require('enyo/Binding'),
+	Button = require('onyx/Button'),
 	accounts = require('../data/accounts'),
 	$L = require('enyo/i18n').$L;   // no-op placeholder
 

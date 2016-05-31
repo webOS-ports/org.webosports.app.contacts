@@ -1,23 +1,26 @@
 {
-  "title": "",
+  "title": "Contacts",
   "libDir": "lib",
   "paths": [],
   "libraries": [
     "enyo",
     "onyx",
     "layout",
+    "enyo-webos",
     "enyo-luneos"
   ],
   "sources": {
     "enyo": "https://github.com/enyojs/enyo.git",
     "onyx": "https://github.com/enyojs/onyx.git",
     "layout": "https://github.com/enyojs/layout.git",
+    "enyo-webos": "https://github.com/enyojs/enyo-webos.git",
     "enyo-luneos": "https://github.com/JayCanuck/enyo-luneos.git"
   },
   "targets": {
     "enyo": "2.7.0",
     "onyx": "2.7.0",
     "layout": "2.7.0",
+    "enyo-webos": "master",
     "enyo-luneos": "master"
   },
   "production": false,

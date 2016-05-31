@@ -10,7 +10,7 @@ var
     FittableRows = require('layout/FittableRows'),
     ContactHeader = require('./ContactHeader'),
     DataRepeater = require('enyo/DataRepeater'),
-    Binding = require('enyo/Binding')
+    Binding = require('enyo/Binding'),
     Button = require('onyx/Button'),
     Icon = require('onyx/Icon'),
     $L = require('enyo/i18n').$L;   // no-op placeholder
