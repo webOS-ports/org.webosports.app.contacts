@@ -1,0 +1,325 @@
+{
+  "results": [
+    {
+      "_kind": "com.palm.account:1",
+      "_id": "++HqVF6BEhSPSfq0",
+      "_rev": 672779,
+      "_sync": true,
+      "alias": "Acme",
+      "beingDeleted": false,
+      "capabilityProviders": [
+        {
+          "_id": "33a7",
+          "capability": "CONTACTS",
+          "id": "com.palm.google.contacts",
+          "dbkinds": {
+            "contact": "com.palm.contact.google:1"
+          },
+          "implementation": "palm:\/\/com.palm.service.contacts.google\/",
+          "onCreate": "palm:\/\/com.palm.service.contacts.google\/onCreate",
+          "onCredentialsChanged": "palm:\/\/com.palm.service.contacts.google\/credentialsChanged",
+          "onDelete": "palm:\/\/com.palm.service.contacts.google\/onDelete",
+          "onEnabled": "palm:\/\/com.palm.service.contacts.google\/onEnabled",
+          "refetchPhoto": "palm:\/\/com.palm.service.contacts.google\/refetchPhoto",
+          "sync": "palm:\/\/com.palm.service.contacts.google\/sync"
+        },
+        {
+          "_id": "33a8",
+          "capability": "MESSAGING",
+          "id": "com.palm.google.talk",
+          "capabilitySubtype": "IM",
+          "chatWithNonBuddies": false,
+          "dbkinds": {
+            "imcommand": "com.palm.imcommand.libpurple:1",
+            "immessage": "com.palm.immessage.libpurple:1"
+          },
+          "icon": {
+            "loc_32x32": "mock/com.palm.service.accounts/gtalk-32x32.png",
+            "loc_48x48": "mock/com.palm.service.accounts/google-48x48.png",
+            "splitter": "mock/com.palm.service.accounts/gtalk-32x32.png"
+          },
+          "implementation": "palm:\/\/com.palm.imlibpurple\/",
+          "loc_shortName": "Google",
+          "onEnabled": "palm:\/\/com.palm.imlibpurple\/onEnabled",
+          "readOnlyData": true,
+          "serviceName": "type_gtalk"
+        },
+        {
+          "_id": "33a9",
+          "capability": "MAIL",
+          "id": "com.palm.google.mail",
+          "config": {
+            "encryption": "ssl",
+            "port": 993,
+            "server": "imap.gmail.com",
+            "smtpConfig": {
+              "encryption": "ssl",
+              "port": 465,
+              "server": "smtp.gmail.com",
+              "useSmtpAuth": true
+            },
+            "syncFrequencyMins": 15
+          },
+          "dbkinds": {
+            "email": "com.palm.imap.email:1"
+          },
+          "implementation": "palm:\/\/com.palm.imap\/",
+          "onCreate": "palm:\/\/com.palm.imap\/accountCreated",
+          "onCredentialsChanged": "palm:\/\/com.palm.imap\/credentialsChanged",
+          "onDelete": "palm:\/\/com.palm.imap\/accountDeleted",
+          "onEnabled": "palm:\/\/com.palm.imap\/accountEnabled",
+          "subKind": "com.palm.imap.email:1"
+        }
+      ],
+      "templateId": "com.palm.google",
+      "username": "acme@gmail.com",
+      "icon": {
+        "loc_32x32": "mock/com.palm.service.accounts/google-32x32.png",
+        "loc_48x48": "mock/com.palm.service.accounts/google-48x48.png"
+      },
+      "loc_name": "Google",
+      "loc_usernameLabel": "email address",
+      "validator": "palm:\/\/com.palm.service.contacts.google\/checkCredentials"
+    },
+    {
+      "_kind": "com.palm.account:1",
+      "_id": "++HoXVTTqIccE0m1",
+      "_rev": 1463,
+      "_sync": true,
+      "beingDeleted": false,
+      "capabilityProviders": [
+        {
+          "_id": "5b8",
+          "capability": "CONTACTS",
+          "id": "com.palm.palmprofile.contacts",
+          "dbkinds": {
+            "contact": "com.palm.contact.palmprofile:1"
+          },
+          "refetchPhoto": "palm:\/\/com.palm.service.contacts\/refetchPhoto"
+        },
+        {
+          "_id": "5b9",
+          "capability": "CALENDAR",
+          "id": "com.palm.palmprofile.calendar"
+        },
+        {
+          "_id": "5ba",
+          "capability": "TASKS",
+          "id": "com.palm.palmprofile.tasks"
+        },
+        {
+          "_id": "5bb",
+          "capability": "MEMOS",
+          "id": "com.palm.palmprofile.memos"
+        },
+        {
+          "_id": "5bc",
+          "capability": "MESSAGING",
+          "id": "com.palm.palmprofile.sms",
+          "capabilitySubtype": "SMS",
+          "icon": {
+            "loc_32x32": "mock/com.palm.service.accounts/sms-32x32.png",
+            "loc_48x48": "mock/com.palm.service.accounts/sms-48x48.png",
+            "splitter": "mock/com.palm.service.accounts/sms-32x32.png"
+          },
+          "loc_name": "SMS Account",
+          "loc_shortName": "Text"
+        },
+        {
+          "_id": "5bd",
+          "capability": "VOICE",
+          "id": "com.palm.palmprofile.voice",
+          "alwaysOn": true,
+          "icon": {
+            "loc_32x32": "mock/com.palm.service.accounts/mypalm-32x32.png",
+            "loc_48x48": "mock/com.palm.service.accounts/mypalm-48x48.png"
+          },
+          "loc_name": "Carrier",
+          "loc_shortName": "Carrier"
+        }
+      ],
+      "templateId": "com.palm.palmprofile",
+      "username": "Local Boy",
+      "icon": {
+        "loc_32x32": "mock/com.palm.service.accounts/mypalm-32x32.png",
+        "loc_48x48": "mock/com.palm.service.accounts/mypalm-48x48.png"
+      },
+      "loc_name": "LuneOS Account"
+    },
+    {
+      "_kind": "com.palm.account:1",
+      "_id": "++HqeAHcaj_WNKfF",
+      "_rev": 15829,
+      "_sync": true,
+      "alias": "AIM",
+      "beingDeleted": false,
+      "capabilityProviders": [
+        {
+          "_id": "3dd6",
+          "capability": "MESSAGING",
+          "id": "com.palm.aol.aim",
+          "capabilitySubtype": "IM",
+          "dbkinds": {
+            "imcommand": "com.palm.imcommand.libpurple:1",
+            "immessage": "com.palm.immessage.libpurple:1"
+          },
+          "icon": {
+            "splitter": "mock/com.palm.service.accounts/aim-32x32.png"
+          },
+          "implementation": "palm:\/\/com.palm.imlibpurple\/",
+          "loc_shortName": "AIM",
+          "onEnabled": "palm:\/\/com.palm.imlibpurple\/onEnabled",
+          "readOnlyData": true,
+          "serviceName": "type_aim"
+        }
+      ],
+      "templateId": "com.palm.aol",
+      "username": "JohnDoe@aol.com",
+      "icon": {
+        "loc_32x32": "mock/com.palm.service.accounts/aim-32x32.png",
+        "loc_48x48": "mock/com.palm.service.accounts/aim-logo.png"
+      },
+      "loc_name": "AIM",
+      "validator": "palm:\/\/com.palm.imaccountvalidator\/checkCredentials"
+    },
+    {
+      "_kind": "com.palm.account:1",
+      "_id": "++HoXVohVCoSQNS7",
+      "_rev": 779929,
+      "_sync": true,
+      "beingDeleted": false,
+      "capabilityProviders": [
+        {
+          "_id": "60d",
+          "capability": "CONTACTS",
+          "id": "com.palm.sim.contacts",
+          "db_kinds": {
+            "contact": "com.palm.contact.sim:1"
+          },
+          "implementation": "palm:\/\/com.palm.service.contacts.sim\/",
+          "onCreate": "palm:\/\/com.palm.service.contacts.sim\/onCreate",
+          "onDelete": "palm:\/\/com.palm.service.contacts.sim\/onDelete",
+          "onEnabled": "palm:\/\/com.palm.service.contacts.sim\/onEnabled",
+          "readOnlyData": false,
+          "sync": "palm:\/\/com.palm.service.contacts.sim\/sync"
+        }
+      ],
+      "templateId": "com.palm.sim",
+      "username": "1 (666) 555-1212",
+      "disableRemove": true,
+      "icon": {
+        "loc_32x32": "mock/com.palm.service.accounts/sim-32x32.png",
+        "loc_48x48": "mock/com.palm.service.accounts/sim-32x32.png"
+      },
+      "loc_name": "SIM"
+    },
+    {
+      "_kind": "com.palm.account:1",
+      "_id": "++HnY2Qbp2pHNVFT",
+      "_rev": 17476,
+      "_sync": true,
+      "alias": "Skype",
+      "beingDeleted": false,
+      "capabilityProviders": [
+        {
+          "_id": "1e76",
+          "capability": "MESSAGING",
+          "id": "com.palm.skype.messaging",
+          "capabilitySubtype": "IM",
+          "loc_shortName": "Skype",
+          "alwaysOn": true,
+          "icon": {
+            "loc_32x32": "mock/com.palm.service.accounts/skype32.png",
+            "loc_48x48": "mock/com.palm.service.accounts/skype48.png",
+            "splitter": "mock/com.palm.service.accounts/skype32.png"
+          },
+          "implementation": "palm:\/\/com.palm.skype\/",
+          "onEnabled": "palm:\/\/com.palm.skype\/onEnabled",
+          "serviceName": "type_skype",
+          "dbkinds": {
+            "immessage": "com.palm.immessage.skypem:1",
+            "imcommand": "com.palm.imcommand.skypem:1"
+          },
+          "settingsUI": {
+            "appId": "com.palm.app.skype",
+            "sceneName": "accountlogin"
+          },
+          "invites": {
+            "supportsCustomMessage": true,
+            "loc_bannerText": "Skype contact request"
+          },
+          "groupChat": {
+            "supported": true,
+            "topicsSupported": true,
+            "invitesSupportMessages": false
+          },
+          "chatWithNonBuddies": true
+        },
+        {
+          "_id": "1e77",
+          "capability": "CONTACTS",
+          "id": "com.palm.skype.contacts",
+          "alwaysOn": true,
+          "implementation": "palm:\/\/com.palm.skype\/",
+          "sync": "palm:\/\/com.palm.skype\/sync",
+          "readOnlyData": true,
+          "db_kinds": {
+            "contact": "com.palm.contact.skypem:1"
+          }
+        },
+        {
+          "_id": "1e78",
+          "capability": "PHONE",
+          "id": "com.palm.skype.call",
+          "alwaysOn": true,
+          "implementation": "palm:\/\/com.palm.skype\/",
+          "serviceName": "type_skype",
+          "wanAllowed": true,
+          "wifiAllowed": true,
+          "pausePrompt": false,
+          "pauseCode": [
+          ],
+          "waitCode": [
+          ],
+          "keyHoldMappings": [
+          ],
+          "launchCode": "##"
+        }
+      ],
+      "templateId": "com.palm.skype",
+      "username": "Alphonso",
+      "loc_name": "Skype",
+      "icon": {
+        "loc_32x32": "mock/com.palm.service.accounts/skype32.png",
+        "loc_48x48": "mock/com.palm.service.accounts/skype48.png"
+      },
+      "validator": {
+        "customUI": {
+          "appId": "com.palm.app.skype",
+          "name": "validator.html"
+        },
+        "address": "palm:\/\/com.palm.skypevalidator\/updateCredentials"
+      },
+      "onCredentialsChanged": "palm:\/\/com.palm.skypevalidator\/credentialsChanged",
+      "readPermissions": [
+        "com.palm.app.phone",
+        "com.palm.app.skype",
+        "com.palm.app.messaging",
+        "com.palm.app.contacts",
+        "com.palm.service.contacts",
+        "com.palm.service.contacts.linker",
+        "com.palm.skype"
+      ],
+      "writePermissions": [
+        "com.palm.app.phone",
+        "com.palm.app.skype",
+        "com.palm.app.messaging",
+        "com.palm.app.contacts",
+        "com.palm.service.contacts",
+        "com.palm.service.contacts.linker",
+        "com.palm.skype"
+      ]
+    }
+  ],
+  "returnValue": true
+}

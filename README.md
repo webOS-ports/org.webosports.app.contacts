@@ -1,16 +1,21 @@
 org.webosports.app.contacts
 ===========================
 
-The Contacts (address book) app for Lune OS, built with Enyo 2.
+The Contacts (address book) app for Lune OS, rewritten with Enyo 2.
 Typically, most data is supplied by Synergy Connectors, but it also allows local editing.
 
 ## Building/Installation
 
-You can develop in the browser like a normal Enyo 2 app - Contacts
-will use the data in db8SourceMock.js
+You can develop in the browser like a normal Enyo 2 app - 
+Contacts will use the data in db8SourceMock.js and the mock directory.
 
-When you're ready to install to a device, run `tools/deploy.sh -i`
-(Luna-Next will restart)
+To rebuild on any change (for developing in the browser), run this command once in the app directory:
+`enyo pack --watch`
+
+
+To rebuild and install on a device attached via USB, run this command in the app directory:
+`enyo pack; adb push dist /usr/palm/applications/com.palm.app.contacts; adb shell systemctl restart luna-next; adb forward tcp:1122 tcp:1122`
+
 
 ## Contributing
 

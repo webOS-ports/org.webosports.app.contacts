@@ -2,4 +2,10 @@
 /deploy
 .project
 /.settings
+org.webosports.app.contacts.iml
+.idea
 .DS_Store
+lib
+node_modules
+dist
+.enyocache
