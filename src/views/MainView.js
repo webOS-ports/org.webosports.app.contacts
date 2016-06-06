@@ -62,7 +62,14 @@ module.exports = kind({
                                 }
                             ]
                         },
-                        { name: "contactDetails", kind: ContactDetails, fit: true, onPersonChanged: "savePerson", onEdit: "showEdit" }
+                        {
+							name: "contactDetails",
+							kind: ContactDetails,
+							fit: true,
+							onPersonChanged: "savePerson",
+							onEdit: "showEdit",
+							onAlterSearch: 'alterSearch'
+						}
                     ]
                 }
             ]
@@ -289,6 +296,13 @@ module.exports = kind({
 			});
 			oldPerson.set(attrName, attr);
 			changed = true;
+		}
+	},
+
+	alterSearch: function (inSender, inEvent) {
+		this.$.contactsBar.alterSearch(inEvent.searchText);
+		if (Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
+			this.$.main.setIndex(0);
 		}
 	},
     
