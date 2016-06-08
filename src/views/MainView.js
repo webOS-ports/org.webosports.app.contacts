@@ -90,7 +90,7 @@ module.exports = kind({
         this.handleResize();
         
         if (window.PalmSystem) {
-        	this.processLaunchParam(null, JSON.parse(window.PalmSystem.launchParams));
+        	this.processLaunchParam(null, webOS.window.launchParams());
         }
 
         this.log("==========> Telling global list to fetch contacts...");
