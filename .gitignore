@@ -5,6 +5,7 @@
 org.webosports.app.contacts.iml
 .idea
 .DS_Store
+.npmignore
 lib
 node_modules
 dist

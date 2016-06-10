@@ -81,7 +81,7 @@ module.exports = kind({
         },
         {
             kind: Signals,
-            onbackbutton: "goBack",
+			onbackgesture: "goBack",
             onwebOSRelaunch: "processLaunchParam"
         }
     ],
