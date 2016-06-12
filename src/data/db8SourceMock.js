@@ -285,7 +285,7 @@ module.exports = kind({
                 "normalizedValue": "-0989898989898-898--",
                 "primary": false,
                 "speedDial": "",
-                "type": "type_mobile",
+                "type": "type_work",
                 "value": "8988989898989890"
             }, {
                 "_id": "138",

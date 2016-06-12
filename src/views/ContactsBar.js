@@ -118,6 +118,10 @@ module.exports = kind({
 
         this.doSelected({person: inSender.selected()});
     },
+
+    alterSearch: function (newSearchText) {
+        this.$.searchInput.set('value', newSearchText);
+    },
     
     goBack: function (inSender, inEvent) {
     	if (this.$.panes.get('index') === 0) {
