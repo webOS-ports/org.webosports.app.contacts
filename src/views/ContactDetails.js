@@ -279,7 +279,7 @@ module.exports = kind({
             this.doAlterSearch({searchText: inEvent.model.get('value')});
         } else if (inEvent.model.get('key') === 'phoneNumbers') {
             this.log("dialing " + inEvent.model.get('value'));
-            this.$.telephonySrvc.send({number: inEvent.model.get('value'), "blockId": false});
+            this.$.telephonySrvc.send({number: inEvent.model.get('value') /*, "blockId": false */});
         } else {
             switch (inEvent.model.get('key')) {
                 case 'emails':
@@ -310,7 +310,16 @@ module.exports = kind({
         this.log("processId:", inEvent.processId);
     },
     serviceError: function (inSender, inEvent) {
-        this.log(inEvent.errorCode, inEvent.errorText);
-        window.PalmSystem.addBannerMessage(inEvent.errorText || $L("Is there a typo?"));
+        this.log("errorCode:", inEvent.errorCode, "   errorText:", inEvent.errorText);
+        var errMsg;
+        if (inEvent.errorText) {
+            errMsg = inEvent.errorText
+        } else {
+            errMsg = $L("Is there a typo?");
+            if (inEvent.errorCode) {
+                errMsg += " error code " + inEvent.errorCode;
+            }
+        }
+        window.PalmSystem.addBannerMessage(errMsg);
     }
 });
