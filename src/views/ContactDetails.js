@@ -181,6 +181,7 @@ module.exports = kind({
         if (person.get(key).length > 0) {
             person.get(key).forEach(function (obj) {
                 this.$.detailsCollection.add({
+                    type: obj.type,
                     label: this.getLabelFromType(obj),
                     value: obj.value,
                     key: key,
@@ -262,7 +263,7 @@ module.exports = kind({
     },
 
     detailTap: function (inSender, inEvent) {
-        var url;
+        var url, type;
         // this.log(inEvent.model.attributes);
         if (inEvent.model.get('key') === 'birthday' || inEvent.model.get('key') === 'anniversary') {
             var upcoming = new Date(inEvent.model.get('value'));
@@ -286,7 +287,25 @@ module.exports = kind({
                     url = 'mailto:' + encodeURIComponent(inEvent.model.get('value'));
                     break;
                 case 'ims':
-                    url = 'im:' + encodeURIComponent(inEvent.model.get('value')) + '?personId=' + inEvent.model.get('personId');
+                    var match = /([^@]+)(@([^@]+))?/.exec(inEvent.model.get('value'));
+                    this.log("recipient:" + match[1], "host:" + match[3]);
+                    var addr;
+                    if (match[3]) {
+                        addr = encodeURIComponent(match[1]) + "@" + encodeURIComponent(match[3]);
+                    } else if (match[1]) {
+                        addr = encodeURIComponent(match[1]);
+                    } else {
+                            window.PalmSystem.addBannerMessage($L("Not an address"));
+                            return;
+                    }
+                    url = 'im:' + addr + '?personId=' + inEvent.model.get('personId');
+                    type = inEvent.model.get('type');
+                    if (type.slice(0,5) === 'type_') {
+                        type = type.slice(5);
+                    }
+                    if (type && type !== 'other') {
+                        url += '&type=' + type;
+                    }
                     break;
                 case 'urls':
                     url = inEvent.model.get('value');

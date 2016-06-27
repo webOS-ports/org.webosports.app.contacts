@@ -245,7 +245,7 @@ module.exports = kind({
            	            {   classes: "flex-row",
                             components: [
           	                    {kind: InputDecorator, classes: "flex-auto", components: [
-                        	        {name: "imInput", kind: Input, type: "email", placeholder: $L("New IM address"), onchange: "imChange"}
+                        	        {name: "imInput", kind: Input, type: "text", placeholder: $L("New IM address"), onchange: "imChange"}
                         	    ]},
                     	        {kind: PickerDecorator, classes: "flex-none", components: [
 	                	            {name: "imType", style: "min-width: 8rem; text-transform: capitalize;"},
