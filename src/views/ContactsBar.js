@@ -120,6 +120,7 @@ module.exports = kind({
     },
 
     alterSearch: function (newSearchText) {
+        this.$.panes.setIndex(0);
         this.$.searchInput.set('value', newSearchText);
     },
     
