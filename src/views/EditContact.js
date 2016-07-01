@@ -373,7 +373,7 @@ module.exports = kind({
         	    {kind: Groupbox, components: [
           	        {name: "urlRepeater", kind: DataRepeater, components: [{
           	        	components: [
-         	                {kind: InputDecorator, components: [
+         	                {kind: InputDecorator, style: "box-sizing: border-box; width:100%", components: [
                        	        {name: "urlInput", kind: Input, type: "url", placeholder: $L("New URL"), onchange: "urlChange"}
                        	    ]}
                         ],
@@ -395,7 +395,7 @@ module.exports = kind({
         	    {kind: Groupbox, components: [
           	        {name: "noteRepeater", kind: DataRepeater, components: [{
           	        	components: [
-         	                {kind: InputDecorator, components: [
+         	                {kind: InputDecorator, style: "box-sizing: border-box; width:100%", components: [
                        	        {name: "noteInput", kind: TextArea, placeholder: $L("New note"), onchange: "noteChange"}
                        	    ]}    
                         ],
