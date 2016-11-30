@@ -7,21 +7,24 @@
     "onyx",
     "layout",
     "enyo-webos",
-    "enyo-luneos"
+    "enyo-luneos",
+    "enyo-animated"
   ],
   "sources": {
     "enyo": "https://github.com/enyojs/enyo.git",
     "onyx": "https://github.com/enyojs/onyx.git",
     "layout": "https://github.com/enyojs/layout.git",
     "enyo-webos": "https://github.com/enyojs/enyo-webos.git",
-    "enyo-luneos": "https://github.com/JayCanuck/enyo-luneos.git"
+    "enyo-luneos": "https://github.com/JayCanuck/enyo-luneos.git",
+    "enyo-animated": "https://github.com/DougReeder/enyo-animated.git"
   },
   "targets": {
     "enyo": "2.7.0",
     "onyx": "2.7.0",
     "layout": "2.7.0",
     "enyo-webos": "master",
-    "enyo-luneos": "master"
+    "enyo-luneos": "master",
+    "enyo-animated": "master"
   },
   "production": false,
   "devMode": true,

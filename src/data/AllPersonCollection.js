@@ -19,19 +19,30 @@ module.exports = kind({
     dbKind: "com.palm.person:1",
     published: {
         globalPersonCollection: null,
+        favorites: false,
         searchText: ""
     },
     create: function () {
         this.log(arguments);
         this.inherited(arguments);
     },
+    favoritesChanged: function () {
+        this.refilter.apply(this, arguments);
+    },
     searchTextChanged: function () {
+        this.refilter.apply(this, arguments);
+    },
+    refilter: function () {
+        var favorites = this.favorites;
         var searchText = this.searchText.trim().toLowerCase();
         var searchLength = searchText.length;
         this.empty();
         this.add(this.globalPersonCollection.filter(function (item) {
             var i, allSearchTerms, name;
             try {
+                if (favorites && ! item.get("favorite")) {
+                    return false;
+                }
                 allSearchTerms = item.get("allSearchTerms") || [""];
                 for (i = 0; i < allSearchTerms.length; ++i) {
                     if (allSearchTerms[i].slice(0, searchLength) === searchText) {
@@ -43,6 +54,6 @@ module.exports = kind({
             }
             return false;
         }));
-        this.log(this.get("length"), "records match", '"' + searchText + '"');
+        this.log(this.get("length"), "records match", '"' + searchText + '" ' + favorites);
     }
 });

@@ -1,10 +1,10 @@
 /* ContactsBar.js - lists of All and Favorite contacts - org.webosports.app.contacts */
-/*global GlobalPersonCollection */
 
 var
     kind = require('enyo/kind'),
     FittableRows = require('layout/FittableRows'),
     Toolbar = require('onyx/Toolbar'),
+    InputSearchStretch = require('enyo-animated/InputSearchStretch'),
     RadioGroup = require('onyx/RadioGroup'),
     Panels = require('layout/Panels'),
     CardArranger = require('layout/CardArranger'),
@@ -12,7 +12,6 @@ var
     Input = require('onyx/Input'),
     Image = require('enyo/Image'),
     AllPersonCollection = require('../data/AllPersonCollection'),
-    FavoritePersonCollection = require('../data/FavoritePersonCollection'),
     ContactsList = require('./ContactsList'),
     $L = require('enyo/i18n').$L;   // no-op placeholder
 
@@ -33,16 +32,18 @@ module.exports = kind({
             name: "tabsToolbar",
             kind: Toolbar,
             components: [
+                {kind: InputSearchStretch, end:true, placeholder: $L("Search"), onkeydown: 'inputKeydown', components: [
                 {
                     name: "tabs",
                     kind: RadioGroup,
-                    controlClasses: "onyx-tabbutton",
+                    controlClasses: "luneos-tabbutton",
                     onActivate: "paneChange",
                     components: [
-                        { name: "0", content: $L("All"), index: 0, active: true },
-                        { name: "1", content: $L("Favourites"), index: 1 }
+                        { name: "0", content: $L("All"), favorites: false, active: true },
+                        { name: "1", content: $L("Favourites"), favorites: true }
                     ]
                 }
+                ]}
             ]
         },
         {
@@ -60,26 +61,7 @@ module.exports = kind({
                     kind: FittableRows,
                     classes: "contacts-list",
                     components: [
-                        {
-                            kind: InputDecorator,
-                            classes: "contacts-search",
-                            components: [
-                                // When our version of webkit supports type "search", we can get a "recent searches" dropdown for free
-                                { name: "searchInput", kind: Input, placeholder: "Search" /*, type: "search", attributes: {results:6, autosave:"contactsSearch"}, style: "font-size: 16px;"*/ },
-                                { kind: Image, src: "assets/search-input.png" }
-                            ]
-                        },
                         { name: "allContactsList", kind: ContactsList, fit: true, collection: new AllPersonCollection(), ontap: "selectPerson" }
-                    ]
-                },
-                //Scroller is going crazy without the FittableRows
-                {
-                    name: "favourites",
-                    description: "Favourites",
-                    kind: FittableRows,
-                    classes: "contacts-list",
-                    components: [
-                        { name: "favContactsList", kind: ContactsList, fit: true, collection: new FavoritePersonCollection(), ontap: "selectPerson" }
                     ]
                 }
             ]
@@ -87,15 +69,13 @@ module.exports = kind({
     ],
 
     bindings: [
-        {from: "$.searchInput.value", to: "$.allContactsList.collection.searchText"},
-        {from: "globalPersonCollection", to: "$.allContactsList.collection.globalPersonCollection"},
-        {from: "globalPersonCollection", to: "$.favContactsList.collection.globalPersonCollection"}
+        {from: "$.inputSearchStretch.value", to: "$.allContactsList.collection.searchText"},
+        {from: "globalPersonCollection", to: "$.allContactsList.collection.globalPersonCollection"}
     ],
 
     paneChange: function (inSender, inEvent) {
         if (inEvent.originator.getActive()) {
-            //Is this okay, without index being published?
-            this.$.panes.setIndex(inEvent.originator.index);
+            this.$.allContactsList.collection.set('favorites', inEvent.originator.favorites);
         }
     },
     tabChange: function (inSender, inEvent) {
@@ -103,12 +83,18 @@ module.exports = kind({
     		this.$[inEvent.toIndex].setActive(true);
     	}
     },
-    
+
+    inputKeydown: function (inSender, inEvent) {
+        var code = inEvent.charCode || inEvent.keyCode;
+        if (code === 13 || code === 38 || code === 40) {
+            inEvent.dispatchTarget.node.blur();
+        }
+    },
+
     refilter: function () {
     	var searchText = this.$.allContactsList.collection.get("searchText");
     	// Forces refiltering without changing searchText.
     	this.$.allContactsList.collection.searchTextChanged(searchText, searchText, "searchText");
-    	this.$.favContactsList.collection.refilter();
     },
 
     selectPerson: function (inSender, inEvent) {
@@ -121,14 +107,21 @@ module.exports = kind({
 
     alterSearch: function (newSearchText) {
         this.$.panes.setIndex(0);
-        this.$.searchInput.set('value', newSearchText);
+
+        this.$.inputSearchStretch.set('value', newSearchText);
+        this.$.inputSearchStretch.blur();
+
+        this.$[0].setActive(true);   // tab
+        this.$.allContactsList.collection.set('favorites', false);
     },
     
     goBack: function (inSender, inEvent) {
     	if (this.$.panes.get('index') === 0) {
-    		this.$.searchInput.set('value', '');
-    	} else {
-    		this.$.favContactsList.scrollToIndex(0);
+    		this.$.inputSearchStretch.set('value', '');
+            this.$.inputSearchStretch.blur();
+
+            this.$[0].setActive(true);   // tab
+            this.$.allContactsList.collection.set('favorites', false);
     	}
     }
     
