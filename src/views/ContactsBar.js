@@ -46,26 +46,7 @@ module.exports = kind({
                 ]}
             ]
         },
-        {
-            name: "panes",
-            kind: Panels,
-            arrangerKind: CardArranger,
-            draggable: false,
-            onTransitionFinish: "tabChange",
-            margin: 0,
-            fit: true,
-            components: [
-                {
-                    name: "main",
-                    description: "All",
-                    kind: FittableRows,
-                    classes: "contacts-list",
-                    components: [
-                        { name: "allContactsList", kind: ContactsList, fit: true, collection: new AllPersonCollection(), ontap: "selectPerson" }
-                    ]
-                }
-            ]
-        }
+        { name: "allContactsList", kind: ContactsList, fit: true, collection: new AllPersonCollection(), ontap: "selectPerson" }
     ],
 
     bindings: [
@@ -77,11 +58,6 @@ module.exports = kind({
         if (inEvent.originator.getActive()) {
             this.$.allContactsList.collection.set('favorites', inEvent.originator.favorites);
         }
-    },
-    tabChange: function (inSender, inEvent) {
-    	if (inEvent.toIndex !== inEvent.fromIndex) {
-    		this.$[inEvent.toIndex].setActive(true);
-    	}
     },
 
     inputKeydown: function (inSender, inEvent) {
@@ -106,8 +82,6 @@ module.exports = kind({
     },
 
     alterSearch: function (newSearchText) {
-        this.$.panes.setIndex(0);
-
         this.$.inputSearchStretch.set('value', newSearchText);
         this.$.inputSearchStretch.blur();
 
@@ -116,13 +90,11 @@ module.exports = kind({
     },
     
     goBack: function (inSender, inEvent) {
-    	if (this.$.panes.get('index') === 0) {
-    		this.$.inputSearchStretch.set('value', '');
-            this.$.inputSearchStretch.blur();
+        this.$.inputSearchStretch.set('value', '');
+        this.$.inputSearchStretch.blur();
 
-            this.$[0].setActive(true);   // tab
-            this.$.allContactsList.collection.set('favorites', false);
-    	}
+        this.$[0].setActive(true);   // tab
+        this.$.allContactsList.collection.set('favorites', false);
     }
     
 });
