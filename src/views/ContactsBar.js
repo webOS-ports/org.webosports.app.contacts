@@ -32,7 +32,8 @@ module.exports = kind({
             name: "tabsToolbar",
             kind: Toolbar,
             components: [
-                {kind: InputSearchStretch, end:true, placeholder: $L("Search"), onkeydown: 'inputKeydown', components: [
+                {kind: InputSearchStretch, end:true, targetWidth: 180, placeholder: $L("Search"),
+                    onkeydown: 'inputKeydown', components: [
                 {
                     name: "tabs",
                     kind: RadioGroup,
