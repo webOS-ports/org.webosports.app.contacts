@@ -1,11 +1,11 @@
 {
     "id": "com.palm.app.contacts",
-    "version": "0.1.2",
+    "version": "0.1.4",
     "vendor": "WebOS Ports",
     "type": "web",
     "main": "index.html",
     "title": "Contacts",
     "icon": "icon.png",
     "uiRevision": 2,
-    "keywords": ["Addresses", "People"]
+    "keywords": ["Addresses", "People", "person"]
 }

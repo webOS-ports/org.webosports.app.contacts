@@ -37,6 +37,7 @@ luna-send -n 1 palm://com.palm.applicationManager/launch '{"id":"com.palm.app.co
 see http://www.openwebosproject.org/docs/developer_reference/application_apis/add_contact/
 
 ## TODO
+* searching for two names should work
 * contact details displays address with locality, region, country and postal code on separate lines
 * locale-specific code to parse a single address field into DB fields
 * edit name components
