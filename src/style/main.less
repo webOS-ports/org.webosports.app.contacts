@@ -121,6 +121,7 @@ ContactsUI CSS
     overflow:hidden;
     text-overflow:ellipsis;
     text-align: left;
+    text-shadow: 0px 1px 0px #fff;
 }
 .contacts-list .contacts-item .favorite-cell {
     width: 25px;
@@ -172,7 +173,7 @@ ContactsUI CSS
     text-overflow:ellipsis;
 }
 .contacts-details .name {
-    color:#222;
+    color:@onyx-text-color;
     font-weight:normal;
 /*    padding:0 0 0.5em; */
     overflow:hidden;
@@ -208,7 +209,7 @@ ContactsUI CSS
     margin:0;
 }
 .contacts-details .group .contacts-item {
-    color:#222;
+    color:@onyx-text-color;
 }
 .contacts-pointpickerlist .label {
     color:#1879cd;
@@ -605,7 +606,7 @@ border-top-color:rgba(255,255,255,0.5);
 
 .details .name {
     font-size: 34px;
-    color: #222;
+    color: @onyx-text-color;
     overflow: hidden;
     text-overflow: ellipsis;
     font-family: PreludeWGL-Light, "Prelude Light", Prelude, "Prelude Medium", "Segoe UI", Arial, Helvetica, sans-serif;
@@ -706,7 +707,7 @@ border-top-color:rgba(255,255,255,0.5);
     border-top: 1px dashed #ccc;
     border-bottom: 0;
     height: 73px;
-    color: #222;
+    color: @onyx-text-color;
     font-weight: normal;
     padding: 0 14px;
 }
@@ -732,7 +733,7 @@ border-top-color:rgba(255,255,255,0.5);
 
 .details .group .contacts-item {
     padding: 0.5rem 0.7rem;
-    color: #222;
+    color: @onyx-text-color;
     font-size: 0.9rem;
     border-bottom: 1px solid #d8d8d8;
 }
