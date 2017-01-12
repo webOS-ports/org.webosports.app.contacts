@@ -146,7 +146,7 @@ module.exports = kind({
         {from: "newPerson.ims", to: "$.imRepeater.collection", transform: function (ims) {
             console.log("ims", ims); 
             var c = new Collection(ims);
-            c.add({value: "", favoriteData: {}, normalizedValue: ""});
+            c.add({value: "", favoriteData: {}, normalizedValue: "", type: 'type_other'});
 //            console.log("IM collection", c);
             return c;
         }},
@@ -297,7 +297,7 @@ module.exports = kind({
                            	   // Is there a better way to get the collection?
                            	   // this.owner.$.addressRepeater.collection also works
 		          	        	if (inEvent.originator.value && inEvent.index === collection.length - 1) {
-		          	        		collection.add({value: "", favoriteData: {}, normalizedValue: ""});
+		          	        		collection.add({value: "", favoriteData: {}, normalizedValue: "", type: 'type_other'});
 		          	        	} else if (! inEvent.originator.value && inEvent.index !== collection.length - 1) {
 		          	        		collection.remove(collection.at(inEvent.index));
 		          	        	}
