@@ -255,9 +255,8 @@ module.exports = kind({
 	                	                 // There's no such thing as a Bonjour messaging account; it works without accounts.
 	                	                 {name: "type_gadugadu_item", content: $L("Gadu-Gadu"), value: "type_gadugadu"},
 	                	                 {name: "type_icq_item", content: $L("ICQ"), value: "type_icq"},
-	                	                 {name: "type_jabber_item", content: $L("Jingle / Jabber / XMPP"), value: "type_jabber"},   // Google Talk, LJ Talk, Gizmo5, Facebook Chat, ...)
+	                	                 {name: "type_jabber_item", content: $L("Jingle / Jabber / XMPP"), value: "type_jabber"},   // Google Talk, LJ Talk, Gizmo5, ...)
 	                	                 {name: "type_sametime_item", content: $L("Lotus Sametime"), value: "type_sametime"},
-                                        {name: "type_simple_item", content: $L("Simple / LCS"), value: "type_simple"},   // includes MS "Live Communication Server"
 	                	                 {name: "type_groupwise_item", content: $L("Novell GroupWise"), value: "type_groupwise"},
                                         {name: "type_qq_item", content: $L("QQ"), value: "type_qq"},
                                         {name: "type_whatsapp_item", content: $L("WhatsApp"), value: "type_whatsapp"},
@@ -273,22 +272,19 @@ module.exports = kind({
                                         {name: "type_kakaotalk_item", content: $L("Kakaotalk"), value: "type_kakaotalk"},
                                         {name: "type_line_item", content: $L("LINE"), value: "type_line"},
 	                	                 {name: "type_linkedin_item", content: $L("LinkedIn"), value: "type_linkedin"},
-                                        {name: "type_mxit_item", content: $L("Mxit"), value: "type_mxit"},
-                                        {name: "type_myspace_item", content: $L("MySpace IM"), value: "type_myspace"},
-                                        {name: "type_signal_item", content: $L("Signal"), value: "type_signal"},
+                                        {name: "type_signal_item", content: $L("Signal"), value: "type_signal"},   // uses phone # as ID
                                         {name: "type_silc_item", content: $L("SILC"), value: "type_silc"},
                                         {name: "type_silentphone_item", content: $L("Silent Phone"), value: "type_silentphone"},
+                                        {name: "type_simple_item", content: $L("Simple / LCS"), value: "type_simple"},   // includes MS "Live Communication Server"
 	                	                 {name: "type_skype_item", content: $L("Skype"), value: "type_skype"},   // we'd need more than the skype4pidgin plugin
                                         {name: "type_snapchat_item", content: $L("Snapchat"), value: "type_snapchat"},
 	                	                 {name: "type_telegram_item", content: $L("Telegram"), value: "type_telegram"},
-	                	                 {name: "type_textsecure_item", content: $L("TextSecure"), value: "type_textsecure"},   // uses phone # as ID
 	                	                 {name: "type_threema_item", content: $L("Threema"), value: "type_threema"},
 	                	                 {name: "type_twitter_item", content: $L("Twitter"), value: "type_twitter"},
                                         {name: "type_viber_item", content: $L("Viber"), value: "type_viber"},
                                         {name: "type_wechat_item", content: $L("WeChat"), value: "type_wechat"},
                                         {name: "type_zalo_item", content: $L("Zalo"), value: "type_zalo"},
-                                        {name: "type_zephr_item", content: $L("Zephr"), value: "type_zephr"}
-									    // {content: $L("Windows Live Messenger"), value: "type_msn"},
+                                        {name: "type_zephyr_item", content: $L("Zephyr"), value: "type_zephyr"}
 	                	            ]}
 	                	        ]}                        	    
                            ],
