@@ -7,5 +7,6 @@
     "title": "Contacts",
     "icon": "icon.png",
     "uiRevision": 2,
-    "keywords": ["Addresses", "People", "person"]
+    "keywords": ["Addresses", "People", "person"],
+    "requiredPermissions": ["networking.internal", "services", "applications.internal", "system", "database.internal"]
 }
