@@ -427,7 +427,7 @@
             },
             "focused": false,
             "requirements": {
-                "internetConfidence": "fair"
+                "internet": true
             },
             "subscribers": [
             ],
@@ -479,7 +479,7 @@
             },
             "focused": false,
             "requirements": {
-                "internetConfidence": "fair"
+                "internet": true
             },
             "subscribers": [
             ],
@@ -535,7 +535,7 @@
             },
             "focused": false,
             "requirements": {
-                "internetConfidence": "fair"
+                "internet": "true"
             },
             "subscribers": [
             ],
