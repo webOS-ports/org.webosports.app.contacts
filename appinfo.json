@@ -8,5 +8,5 @@
     "icon": "icon.png",
     "uiRevision": 2,
     "keywords": ["Addresses", "People", "person"],
-    "requiredPermissions": ["networking.internal", "services", "applications.internal", "system", "database.internal"]
+    "requiredPermissions": ["accountsservice.management", "accountsservice.operation", "application.launcher", "activity.operation", "contactslinker-service.operation", "contacts-service.operation", "database.management", "database.operation", "settings.read", "tempdatabase.management", "tempdatabase.operation"]
 }
