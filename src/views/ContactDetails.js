@@ -14,7 +14,9 @@ var
     Button = require('onyx/Button'),
     Icon = require('onyx/Icon'),
     LunaService = require('enyo-webos/LunaService'),
+    Popup = require('onyx/Popup'),
     details = require('../util/details'),
+    accounts = require('../data/accounts'),
     services = require('../data/services'),
     $L = require('enyo/i18n').$L;   // no-op placeholder
 
@@ -123,6 +125,12 @@ module.exports = kind({
                 ]
             }]
         },
+        // What an IM address can do: chat, and calls when an account can call it.
+        {name: "imPopup", kind: Popup, classes: "im-popup", floating: true, modal: true, scrim: true, components: [
+            {name: "imChatBtn", kind: Button, content: $L("Chat"), ontap: "imChatTap"},
+            {name: "imVoiceBtn", kind: Button, content: $L("Voice Call"), ontap: "imVoiceTap"},
+            {name: "imVideoBtn", kind: Button, content: $L("Video Call"), ontap: "imVideoTap"}
+        ]},
         { name: "editContactBtn", kind: Button, style: "position: absolute; right: 0.5rem; bottom: 0.5rem;", ontap: "doEdit", components: [
             {kind: Icon, src: "assets/btn_edit.png"}
         ]}
@@ -184,7 +192,8 @@ module.exports = kind({
         } else if (key === 'relations') {
             this.doAlterSearch({searchText: model.get('value')});
         } else if (key === 'ims') {
-            url = this.imUrl(model);
+            this.imTap(model, inEvent);
+            return;
         } else {
             url = details.target({key: key, value: model.get('value')});
         }
@@ -192,25 +201,53 @@ module.exports = kind({
             this.$.applicationManagerOpenSrvc.send({target: url});
         }
     },
-    imUrl: function (inModel) {
-        var match = /([^@]+)(@([^@]+))?/.exec(inModel.get('value')), addr, type, url;
-        if (match && match[3]) {
-            addr = encodeURIComponent(match[1]) + "@" + encodeURIComponent(match[3]);
-        } else if (match && match[1]) {
-            addr = encodeURIComponent(match[1]);
-        } else {
+    imTap: function (inModel, inEvent) {
+        var actions = details.imActions(inModel.get('type'), accounts.list);
+        this.imModel = inModel;
+        this.imActions = actions;
+        if (actions.length === 1) {
+            this.imChatTap();
+            return;
+        }
+        var has = function (inAction) {
+            return actions.some(function (inA) { return inA.action === inAction; });
+        };
+        this.$.imVoiceBtn.set("showing", has("voice"));
+        this.$.imVideoBtn.set("showing", has("video"));
+        this.$.imPopup.showAtEvent(inEvent);
+    },
+    imChatTap: function () {
+        var model = this.imModel;
+        this.$.imPopup.hide();
+        var url = model && details.imTarget(model.get('value'), model.get('type'), model.get('personId'));
+        if (url) {
+            this.$.applicationManagerOpenSrvc.send({target: url});
+        } else if (model) {
             services.banner($L("Not an address"));
-            return null;
         }
-        url = 'im:' + addr + '?personId=' + encodeURIComponent(inModel.get('personId'));
-        type = inModel.get('type') || '';
-        if (type.slice(0, 5) === 'type_') {
-            type = type.slice(5);
+        return true;
+    },
+    imVoiceTap: function () {
+        this.imCall(false);
+        return true;
+    },
+    imVideoTap: function () {
+        this.imCall(true);
+        return true;
+    },
+    // A call to an IM address, through the Phone app, as the legacy app placed Skype calls.
+    imCall: function (inVideo) {
+        var model = this.imModel, wanted = inVideo ? "video" : "voice";
+        var action = (this.imActions || []).filter(function (inA) { return inA.action === wanted; })[0];
+        this.$.imPopup.hide();
+        if (!model || !action) {
+            return;
         }
-        if (type && type !== 'other') {
-            url += '&type=' + encodeURIComponent(type);
+        var params = {address: model.get('value'), transport: action.transport};
+        if (inVideo) {
+            params.video = true;
         }
-        return url;
+        this.$.applicationManagerLaunchSrvc.send({id: "com.palm.app.phone", params: params});
     },
     smsTap: function (inSender, inModel) {
         var url = details.smsTarget({key: inModel.get('key'), value: inModel.get('value')}, inModel.get('personId'));

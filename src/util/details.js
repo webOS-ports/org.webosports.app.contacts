@@ -11,6 +11,7 @@
 // Pure module: no Enyo, so it is unit tested under Node.
 
 var labels = require("./labels");
+var accountRules = require("./accountRules");
 
 function str(inValue) {
 	return typeof inValue === "string" ? inValue : (typeof inValue === "number" ? String(inValue) : "");
@@ -143,6 +144,47 @@ function smsTarget(inRow, inPersonId) {
 }
 
 /**
+	What tapping an IM address can do, in order: always "chat" (Messaging
+	handles every IM type), "voice" when an account's PHONE provider serves
+	the type (Skype's serves "type_skype"), and "video" when that provider
+	says it has video (videoFormat other than "none"). Each is
+	{action, transport}: transport is the calling account's templateId, as
+	the legacy app passed it to the Phone app.
+*/
+function imActions(inType, inAccounts) {
+	var out = [{action: "chat", transport: ""}];
+	if (!inType) {
+		return out;
+	}
+	var phone = accountRules.providersFor(inAccounts, "PHONE", inType)[0];
+	if (phone) {
+		out.push({action: "voice", transport: phone.account.templateId || ""});
+		if (phone.provider.videoFormat && phone.provider.videoFormat !== "none") {
+			out.push({action: "video", transport: phone.account.templateId || ""});
+		}
+	}
+	return out;
+}
+
+/**
+	The im: URL that opens a chat with an IM address in Messaging, or null
+	when the value is not an address.
+*/
+function imTarget(inValue, inType, inPersonId) {
+	var match = /^([^@\s]+)(@([^@\s]+))?$/.exec(str(inValue).trim()), url, type;
+	if (!match) {
+		return null;
+	}
+	url = "im:" + encodeURIComponent(match[1]) + (match[3] ? "@" + encodeURIComponent(match[3]) : "");
+	url += "?personId=" + encodeURIComponent(str(inPersonId));
+	type = str(inType).replace(/^type_/, "");
+	if (type && type !== "other") {
+		url += "&type=" + encodeURIComponent(type);
+	}
+	return url;
+}
+
+/**
 	The detail rows of a person record, in the legacy order: phone numbers,
 	emails, IMs, addresses, web addresses, notes, birthday, anniversary,
 	relations. Each row is {key, type, label, value, sms, entry}: label and
@@ -183,5 +225,5 @@ function rows(inPerson) {
 	return out;
 }
 
-module.exports = {rows: rows, target: target, smsTarget: smsTarget, addressText: addressText, dateText: dateText,
+module.exports = {rows: rows, target: target, smsTarget: smsTarget, imActions: imActions, imTarget: imTarget, addressText: addressText, dateText: dateText,
 	nextOccurrence: nextOccurrence, webUrl: webUrl, dialString: dialString, MONTHS: MONTHS};

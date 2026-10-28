@@ -429,4 +429,28 @@ t.test("details: the next birthday", function() {
 	assert.strictEqual(details.nextOccurrence("1980-13-01", now), null);
 });
 
+t.test("details: what an IM address offers depends on the accounts", function() {
+	assert.deepStrictEqual(details.imActions("type_skype", ACCOUNTS), [{action: "chat", transport: ""},
+		{action: "voice", transport: "com.palm.skype"}]);
+	assert.deepStrictEqual(details.imActions("type_gtalk", ACCOUNTS), [{action: "chat", transport: ""}]);
+	assert.deepStrictEqual(details.imActions("", ACCOUNTS), [{action: "chat", transport: ""}]);
+	var withVideo = JSON.parse(JSON.stringify(ACCOUNTS));
+	withVideo.forEach(function(a) {
+		(a.capabilityProviders || []).forEach(function(p) {
+			if (p.capability === "PHONE") {
+				p.videoFormat = "both";
+			}
+		});
+	});
+	assert.deepStrictEqual(details.imActions("type_skype", withVideo).map(function(a) { return a.action; }), ["chat", "voice", "video"]);
+	assert.deepStrictEqual(details.imActions("type_skype", []), [{action: "chat", transport: ""}]);
+});
+t.test("details: im: links", function() {
+	assert.strictEqual(details.imTarget("anna.vdberg", "type_skype", "p-anna"), "im:anna.vdberg?personId=p-anna&type=skype");
+	assert.strictEqual(details.imTarget("gina@gmail.com", "type_gtalk", "p 1"), "im:gina@gmail.com?personId=p%201&type=gtalk");
+	assert.strictEqual(details.imTarget("x&y=1", "type_other", "p"), "im:x%26y%3D1?personId=p");
+	assert.strictEqual(details.imTarget("a@b@c", "type_jabber", "p"), null);
+	assert.strictEqual(details.imTarget("  ", "type_jabber", "p"), null);
+});
+
 t.run();

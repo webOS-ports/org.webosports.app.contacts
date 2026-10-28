@@ -217,6 +217,36 @@ t.test("details: taps open the right app through a URL, never the telephony serv
 	assert.strictEqual((await opened())[4], "mailto:anna@example.com");
 });
 
+t.test("details: an IM address an account can call offers chat and a call", async function() {
+	await open();
+	await tapPerson("Anna van der Berg");
+	await tapDetail("anna.vdberg");
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_imPopup]');return e && e.getBoundingClientRect().width>0;})()");
+	assert.strictEqual(await visible("[id$=_imVoiceBtn]"), true);
+	assert.strictEqual(await visible("[id$=_imVideoBtn]"), false, "the Skype provider declares no video");
+	await shot("details-im-popup");
+	await page.tap("[id$=_imVoiceBtn]");
+	var launches = await page.eval("__MOCK__.calls.filter(function(c){return /applicationManager\\/launch$/.test(c.url);}).map(function(c){return c.params;})");
+	assert.deepStrictEqual(launches, [{id: "com.palm.app.phone", params: {address: "anna.vdberg", transport: "com.palm.skype"}}]);
+	assert.strictEqual(await visible("[id$=_imPopup]"), false);
+	await tapDetail("anna.vdberg");
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_imChatBtn]');return e && e.getBoundingClientRect().width>0;})()");
+	await page.tap("[id$=_imChatBtn]");
+	assert.deepStrictEqual(await opened(), ["com.palm.app.phone", "im:anna.vdberg?personId=p-anna&type=skype"]);
+});
+
+t.test("details: an IM address only Messaging handles opens a chat at once", async function() {
+	await open();
+	await tapPerson("Gina Talk");
+	var rows = await detailRows();
+	var gtalk = rows.filter(function(r) { return r[0] === "Google Talk"; })[0];
+	assert.ok(gtalk, JSON.stringify(rows));
+	await tapDetail(gtalk[1]);
+	await sleep(100);
+	assert.strictEqual(await visible("[id$=_imPopup]"), false);
+	assert.ok(/^im:.*&type=gtalk$/.test((await opened())[0]), JSON.stringify(await opened()));
+});
+
 t.test("startup: every service call is one the hub allows", async function() {
 	await open();
 	var denied = await page.eval("__MOCK__.calls.filter(function(c){return c.acg && !/^(granted|exempt|unchecked)/.test(c.acg);})");
