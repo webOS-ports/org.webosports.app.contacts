@@ -22,6 +22,7 @@ var
 	prefs = require('../data/prefs'),
 	services = require('../data/services'),
 	choose = require('./choose'),
+	AccountRow = require('./AccountRow'),
 	$L = require('enyo/i18n').$L;   // no-op placeholder
 
 var SORT_ORDERS = [
@@ -30,39 +31,6 @@ var SORT_ORDERS = [
 	{value: "COMPANY_FIRST_LAST", content: "Company & first name"},
 	{value: "COMPANY_LAST_FIRST", content: "Company & last name"}
 ];
-
-var ACCOUNTS_APP = "com.palm.app.accounts";
-
-//* One account in the list; a tap opens it in the Accounts app.
-var AccountRow = kind({
-	name: "PrefsAccountRow",
-	classes: "prefs-account flex-row",
-	published: {
-		account: null,
-		count: null
-	},
-	components: [
-		{name: "icon", kind: Image, classes: "prefs-account-icon flex-none"},
-		{classes: "flex-auto prefs-account-text", components: [
-			{name: "name", classes: "prefs-account-name"},
-			{name: "username", classes: "prefs-account-username"}
-		]},
-		{name: "count", classes: "prefs-account-count flex-none"}
-	],
-	create: function () {
-		this.inherited(arguments);
-		var a = this.account;
-		this.$.icon.set("src", a.icon || "assets/header-icon-contacts.png");
-		this.$.name.set("content", a.name);
-		this.$.username.set("content", a.username);
-		this.$.username.set("showing", !!a.username);
-		this.countChanged();
-	},
-	countChanged: function () {
-		this.$.count.set("content", typeof this.count === "number" ?
-			(this.count === 1 ? $L("1 contact") : $L("{count} contacts").replace("{count}", this.count)) : "");
-	}
-});
 
 module.exports = kind({
 	name: "Preferences",
@@ -180,18 +148,14 @@ module.exports = kind({
 		return true;
 	},
 	accountTap: function (inSender, inEvent) {
-		var row = inEvent.originator;
-		while (row && row !== inSender && !(row instanceof AccountRow)) {
-			row = row.parent;
-		}
-		if (row instanceof AccountRow) {
-			services.call(services.APPMANAGER, "launch", {id: ACCOUNTS_APP,
-				params: {accountId: row.account.accountId, capability: "CONTACTS"}});
+		var row = AccountRow.from(inEvent.originator, inSender);
+		if (row) {
+			accounts.openInApp(row.account.accountId);
 		}
 		return true;
 	},
 	addAccount: function () {
-		services.call(services.APPMANAGER, "launch", {id: ACCOUNTS_APP, params: {capability: "CONTACTS", launchType: "add"}});
+		accounts.addInApp();
 		return true;
 	},
 	// Starts each account's sync, as the legacy Sync Now did; a failure is

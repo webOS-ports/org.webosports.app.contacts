@@ -50,7 +50,7 @@ var server, browser, page;
 
 /**
 	Opens the app on a fresh mock bus.
-	inOptions: {data, launchParams, width, height, luna, vcards, acg, delay}
+	inOptions: {data, launchParams, width, height, luna, vcards, acg, delay, firstLaunch}
 */
 async function open(inOptions) {
 	var o = inOptions || {};
@@ -63,7 +63,8 @@ async function open(inOptions) {
 		luna: o.luna || {},
 		vcards: o.vcards || {},
 		acg: o.acg || ACG,
-		delay: o.delay || 0
+		delay: o.delay || 0,
+		firstLaunch: !!o.firstLaunch
 	};
 	page = await browser.newPage({width: o.width || 1024, height: o.height || 768,
 		initScripts: ["window.__MOCK_CONFIG__ = " + JSON.stringify(config) + ";", BUS]});
@@ -1082,7 +1083,7 @@ async function openPrefs() {
 	await page.tap("[id$=_prefsMenuItem]");
 	await page.waitFor("(function(){var e=document.querySelector('[id$=_preferences] [id$=_doneBtn]');" +
 		"return e && e.getBoundingClientRect().width>0 && e.getBoundingClientRect().left>=0 && e.getBoundingClientRect().left<1024;})()");
-	await page.waitFor("document.querySelectorAll('.prefs-account').length > 0");
+	await page.waitFor("document.querySelectorAll('[id$=_preferences] .prefs-account').length > 0");
 }
 async function closePrefs() {
 	await page.tap("[id$=_preferences] [id$=_doneBtn]");
@@ -1096,7 +1097,7 @@ function prefsRecord() {
 	return page.eval("JSON.parse(JSON.stringify(__MOCK__.db.all('com.palm.app.contacts.prefs:1')[0] || null))");
 }
 function accountRows() {
-	return page.eval("Array.prototype.map.call(document.querySelectorAll('.prefs-account'), function(e){" +
+	return page.eval("Array.prototype.map.call(document.querySelectorAll('[id$=_preferences] .prefs-account'), function(e){" +
 		"return [e.querySelector('.prefs-account-name').textContent, e.querySelector('.prefs-account-count').textContent];})");
 }
 
@@ -1112,7 +1113,7 @@ t.test("prefs: the app menu opens Preferences & Accounts, a second tap closes it
 	// The default account offers only the accounts new contacts can go to.
 	assert.deepStrictEqual(await page.eval("Array.prototype.map.call(document.querySelectorAll('[id$=_defaultAccount] option'),function(o){return o.value;}).sort()"),
 		[GOOGLE, PALM].sort());
-	await page.waitFor("Array.prototype.every.call(document.querySelectorAll('.prefs-account-count'),function(e){return e.textContent;})");
+	await page.waitFor("Array.prototype.every.call(document.querySelectorAll('[id$=_preferences] .prefs-account-count'),function(e){return e.textContent;})");
 	var rows = await accountRows();
 	assert.deepStrictEqual(rows.slice().sort(), [["Acme", "4 contacts"], ["LuneOS Account", "8 contacts"],
 		["SIM", "1 contact"], ["Skype", "2 contacts"]], JSON.stringify(rows));
@@ -1176,7 +1177,7 @@ t.test("prefs: the default account is stored and new contacts go there", async f
 t.test("prefs: accounts open in the Accounts app; Sync Now starts each account's sync", async function() {
 	await open();
 	await openPrefs();
-	await page.tapText(".prefs-account", "Acme");
+	await page.tapText("[id$=_preferences] .prefs-account", "Acme");
 	await page.tap("[id$=_addAccountBtn]");
 	var launches = (await lunaCalls("applicationManager/launch")).map(function(c) { return c.params; });
 	assert.deepStrictEqual(launches, [
@@ -1204,8 +1205,97 @@ t.test("prefs: an account added in the Accounts app shows when Preferences opens
 			dbkinds: {contact: "com.example.carddav.contact:1"}}]}]);
 	await page.eval("__MOCK__.setAccounts(" + JSON.stringify(added) + ")");
 	await openPrefs();
-	await page.waitFor("document.querySelectorAll('.prefs-account').length === 5");
-	await page.waitFor("Array.prototype.some.call(document.querySelectorAll('.prefs-account'),function(e){return e.textContent.indexOf('0 contacts')>=0;})");
+	await page.waitFor("document.querySelectorAll('[id$=_preferences] .prefs-account').length === 5");
+	await page.waitFor("Array.prototype.some.call(document.querySelectorAll('[id$=_preferences] .prefs-account'),function(e){return e.textContent.indexOf('0 contacts')>=0;})");
+});
+
+// --- first use ---------------------------------------------------------
+
+function waitForFirstLaunch() {
+	return page.waitFor("contactsApp.view.$.cards.getActive() === contactsApp.view.$.firstLaunch && " +
+		"!contactsApp.view.$.cards.transitionPoints.length && " +
+		"(function(){var e=document.querySelector('[id$=_firstLaunch] [id$=_doneBtn]');var r=e&&e.getBoundingClientRect();" +
+		"return r && r.width>0 && r.left>=0 && r.left<1024;})()");
+}
+function firstLaunchView() {
+	return page.eval("(function(){var v=contactsApp.view.$.firstLaunch.$;return {title: v.title.content, welcome: v.welcome.content, " +
+		"existing: v.existing.showing && v.existing.hasNode().getBoundingClientRect().height > 0, " +
+		"rows: Array.prototype.map.call(document.querySelectorAll('.first-launch .prefs-account-name'),function(e){return e.textContent;})};})()");
+}
+function firstLaunchRecords() {
+	return page.eval("__MOCK__.db.all('com.palm.firstlaunch:1').map(function(r){return r.appId;})");
+}
+function launches() {
+	return page.eval("__MOCK__.calls.filter(function(c){return /applicationManager\\/launch$/.test(c.url);}).map(function(c){return c.params;})");
+}
+
+t.test("first use: shown at the first launch, lists the accounts, and Done remembers it", async function() {
+	await open({firstLaunch: true, noWait: true});
+	await waitForFirstLaunch();
+	var v = await firstLaunchView();
+	assert.strictEqual(v.title, "Your contacts accounts");
+	assert.strictEqual(v.welcome, "Get started with your existing accounts:");
+	assert.strictEqual(v.existing, true);
+	assert.strictEqual(v.rows.length, 3, "the contacts accounts but the device's own: " + v.rows);
+	assert.ok(v.rows.indexOf("Acme") >= 0 && v.rows.indexOf("Skype") >= 0, v.rows.join());
+	await shot("first-launch-accounts");
+	assert.deepStrictEqual(await firstLaunchRecords(), [], "not remembered before Done");
+	await menuButton();
+	await sleep(300);
+	assert.strictEqual(await visible("[id$=_prefsMenuItem]"), false, "no app menu over First use");
+	await page.tap("[id$=_firstLaunch] [id$=_doneBtn]");
+	await waitForMainCard();
+	await waitForList();
+	assert.deepStrictEqual(await firstLaunchRecords(), ["com.palm.app.contacts"]);
+	assert.strictEqual((await lunaCalls("com.palm.db/put")).filter(function(c) {
+		return c.params.objects[0]._kind === "com.palm.firstlaunch:1";
+	}).length, 1);
+});
+
+t.test("first use: a new device is welcomed; Add an Account opens the Accounts app, the account shows on return", async function() {
+	var d = data();
+	d.accounts = d.accounts.filter(function(inA) { return inA.templateId === "com.palm.palmprofile"; });
+	await open({data: d, firstLaunch: true, noWait: true});
+	await waitForFirstLaunch();
+	var v = await firstLaunchView();
+	assert.deepStrictEqual(v, {title: "Welcome!", welcome: "To get started, set up a Contacts account", existing: false, rows: []});
+	await shot("first-launch-welcome");
+	await page.tap("[id$=_firstLaunch] [id$=_addAccountBtn]");
+	await sleep(150);
+	assert.deepStrictEqual(await launches(), [{id: "com.palm.app.accounts", params: {capability: "CONTACTS", launchType: "add"}}]);
+	// Back from the Accounts app with a Google account.
+	await page.eval("__MOCK__.setAccounts(" + JSON.stringify(data().accounts) + "); document.dispatchEvent(new Event('activate'))");
+	await page.waitFor("document.querySelectorAll('.first-launch .prefs-account').length === 3");
+	v = await firstLaunchView();
+	assert.strictEqual(v.title, "Your contacts accounts");
+	assert.strictEqual(v.existing, true);
+	await page.eval("Array.prototype.filter.call(document.querySelectorAll('.first-launch .prefs-account'),function(e){" +
+		"return e.textContent.indexOf('Acme')>=0;})[0].setAttribute('data-acme','1')");
+	await page.tap(".first-launch [data-acme] .prefs-account-name");
+	await sleep(150);
+	assert.deepStrictEqual((await launches()).pop(), {id: "com.palm.app.accounts", params: {accountId: GOOGLE, capability: "CONTACTS"}});
+	assert.strictEqual(await page.eval("contactsApp.view.$.cards.getActive() === contactsApp.view.$.firstLaunch"), true);
+});
+
+t.test("first use: back leaves it for good; not over another app's launch, nor once shown", async function() {
+	await open({firstLaunch: true, noWait: true});
+	await waitForFirstLaunch();
+	await page.eval("document.dispatchEvent(new Event('backgesture'))");
+	await waitForMainCard();
+	assert.deepStrictEqual(await firstLaunchRecords(), ["com.palm.app.contacts"]);
+
+	await open({firstLaunch: true, noWait: true, launchParams: {id: "p-anna"}});
+	await waitForDetails("Anna");
+	await sleep(300);
+	assert.strictEqual(await page.eval("contactsApp.view.$.cards.get('index')"), 0, "the person, not First use");
+	assert.deepStrictEqual(await firstLaunchRecords(), []);
+
+	await open();
+	await sleep(300);
+	assert.strictEqual(await page.eval("contactsApp.view.$.cards.get('index')"), 0);
+	assert.strictEqual((await lunaCalls("com.palm.db/find")).filter(function(c) {
+		return c.params.query.from === "com.palm.firstlaunch:1";
+	}).length, 1, "checked once");
 });
 
 // --- run ---------------------------------------------------------------

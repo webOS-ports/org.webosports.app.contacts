@@ -5,6 +5,8 @@
 var
     services = require('./services');
 
+var ACCOUNTS_APP = "com.palm.app.accounts";
+
 /**
 	The account list from com.palm.service.accounts/listAccounts.
 		accounts.list          the raw accounts ([] until loaded)
@@ -12,6 +14,10 @@ var
 		accounts.whenReady(fn) runs fn once the list is loaded (at once if it is)
 		accounts.refresh()     reloads it (an account may have been added)
 		accounts.onChange(fn)  runs fn after every load
+		accounts.openInApp(id) opens an account in the Accounts app
+		accounts.addInApp()    asks the Accounts app for a new contacts account
+	Adding and changing an account is the Accounts app's job, as in the
+	other LuneOS apps; the legacy in-app AccountsUI has no Enyo 2 port.
 */
 var accounts = {
     list: [],
@@ -50,6 +56,13 @@ var accounts = {
     },
     onChange: function (inFn) {
         accounts.listeners.push(inFn);
+    },
+    openInApp: function (inAccountId) {
+        services.call(services.APPMANAGER, "launch", {id: ACCOUNTS_APP,
+            params: {accountId: inAccountId, capability: "CONTACTS"}});
+    },
+    addInApp: function () {
+        services.call(services.APPMANAGER, "launch", {id: ACCOUNTS_APP, params: {capability: "CONTACTS", launchType: "add"}});
     }
 };
 

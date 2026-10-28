@@ -143,6 +143,17 @@ function contactsAccounts(inAccounts) {
 }
 
 /**
+	The accounts First use lists as "your existing accounts": the contacts
+	accounts but the device's own (palmprofile), which the legacy
+	firstLaunchView left out as every device has it.
+*/
+function firstLaunchAccounts(inAccounts) {
+	return contactsAccounts(inAccounts).filter(function(inA) {
+		return inA.templateId !== "com.palm.palmprofile";
+	});
+}
+
+/**
 	The activity manager create call that syncs one account now, as the
 	legacy Prefs' Sync Now made it; null for an account without a sync
 	method.
@@ -192,6 +203,6 @@ function deletePlan(inContacts, inAccounts) {
 module.exports = {
 	contactsProvider: contactsProvider, contactKind: contactKind, byId: byId, isReadOnly: isReadOnly,
 	writableAccounts: writableAccounts, defaultAccount: defaultAccount, icon: icon, name: name,
-	providersFor: providersFor, contactsAccounts: contactsAccounts, syncActivity: syncActivity,
+	providersFor: providersFor, contactsAccounts: contactsAccounts, firstLaunchAccounts: firstLaunchAccounts, syncActivity: syncActivity,
 	deletePlan: deletePlan
 };

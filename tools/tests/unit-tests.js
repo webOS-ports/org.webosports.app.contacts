@@ -168,6 +168,14 @@ t.test("accountRules: the accounts listed in Preferences, and their Sync Now act
 		[{accountId: "x", name: "", username: "", icon: "", templateId: "", sync: ""}]);
 	assert.deepStrictEqual(accountRules.contactsAccounts(null), []);
 });
+t.test("accountRules: First use lists the contacts accounts but the device's own", function() {
+	assert.deepStrictEqual(accountRules.firstLaunchAccounts(ACCOUNTS).map(function(inA) { return inA.templateId; }).sort(),
+		["com.palm.google", "com.palm.sim", "com.palm.skype"]);
+	var palmOnly = ACCOUNTS.filter(function(inA) { return inA.templateId === "com.palm.palmprofile"; });
+	assert.strictEqual(palmOnly.length, 1);
+	assert.deepStrictEqual(accountRules.firstLaunchAccounts(palmOnly), [], "a new device: nothing set up yet");
+	assert.deepStrictEqual(accountRules.firstLaunchAccounts(undefined), []);
+});
 t.test("accountRules: deleting a person deletes its writable contacts only", function() {
 	assert.deepStrictEqual(accountRules.deletePlan(contactsOf("p-mary"), ACCOUNTS), {action: "all", ids: ["c-mary"]});
 	assert.deepStrictEqual(accountRules.deletePlan(contactsOf("p-anna"), ACCOUNTS),

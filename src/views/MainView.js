@@ -17,10 +17,13 @@ var
 	PersonPicker = require('./PersonPicker'),
 	ConfirmDialog = require('./ConfirmDialog'),
 	Preferences = require('./Preferences'),
+	FirstLaunch = require('./FirstLaunch'),
 	Menu = require('onyx/Menu'),
 	MenuItem = require('onyx/MenuItem'),
 	launch = require('../util/launch'),
 	persons = require('../data/persons'),
+	accounts = require('../data/accounts'),
+	firstLaunch = require('../data/firstLaunch'),
 	saveEdit = require('../data/saveEdit'),
 	links = require('../data/links'),
 	services = require('../data/services'),
@@ -88,7 +91,8 @@ module.exports = kind({
         	onSaved: "editSaved",
         	onDeleted: "editDeleted"
         },
-        {name: "preferences", kind: Preferences, onDone: "closePreferences"}
+        {name: "preferences", kind: Preferences, onDone: "closePreferences"},
+        {name: "firstLaunch", kind: FirstLaunch, onDone: "closeFirstLaunch"}
         ]},
         // The app menu opens from the app's name in the status bar, under it:
         // the top left corner. onyx's floating Menu places itself against
@@ -104,6 +108,7 @@ module.exports = kind({
             kind: Signals,
 			onbackgesture: "goBack",
             onwebOSRelaunch: "relaunch",
+            onactivate: "windowActivated",
             // A tap on the app's name in the status bar relaunches the app
             // with palm-command "open-app-menu", which enyo-luneos passes on
             // as menubutton.
@@ -115,7 +120,16 @@ module.exports = kind({
         this.handleResize();
         
         if (window.PalmSystem) {
-        	this.handleLaunch(webOS.window.launchParams());
+        	var params = webOS.window.launchParams();
+        	this.handleLaunch(params);
+        	// First use greets a plain launch; another app's request goes first.
+        	if (!launch.parse(params)) {
+        		firstLaunch.check(this.bindSafely(function (inShow) {
+        			if (inShow && this.$.cards.get("index") === 0) {
+        				this.openFirstLaunch();
+        			}
+        		}));
+        	}
         }
 
         this.log("==========> Telling global list to fetch contacts...");
@@ -229,6 +243,9 @@ module.exports = kind({
     		return true;
     	}
     	this.lastMenuEvent = inEvent;
+    	if (this.$.cards.getActive() === this.$.firstLaunch) {
+    		return true;
+    	}
     	if (this.$.appMenu.showing) {
     		this.$.appMenu.hide();
     	} else {
@@ -246,10 +263,30 @@ module.exports = kind({
     	this.$.cards.setIndex(0);
     	return true;
     },
+    openFirstLaunch: function () {
+    	this.$.firstLaunch.open();
+    	this.$.cards.setIndex(this.$.cards.getPanels().indexOf(this.$.firstLaunch));
+    },
+    // Done (or back) leaves First use for good, as the legacy app's
+    // firstLaunchHasBeenShown once the app had started.
+    closeFirstLaunch: function () {
+    	firstLaunch.markShown();
+    	this.$.cards.setIndex(0);
+    	return true;
+    },
+    // Back from the Accounts app: an account may have been added.
+    windowActivated: function () {
+    	var active = this.$.cards.getActive();
+    	if (active === this.$.preferences || active === this.$.firstLaunch) {
+    		accounts.refresh();
+    	}
+    },
 
     goBack: function () {
     	if (this.$.appMenu.showing) {
     		this.$.appMenu.hide();
+    	} else if (this.$.cards.getActive() === this.$.firstLaunch) {
+    		this.closeFirstLaunch();
     	} else if (this.$.cards.get("index") > 0) {
     		this.$.cards.set("index", 0);   // hide Edit/Create
     	} else if (Panels.isScreenNarrow() && this.$.main.get("index") > 0) {

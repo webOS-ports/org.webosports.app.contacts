@@ -16,7 +16,8 @@
 	    merge, del, with kind inheritance (com.palm.contact.google:1 is a
 	    com.palm.contact:1), the schema types of the person and contact kinds
 	    (-986 on a mismatch) and the app's kind permissions: it may not delete
-	    com.palm.person:1 records (-3963), as on a device.
+	    com.palm.person:1 records (-3963), as on a device. com.palm.firstlaunch:1
+	    holds that First use has been shown, unless config.firstLaunch.
 	  - com.palm.tempdb: find, for IM buddy status.
 	  - com.palm.service.contacts.linker: rebuilds a person from its contacts
 	    whenever a contact changes (as the linker's db watch does), and
@@ -31,11 +32,14 @@
 	    tools/tests for the same scheme).
 
 	Config (window.__MOCK_CONFIG__, all optional)
-	  data: {accounts: [...], contacts: [...], persons: [{_id, favorite, contactIds}], prefs: {...}}
+	  data: {accounts: [...], contacts: [...], persons: [{_id, favorite, contactIds}], prefs: {...},
+	         firstLaunch: [appId, ...]}
 	                   default: mock/db8-data.json and
 	                   mock/com.palm.service.accounts/listAccounts.json, loaded
 	                   synchronously
 	  launchParams: {...}
+	  firstLaunch: true   the app has never run: First use shows (unless
+	                   data.firstLaunch says otherwise)
 	  vcards: {"/path.vcf": {contacts: [...]}}
 	  luna: {"luna://svc/method": rule}   overrides, rule = {json} | {error} | {delay} | {never}
 	  delay: ms        answer every call this late (default 0)
@@ -121,7 +125,8 @@
 	var appPermissions = {
 		"com.palm.person:1": {read: true, create: true, update: true, "delete": false},
 		"com.palm.contact:1": {read: true, create: true, update: true, "delete": true},
-		"com.palm.app.contacts.prefs:1": {read: true, create: true, update: true, "delete": true}
+		"com.palm.app.contacts.prefs:1": {read: true, create: true, update: true, "delete": true},
+		"com.palm.firstlaunch:1": {read: true, create: true, update: false, "delete": true}
 	};
 
 	var records = {};
@@ -304,7 +309,9 @@
 			return {_id: inP._id, favorite: inP.favorite, contactIds: inP.contactIds};
 		});
 		var prefs = db.all("com.palm.app.contacts.prefs:1")[0];
-		return {accounts: accounts, contacts: db.all("com.palm.contact:1").map(clone), persons: persons, prefs: prefs};
+		var shown = db.all("com.palm.firstlaunch:1").map(function(inR) { return inR.appId; });
+		return {accounts: accounts, contacts: db.all("com.palm.contact:1").map(clone), persons: persons, prefs: prefs,
+			firstLaunch: shown};
 	}
 
 	// --- linker ----------------------------------------------------------
@@ -724,6 +731,10 @@
 		db.store(Object.assign({_kind: "com.palm.app.contacts.prefs:1"}, clone(data.prefs)));
 		linker.resort();
 	}
+	// The apps First use has been shown for (com.palm.firstlaunch:1).
+	(data.firstLaunch || (config.firstLaunch ? [] : ["com.palm.app.contacts"])).forEach(function(inAppId) {
+		db.store({_kind: "com.palm.firstlaunch:1", appId: inAppId});
+	});
 
 	// --- ACG -------------------------------------------------------------
 
