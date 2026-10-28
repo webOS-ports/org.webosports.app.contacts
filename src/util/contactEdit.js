@@ -262,7 +262,8 @@ function contactField(inField) {
 	What to write for an edit.
 		inState     from build()
 		inContacts  the same contacts build() was given
-		inEdited    {favorite, single: {...like state.single}, lists: {field: [row]}}
+		inEdited    {favorite, single: {...like state.single}, lists: {field: [row]},
+		             removePhoto: true when the user removed the photo}
 		            rows are {contactId, entry, original}: contactId null means
 		            the target; original is the entry the row was built from
 	Returns
@@ -396,9 +397,34 @@ function plan(inState, inContacts, inEdited) {
 			}
 		});
 	}
+	if (inEdited.removePhoto) {
+		inState.contacts.forEach(function(inC) {
+			if (!inC.readOnly && hasPhotos(byId[inC._id])) {
+				updateFor(result, inC._id).fields.photos = [];
+			}
+		});
+	}
 	result.create = newContact;
 	result.updates = result.updates.filter(function(inU) { return Object.keys(inU.fields).length; });
 	return result;
+}
+
+function hasPhotos(inContact) {
+	return !!inContact && Array.isArray(inContact.photos) && inContact.photos.length > 0;
+}
+
+/**
+	True when the edit can remove the person's photo: a contact it may
+	change has one. The legacy app cleared the primary contact's photos;
+	here every changeable contact's go, so the photo shown goes unless a
+	read-only contact has one too.
+*/
+function canRemovePhoto(inState, inContacts) {
+	var byId = {};
+	(inContacts || []).forEach(function(inC) { byId[inC._id] = inC; });
+	return !inState.isNew && inState.contacts.some(function(inC) {
+		return !inC.readOnly && hasPhotos(byId[inC._id]);
+	});
 }
 
 /**
@@ -482,4 +508,4 @@ function isValidDate(inValue) {
 }
 
 module.exports = {build: build, plan: plan, addData: addData, isValidDate: isValidDate, LIST_FIELDS: LIST_FIELDS,
-	entriesOf: entriesOf};
+	entriesOf: entriesOf, canRemovePhoto: canRemovePhoto};

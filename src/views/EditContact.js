@@ -225,9 +225,14 @@ module.exports = kind({
 		{name: "scroller", kind: Scroller, fit: true, touch: true, horizontal: "hidden", components: [
 			{classes: "edit-main", components: [
 				{classes: "edit-top flex-row", components: [
-					{classes: "avatar flex-none", components: [
-						{name: "photo", kind: Image, sizing: "cover", classes: "img", src: "assets/bg_icon_favorite_img.png"},
-						{classes: "mask"}
+					{classes: "flex-none edit-photo-col", components: [
+						{classes: "avatar", components: [
+							{name: "photo", kind: Image, sizing: "cover", classes: "img", src: "assets/bg_icon_favorite_img.png"},
+							{classes: "mask"}
+						]},
+						// Takes effect on Save, like every other change here.
+						{name: "removePhotoBtn", kind: Button, classes: "edit-remove-photo", content: $L("Remove Photo"),
+							ontap: "removePhotoTap", showing: false}
 					]},
 					{kind: Groupbox, classes: "edit-top-groupbox flex-auto", components: [
 						{kind: InputDecorator, classes: "flex-row edit-name-row", components: [
@@ -339,9 +344,11 @@ module.exports = kind({
 		var photos = (inPerson && inPerson.photos) || {};
 		this.$.photo.set("src", photos.bigPhotoPath || photos.squarePhotoPath || "assets/bg_icon_favorite_img.png");
 		this.contacts = inContacts;
+		this.photoRemoved = false;
 		this.state = contactEdit.build(inPerson, inContacts, accounts.list, prefs.get("defaultAccountId"), inTemplate);
 		this.saving = false;
 		this.$.deleteBtn.set("showing", !this.state.isNew);
+		this.$.removePhotoBtn.set("showing", contactEdit.canRemovePhoto(this.state, inContacts));
 		this.renderState();
 		this.$.scroller.scrollToTop();
 	},
@@ -474,6 +481,13 @@ module.exports = kind({
 		return true;
 	},
 
+	removePhotoTap: function () {
+		this.photoRemoved = true;
+		this.$.photo.set("src", "assets/bg_icon_favorite_img.png");
+		this.$.removePhotoBtn.hide();
+		return true;
+	},
+
 	// As the legacy Delete: contacts of read-only accounts stay, the
 	// dialog says so, and offers to delete the others.
 	deleteTap: function () {
@@ -537,7 +551,8 @@ module.exports = kind({
 				birthday: this.$.birthdayInput.get("value") || "",
 				anniversary: this.$.anniversaryInput.get("value") || ""
 			},
-			lists: lists
+			lists: lists,
+			removePhoto: !!this.photoRemoved
 		};
 	},
 

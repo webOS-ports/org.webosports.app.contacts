@@ -557,6 +557,36 @@ t.test("edit: a bad date is refused, a partial stored one is kept", async functi
 	assert.strictEqual((await record("c-gina")).birthday, "--07-04");
 });
 
+t.test("edit: Remove Photo clears the photo on Save, and Cancel keeps it", async function() {
+	await open();
+	await openEdit("Anna van der Berg");
+	assert.strictEqual(await visible("[id$=_removePhotoBtn]"), true);
+	await page.tap("[id$=_removePhotoBtn]");
+	assert.strictEqual(await visible("[id$=_removePhotoBtn]"), false);
+	await shot("edit-photo-removed");
+	await page.tap("[id$=_editContact_cancelBtn]");
+	await waitForMainCard();
+	assert.strictEqual((await record("c-anna-palm")).photos.length, 1, "cancel writes nothing");
+
+	await openEdit("Anna van der Berg");
+	await page.tap("[id$=_removePhotoBtn]");
+	await save();
+	await page.waitFor("(function(){var p=__MOCK__.db.byId('c-anna-palm');return p.photos.length===0;})()");
+	await page.waitFor("(function(){var p=__MOCK__.db.byId('p-anna');return !p.photos.bigPhotoPath && !p.photos.listPhotoPath;})()");
+	assert.deepStrictEqual((await record("c-anna-goog")).photos, undefined, "other contacts untouched");
+});
+
+t.test("edit: no Remove Photo without a photo the edit may change", async function() {
+	await open();
+	await openEdit("Mary Ann Smith-Jones");
+	assert.strictEqual(await visible("[id$=_removePhotoBtn]"), false);
+	await page.tap("[id$=_editContact_cancelBtn]");
+	await waitForMainCard();
+	await page.tap("[id$=_addContactBtn]");
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_nameInput]');return e && e.getBoundingClientRect().width>0;})()");
+	assert.strictEqual(await visible("[id$=_removePhotoBtn]"), false);
+});
+
 // --- linked profiles ---------------------------------------------------
 
 //* [name, account line] of each profile in the open drawer.

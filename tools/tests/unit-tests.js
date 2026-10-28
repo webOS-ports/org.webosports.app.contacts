@@ -208,6 +208,28 @@ t.test("profiles: what may be done to a linked profile", function() {
 
 // --- contactEdit -------------------------------------------------------
 
+t.test("contactEdit: removing the photo clears it on the contacts that may be changed", function() {
+	var cs = contactsOf("p-anna");
+	var state = contactEdit.build(person("p-anna"), cs, ACCOUNTS, "");
+	assert.strictEqual(contactEdit.canRemovePhoto(state, cs), true);
+	var edited = untouched(state);
+	edited.removePhoto = true;
+	var p = contactEdit.plan(state, cs, edited);
+	assert.deepStrictEqual(p.updates, [{_id: "c-anna-palm", fields: {photos: []}}]);
+	assert.strictEqual(p.create, null);
+	// A read-only contact's photo can not be removed.
+	var skype = cs.map(function(c) { return JSON.parse(JSON.stringify(c)); });
+	skype.forEach(function(c) { c.photos = c._id === "c-anna-skype" ? [{localPath: "/x.jpg", type: "type_big"}] : []; });
+	var state2 = contactEdit.build(person("p-anna"), skype, ACCOUNTS, "");
+	assert.strictEqual(contactEdit.canRemovePhoto(state2, skype), false);
+	var e2 = untouched(state2);
+	e2.removePhoto = true;
+	assert.deepStrictEqual(contactEdit.plan(state2, skype, e2).updates, []);
+	// No photo, nothing to remove; a new contact has none either.
+	var mary = contactsOf("p-mary");
+	assert.strictEqual(contactEdit.canRemovePhoto(contactEdit.build(person("p-mary"), mary, ACCOUNTS, ""), mary), false);
+	assert.strictEqual(contactEdit.canRemovePhoto(contactEdit.build(null, [], ACCOUNTS, ""), []), false);
+});
 t.test("contactEdit: an untouched edit writes nothing", function() {
 	["p-anna", "p-mary", "p-bob", "p-sim", "p-hostile", "p-oscar", "p-li"].forEach(function(inId) {
 		var cs = contactsOf(inId);
