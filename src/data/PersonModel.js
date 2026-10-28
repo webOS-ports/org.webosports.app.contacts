@@ -15,10 +15,13 @@ module.exports = kind({
     dbKind: "com.palm.person:1",
     primaryKey: "_id",
     mixins: [ComputedSupport],
+    // Not cached: Model.set() emits "change" but does not notify observers,
+    // so a cached value would never be recomputed when a fetch merges in a
+    // changed record (a person renamed by a sync kept its old name).
     computed: {
-        listPhoto: ["photos", {cached: true}],
-        displayPhoto: ["photos", {cached: true}],
-        displayName: ["name", "nickname", "organization", "emails", "ims", {cached: true}],
+        listPhoto: ["photos"],
+        displayPhoto: ["photos"],
+        displayName: ["name", "nickname", "organization", "emails", "ims"],
         displayOrg: ["organization"]
     },
     attributes: {

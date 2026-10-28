@@ -5,6 +5,7 @@ var
     kind = require('enyo/kind'),
     Source = require('enyo/Source'),
     ServiceRequest = require('enyo-webos/ServiceRequest'),
+    utils = require('enyo/utils'),
     Model = require('enyo/Model'),
     Collection = require('enyo/Collection'),
     $L = require('enyo/i18n').$L;   // no-op placeholder
@@ -14,7 +15,6 @@ module.exports = kind({
     name: "db8Source",
     kind: Source,
     dbService: "palm://com.palm.db",
-    requests: [],
 
     _doRequest: function (method, parameters, success, failure, subscribe) {
         var request = new ServiceRequest({
@@ -75,55 +75,80 @@ module.exports = kind({
         	}
         }
     },
+    /**
+		Finds every record of the collection's kind: db8 answers at most 500 a
+		page, so the pages are followed by their `next` key and the
+		collection gets all of them at once. The first page's query is
+		watched; when it fires (any record changed), everything is fetched
+		again. An answer to a fetch that a newer one replaced is dropped.
+    */
     _fetchFind: function (collection, opts) {
-        //if more than 500 contacts need to implement paging
-    	// http://www.openwebosproject.org/docs/developer_reference/data_types/db8#Query
-    	// It's okay to call opts.success multiple times, but be sure processing the previous
-    	// call has finished before calling again (probably using enyo.job()).
-    	var query = {
-    		select: opts.select,
-    		from: collection.dbKind,
-    		where: opts.where,
-    		orderBy: opts.orderBy,
-    		desc: opts.desc,
-    		incDel: opts.incDel,
-    		limit: opts.limit,
-    		page: opts.page
-    	};
-        var parameters = {query: query, count: false, watch: true};
-        console.log("db8Source fetch", collection, opts, parameters);
+        var query = {
+            select: opts.select,
+            from: collection.dbKind,
+            where: opts.where,
+            orderBy: opts.orderBy,
+            desc: opts.desc,
+            incDel: opts.incDel,
+            limit: opts.limit
+        };
+        // Kept on the collection: one source serves every collection.
+        var generation = collection.db8FindGeneration = (collection.db8FindGeneration || 0) + 1;
+        var self = this, results = [];
 
-        var request = new ServiceRequest({service: this.dbService, method: "find", subscribe: true});
-        request.go(parameters);
-
-        request.response(handleFindResponse.bind(this, opts.success, opts.fail));
-        request.error(this.generalFailure.bind(this, opts.fail));
-        
-        this.requests.push(request);
-
-        function handleFindResponse(success, failure, inSender, inResponse) {
-        	if (inResponse.results) {
-            	console.log("fetch (find) handleFindResponse:", inResponse.results.length, "records", inResponse);
-
-            	// Do we need to store inResponse.next so it can be passed as opts.page?
-            	// If we set parameters.count=true, can we make use of inResponse.count?
-    			collection.empty();   // replaces all models so sort order is used
-            	// Only records can be passed to the success callback.
-            	// Never pass anything PalmBus- or DB8-specific.
-            	success(inResponse.results);
-        	} else if (inResponse.fired) {   // watch
-        		console.log("fetch (find) handleFindResponse watch fired:", inResponse);
-
-        		var requestInd = this.requests.findIndex( function (element) { return element === request;} );
-				this.requests.splice(requestInd, 1);
-				
-				this._fetchFind(collection, opts);
-        	} else {
-        		console.error("fetch (find) handleFindResponse weird response:", inResponse);
-        	}
+        function current() {
+            return generation === collection.db8FindGeneration;
         }
+        function done() {
+            if (current()) {
+                collection.empty();   // replaces all models so sort order is used
+                // Only records can be passed to the success callback.
+                opts.success(results);
+            }
+        }
+        function nextPage(inPage) {
+            var pageQuery = utils.mixin({}, query);
+            pageQuery.page = inPage;
+            var request = new ServiceRequest({service: self.dbService, method: "find"});
+            request.response(function (inSender, inResponse) {
+                if (!current()) {
+                    return;
+                }
+                results = results.concat(inResponse.results || []);
+                if (inResponse.next) {
+                    nextPage(inResponse.next);
+                } else {
+                    done();
+                }
+            });
+            request.error(self.generalFailure.bind(self, opts.fail));
+            request.go({query: pageQuery});
+        }
+
+        if (collection.db8Watch) {
+            collection.db8Watch.cancel();
+        }
+        var request = collection.db8Watch = new ServiceRequest({service: this.dbService, method: "find", subscribe: true});
+        request.response(function (inSender, inResponse) {
+            if (inResponse.fired) {
+                if (request === collection.db8Watch) {
+                    collection.db8Watch = null;
+                    request.cancel();
+                    self._fetchFind(collection, opts);
+                }
+            } else if (inResponse.results && current()) {
+                results = inResponse.results;
+                if (inResponse.next) {
+                    nextPage(inResponse.next);
+                } else {
+                    done();
+                }
+            }
+        });
+        request.error(this.generalFailure.bind(this, opts.fail));
+        request.go({query: query, count: false, watch: true});
     },
-    
+
     commit: function(rec, opts) {
         var objects;
 

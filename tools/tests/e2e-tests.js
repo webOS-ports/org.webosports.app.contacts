@@ -128,6 +128,29 @@ t.test("list: shows every person in sortKey order", async function() {
 	await shot("list");
 });
 
+t.test("list: more persons than one db8 page (500) are all listed", async function() {
+	var d = data();
+	for (var i = 0; i < 1200; i++) {
+		var n = ("000" + i).slice(-4);
+		d.contacts.push({_id: "c-many-" + n, _kind: "com.palm.contact.palmprofile:1", accountId: "++HoXVTTqIccE0m1",
+			name: {givenName: "Many", familyName: "Zz" + n}});
+		d.persons.push({_id: "p-many-" + n, favorite: false, contactIds: ["c-many-" + n]});
+	}
+	await open({data: d});
+	await page.waitFor("contactsApp.view.globalPersonCollection.length === 1213", 15000);
+	var pages = (await lunaCalls("com.palm.db/find")).filter(function(c) { return c.params.query.from === "com.palm.person:1"; });
+	assert.ok(pages.length >= 3, "followed the next keys: " + pages.length);
+	await tapPerson("Many Zz1199");
+});
+
+t.test("list: a change made elsewhere shows", async function() {
+	await open();
+	await page.eval("__MOCK__.editContact('c-oscar', {name: {givenName: 'Oskar', familyName: 'Other'}})");
+	await page.waitFor("Array.prototype.some.call(document.querySelectorAll('[id*=_allContactsList] .contacts-item .name')," +
+		"function(e){return e.textContent==='Oskar Other';})");
+	assert.ok((await listNames()).indexOf("Oscar Other") < 0);
+});
+
 t.test("list: Favourites tab shows only favourites", async function() {
 	await open();
 	await page.tapText("[id$=_contactsBar_tabs] *", "Favourites");
@@ -286,6 +309,10 @@ t.test("edit: a typed name is parsed with its particles", async function() {
 	assert.strictEqual(c.name.givenName, "Zoë");
 	assert.strictEqual(c.name.middleName, "Maria");
 	assert.strictEqual(c.name.familyName, "van der Ångström");
+	// The list and the details show the new name, not a cached old one.
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_header_displayName]');" +
+		"return e && e.textContent==='Zoë Maria van der Ångström';})()");
+	await scrollToPerson("Zoë Maria van der Ångström");
 });
 
 // The empty row at the end of a field's group, and a row by position (1-based).
