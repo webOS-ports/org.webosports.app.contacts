@@ -443,8 +443,18 @@ img {
     padding: 0 0.5rem;
     min-width: 2.2rem;
 }
-.edit-main .edit-favorite.active {
-    color: #f0b400;
+/* The star is the legacy sprite, not a glyph: Prelude has no U+2605/2606. */
+.edit-main .edit-name-row .edit-favorite {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    background: url(../../assets/bg_edit_favorite.png) no-repeat 0 0;
+}
+.edit-main .edit-name-row .edit-favorite.active {
+    background-position: 0 -32px;
 }
 .edit-main .edit-note {
     margin: 0.5rem 0;
@@ -549,6 +559,11 @@ img {
     flex-flow: row; 
     -webkit-align-items: center;
     align-items: center;
+}
+/* Onyx makes a decorator in a group box a block, which would win over .flex-row. */
+.onyx-groupbox .onyx-input-decorator.flex-row {
+    display: -webkit-flex;
+    display: flex;
 }
 .flex-auto {
     -webkit-flex: auto;

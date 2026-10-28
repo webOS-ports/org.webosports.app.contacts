@@ -238,7 +238,7 @@ module.exports = kind({
 						{kind: InputDecorator, classes: "flex-row edit-name-row", components: [
 							{name: "nameInput", kind: Input, classes: "flex-auto", placeholder: $L("Name"),
 								attributes: {inputmode: "latin-name"}},
-							{name: "favoriteBtn", kind: Button, classes: "edit-favorite flex-none", content: "☆",
+							{name: "favoriteBtn", kind: Button, classes: "edit-favorite flex-none",
 								ontap: "toggleFavorite", attributes: {title: $L("Favorite"), "aria-pressed": "false"}},
 							{name: "nameDetailsBtn", kind: Button, classes: "edit-name-details flex-none", content: "…",
 								ontap: "openNameDetails", attributes: {title: $L("Name details")}}
@@ -439,7 +439,6 @@ module.exports = kind({
 	},
 	favoriteChanged: function () {
 		this.$.favoriteBtn.addRemoveClass("active", !!this.favorite);
-		this.$.favoriteBtn.set("content", this.favorite ? "★" : "☆");
 		this.$.favoriteBtn.setAttribute("aria-pressed", this.favorite ? "true" : "false");
 	},
 

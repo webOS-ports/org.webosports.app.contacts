@@ -307,6 +307,38 @@ t.test("appinfo: the app is trusted, so WAM lets it load the account icons", fun
 	assert.strictEqual(root.trustLevel, "trusted");
 });
 
+/*
+	The coverage of Prelude-Medium.ttf, LuneOS's UI font (fc-query on the
+	device). "Helvetica Neue", "Nimbus Sans L" and Arial all fall back to
+	it there, and no other font covers more of what the app shows, so a
+	character outside it is drawn as an empty box. Desktop Chromium has
+	other fonts and hides that.
+*/
+var PRELUDE = "20-7e a0-131 134-148 14a-17f 192 1fa-1ff 218-21b 237 2c6-2c7 2c9 2d8-2dd 384-38a 38c 38e-3a1 3a3-3ce " +
+	"401-40c 40e-44f 451-45c 45e-45f 490-491 1e02-1e03 1e0a-1e0b 1e1e-1e1f 1e40-1e41 1e56-1e57 1e60-1e61 1e6a-1e6b " +
+	"1e80-1e85 1ef2-1ef3 2002-200b 2011 2013-2015 2018-201a 201c-201e 2020-2022 2026 2030 2032-2033 2039-203a 203c " +
+	"203e 2044 2074 207f 20a3-20a4 20a7 20ac 2105 2113 2116 2122 2126 212e 215c-215e 2202 2206 220f 2211-2212 2215 " +
+	"2219-221a 221e 222b 2248 2260 2264-2265 25ca fb01-fb02";
+t.test("fonts: every character in the views and translations is in the device font", function() {
+	var ranges = PRELUDE.split(" ").map(function(inR) {
+		var ends = inR.split("-").map(function(inH) { return parseInt(inH, 16); });
+		return [ends[0], ends[ends.length - 1]];
+	});
+	function covered(inCode) {
+		return inCode === 9 || inCode === 10 || inCode === 13 ||
+			ranges.some(function(inR) { return inCode >= inR[0] && inCode <= inR[1]; });
+	}
+	var files = fs.readdirSync(path.join(ROOT, "src", "views")).map(function(inF) { return path.join("src", "views", inF); });
+	fs.readdirSync(path.join(ROOT, "resources")).forEach(function(inLang) {
+		files.push(path.join("resources", inLang, "strings.json"), path.join("resources", inLang, "appinfo.json"));
+	});
+	files.forEach(function(inFile) {
+		var missing = Array.from(fs.readFileSync(path.join(ROOT, inFile), "utf8")).filter(function(inC) {
+			return !covered(inC.codePointAt(0));
+		});
+		assert.deepStrictEqual(missing, [], inFile);
+	});
+});
 t.test("details: dates in another language's format", function() {
 	var de = function(inY, inM, inD) { return inD + "." + inM + "." + (inY === null ? "" : inY); };
 	assert.strictEqual(details.dateText("1980-03-14", de), "14.3.1980");

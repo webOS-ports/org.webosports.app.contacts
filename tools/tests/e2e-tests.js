@@ -592,13 +592,27 @@ t.test("edit: a person of read-only contacts gets a new linked contact for the c
 t.test("edit: the favourite star toggles through the contacts service", async function() {
 	await open();
 	await openEdit("Gina Talk");
+	// The legacy sprite, the lit star 32px down; no text (Prelude has no star glyph).
+	var star = "(function(){var e=document.querySelector('[id$=_favoriteBtn]');var s=getComputedStyle(e);" +
+		"return [e.textContent, /bg_edit_favorite\\.png/.test(s.backgroundImage), parseFloat(s.backgroundPositionY)];})()";
+	assert.deepStrictEqual(await page.eval(star), ["", true, 0]);
 	await page.tap("[id$=_favoriteBtn]");
+	assert.deepStrictEqual(await page.eval(star), ["", true, -32]);
 	await save();
 	var calls = await lunaCalls("com.palm.service.contacts/favoritePerson");
 	assert.strictEqual(calls.length, 1);
 	assert.strictEqual((await record(calls[0].params.personId)).favorite, true);
 });
 
+t.test("edit: the name, birthday and anniversary rows are one line each", async function() {
+	await open();
+	await openEdit("Gina Talk");
+	assert.deepStrictEqual(await page.eval("[].slice.call(document.querySelectorAll('[id$=_editContact] .flex-row'))" +
+		".filter(function(e){return e.getBoundingClientRect().width && getComputedStyle(e).display !== 'flex';})" +
+		".map(function(e){return e.className;})"), []);
+	assert.strictEqual(await page.eval("(function(){var n=document.querySelector('[id$=_nameInput]').getBoundingClientRect()," +
+		"f=document.querySelector('[id$=_favoriteBtn]').getBoundingClientRect();return f.left >= n.right && f.top < n.bottom;})()"), true);
+});
 t.test("edit: cancel writes nothing", async function() {
 	await open();
 	await openEdit("Gina Talk");
