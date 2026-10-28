@@ -121,8 +121,49 @@ function providersFor(inAccounts, inCapability, inServiceName) {
 	return out;
 }
 
+/**
+	The accounts that hold contacts, for the Preferences & Accounts list:
+	[{accountId, name, username, icon, templateId, sync}], where sync is
+	the CONTACTS provider's sync method, or "" when it has none.
+*/
+function contactsAccounts(inAccounts) {
+	return (inAccounts || []).filter(function(inAccount) {
+		return contactsProvider(inAccount) && !inAccount.beingDeleted;
+	}).map(function(inAccount) {
+		var p = contactsProvider(inAccount), i = inAccount.icon || {};
+		return {
+			accountId: inAccount._id,
+			name: inAccount.alias || inAccount.loc_name || inAccount.templateId || "",
+			username: typeof inAccount.username === "string" ? inAccount.username : "",
+			icon: i.loc_32x32 || i.loc_48x48 || "",
+			templateId: inAccount.templateId || "",
+			sync: typeof p.sync === "string" ? p.sync : ""
+		};
+	});
+}
+
+/**
+	The activity manager create call that syncs one account now, as the
+	legacy Prefs' Sync Now made it; null for an account without a sync
+	method.
+*/
+function syncActivity(inAccount) {
+	if (!inAccount || !inAccount.sync) {
+		return null;
+	}
+	return {
+		activity: {
+			type: {explicit: true, userInitiated: true, background: true},
+			name: "'Sync Now' sync for " + inAccount.templateId + ", account " + inAccount.accountId,
+			description: "Background sync for account " + inAccount.accountId + " from 'sync now' button",
+			callback: {method: inAccount.sync, params: {accountId: inAccount.accountId}}
+		},
+		start: true
+	};
+}
+
 module.exports = {
 	contactsProvider: contactsProvider, contactKind: contactKind, byId: byId, isReadOnly: isReadOnly,
 	writableAccounts: writableAccounts, defaultAccount: defaultAccount, icon: icon, name: name,
-	providersFor: providersFor
+	providersFor: providersFor, contactsAccounts: contactsAccounts, syncActivity: syncActivity
 };

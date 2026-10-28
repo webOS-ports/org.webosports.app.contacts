@@ -30,6 +30,7 @@ var
 	services = require('../data/services'),
 	saveEdit = require('../data/saveEdit'),
 	persons = require('../data/persons'),
+	choose = require('./choose'),
 	$L = require('enyo/i18n').$L;   // no-op placeholder
 
 var ADDRESS_PARTS = [
@@ -40,17 +41,6 @@ var ADDRESS_PARTS = [
 	{key: "country", hint: "Country"}
 ];
 
-// Selects the option of inValue. Select.set("value") does not work before
-// the select is rendered: it falls back to the first option.
-function choose(inSelect, inValue) {
-	var options = inSelect.getClientControls();
-	for (var i = 0; i < options.length; i++) {
-		if (options[i].value === inValue) {
-			inSelect.set("selected", i);
-			return;
-		}
-	}
-}
 
 var FIELD_INFO = {
 	phoneNumbers: {hint: "New phone number", inputType: "tel"},

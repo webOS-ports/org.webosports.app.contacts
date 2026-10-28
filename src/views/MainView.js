@@ -16,6 +16,9 @@ var
 	AddToContactsPrompt = require('./AddToContactsPrompt'),
 	PersonPicker = require('./PersonPicker'),
 	ConfirmDialog = require('./ConfirmDialog'),
+	Preferences = require('./Preferences'),
+	Menu = require('onyx/Menu'),
+	MenuItem = require('onyx/MenuItem'),
 	launch = require('../util/launch'),
 	persons = require('../data/persons'),
 	saveEdit = require('../data/saveEdit'),
@@ -81,7 +84,15 @@ module.exports = kind({
         	kind: EditContact,
         	onCancel: "hideEdit",
         	onSaved: "editSaved"
-        }
+        },
+        {name: "preferences", kind: Preferences, onDone: "closePreferences"}
+        ]},
+        // The app menu opens from the app's name in the status bar, under it:
+        // the top left corner. onyx's floating Menu places itself against
+        // the control that opened it, and stays invisible without one.
+        {name: "appMenuAnchor", style: "position: absolute; top: 0; left: 0; width: 0; height: 0;"},
+        {name: "appMenu", kind: Menu, floating: true, components: [
+            {name: "prefsMenuItem", kind: MenuItem, content: $L("Preferences & Accounts"), ontap: "openPreferences"}
         ]},
         {name: "addPrompt", kind: AddToContactsPrompt, onAddNew: "promptAddNew", onAddToExisting: "promptAddToExisting"},
         {name: "personPicker", kind: PersonPicker, onPicked: "personPicked"},
@@ -89,7 +100,11 @@ module.exports = kind({
         {
             kind: Signals,
 			onbackgesture: "goBack",
-            onwebOSRelaunch: "relaunch"
+            onwebOSRelaunch: "relaunch",
+            // A tap on the app's name in the status bar relaunches the app
+            // with palm-command "open-app-menu", which enyo-luneos passes on
+            // as menubutton.
+            onmenubutton: "toggleAppMenu"
         }
     ],
     create: function () {
@@ -188,8 +203,35 @@ module.exports = kind({
 		}
 	},
     
+    // enyo-webos and enyo-luneos both pass the menubutton event on, so
+    // each tap arrives twice: the same event is one tap.
+    toggleAppMenu: function (inSender, inEvent) {
+    	if (inEvent && inEvent === this.lastMenuEvent) {
+    		return true;
+    	}
+    	this.lastMenuEvent = inEvent;
+    	if (this.$.appMenu.showing) {
+    		this.$.appMenu.hide();
+    	} else {
+    		this.$.appMenu.requestMenuShow(this, {activator: this.$.appMenuAnchor});
+    	}
+    	return true;
+    },
+    openPreferences: function () {
+    	this.$.appMenu.hide();
+    	this.$.preferences.open();
+    	this.$.cards.setIndex(2);
+    	return true;
+    },
+    closePreferences: function () {
+    	this.$.cards.setIndex(0);
+    	return true;
+    },
+
     goBack: function () {
-    	if (this.$.cards.get("index") > 0) {
+    	if (this.$.appMenu.showing) {
+    		this.$.appMenu.hide();
+    	} else if (this.$.cards.get("index") > 0) {
     		this.$.cards.set("index", 0);   // hide Edit/Create
     	} else if (Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
             this.$.main.setIndex(0);

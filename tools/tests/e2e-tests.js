@@ -749,6 +749,147 @@ t.test("launch: an unreadable vCard says so", async function() {
 	assert.strictEqual(await visible("[id$=_confirm] [id$=_cancelBtn]"), false);
 });
 
+// --- preferences -------------------------------------------------------
+
+var GOOGLE = "++HqVF6BEhSPSfq0", PALM = "++HoXVTTqIccE0m1", SIM = "++HoXVohVCoSQNS7", SKYPE = "++HnY2Qbp2pHNVFT";
+
+// The status bar's app name: WAM relaunches with palm-command
+// "open-app-menu", and enyo-luneos turns that into a menubutton event.
+async function menuButton() {
+	await page.eval("__MOCK__.relaunch({'palm-command': 'open-app-menu'}); document.dispatchEvent(new Event('menubutton'))");
+}
+async function openPrefs() {
+	await menuButton();
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_prefsMenuItem]');return e && e.getBoundingClientRect().width>0;})()");
+	await page.tap("[id$=_prefsMenuItem]");
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_preferences] [id$=_doneBtn]');" +
+		"return e && e.getBoundingClientRect().width>0 && e.getBoundingClientRect().left>=0 && e.getBoundingClientRect().left<1024;})()");
+	await page.waitFor("document.querySelectorAll('.prefs-account').length > 0");
+}
+async function closePrefs() {
+	await page.tap("[id$=_preferences] [id$=_doneBtn]");
+	await waitForMainCard();
+}
+function waitForMainCard() {
+	return page.waitFor("(function(){var e=document.querySelector('[id$=_inputSearchStretch_input]');" +
+		"var r=e&&e.getBoundingClientRect();return r && r.width>0 && r.left>=0 && r.left<1024;})() && !contactsApp.view.$.cards.transitionPoints.length");
+}
+function prefsRecord() {
+	return page.eval("JSON.parse(JSON.stringify(__MOCK__.db.all('com.palm.app.contacts.prefs:1')[0] || null))");
+}
+function accountRows() {
+	return page.eval("Array.prototype.map.call(document.querySelectorAll('.prefs-account'), function(e){" +
+		"return [e.querySelector('.prefs-account-name').textContent, e.querySelector('.prefs-account-count').textContent];})");
+}
+
+t.test("prefs: the app menu opens Preferences & Accounts, a second tap closes it, Done goes back", async function() {
+	await open();
+	await menuButton();
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_prefsMenuItem]');return e && e.getBoundingClientRect().width>0;})()");
+	await menuButton();
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_prefsMenuItem]');return !e || e.getBoundingClientRect().width===0;})()");
+	await openPrefs();
+	assert.strictEqual(await page.eval("document.querySelector('[id$=_sortOrder]').value"), "LAST_FIRST");
+	assert.strictEqual(await page.eval("document.querySelector('[id$=_defaultAccount]').value"), PALM);
+	// The default account offers only the accounts new contacts can go to.
+	assert.deepStrictEqual(await page.eval("Array.prototype.map.call(document.querySelectorAll('[id$=_defaultAccount] option'),function(o){return o.value;}).sort()"),
+		[GOOGLE, PALM].sort());
+	await page.waitFor("Array.prototype.every.call(document.querySelectorAll('.prefs-account-count'),function(e){return e.textContent;})");
+	var rows = await accountRows();
+	assert.deepStrictEqual(rows.slice().sort(), [["Acme", "4 contacts"], ["LuneOS Account", "8 contacts"],
+		["SIM", "1 contact"], ["Skype", "2 contacts"]], JSON.stringify(rows));
+	await shot("prefs");
+	await closePrefs();
+	// The relaunch for the menu is not a launch request.
+	assert.strictEqual((await lunaCalls("com.palm.db/put")).length, 0);
+});
+
+t.test("prefs: back closes Preferences", async function() {
+	await open();
+	await openPrefs();
+	await page.eval("document.dispatchEvent(new Event('backgesture'))");
+	await waitForMainCard();
+});
+
+t.test("prefs: the list order is stored, and the list and its dividers follow it", async function() {
+	await open();
+	await openPrefs();
+	await selectValue("[id$=_sortOrder]", "FIRST_LAST");
+	await page.waitFor("(function(){var p=__MOCK__.db.all('com.palm.app.contacts.prefs:1')[0];return p && p.listSortOrder==='FIRST_LAST';})()");
+	await closePrefs();
+	// The contacts service writes the sort keys for the new order; the list follows.
+	await page.waitFor("(function(){var c=contactsApp.view.$.contactsBar.$.allContactsList.collection;" +
+		"return c.length===13 && c.at(0).get('displayName')==='Anna Berg' && c.at(1).get('displayName')==='Anna van der Berg';})()");
+	var groups = await listGroups(), all = JSON.stringify(groups);
+	var under = {}, current = "";
+	groups.forEach(function(g) { current = g[1] || current; under[g[0]] = current; });
+	assert.strictEqual(under["Zoë Ångström"], "Z", all);
+	assert.strictEqual(under["Émile Zola"], "E", all);
+	assert.strictEqual(under["Bob Cowboy"], "B", all);
+
+	await openPrefs();
+	await selectValue("[id$=_sortOrder]", "COMPANY_LAST_FIRST");
+	await closePrefs();
+	await page.waitFor("(function(){var c=contactsApp.view.$.contactsBar.$.allContactsList.collection;" +
+		"return c.length===13 && c.at(0).get('displayName')==='Anna van der Berg';})()");
+	groups = await listGroups();
+	all = JSON.stringify(groups);
+	under = {};
+	groups.forEach(function(g) { current = g[1] || current; under[g[0]] = current; });
+	assert.strictEqual(under["Anna van der Berg"], "A", "company Acme: " + all);
+	assert.strictEqual(under["Globex Corporation"], "G", all);
+	assert.strictEqual(under["Bob Cowboy"], "#", "no company: " + all);
+	assert.strictEqual((await prefsRecord()).listSortOrder, "COMPANY_LAST_FIRST");
+	await shot("prefs-company-order");
+});
+
+t.test("prefs: the default account is stored and new contacts go there", async function() {
+	await open();
+	await openPrefs();
+	await selectValue("[id$=_defaultAccount]", GOOGLE);
+	await page.waitFor("(function(){var p=__MOCK__.db.all('com.palm.app.contacts.prefs:1')[0];return p && p.defaultAccountId===" +
+		JSON.stringify(GOOGLE) + ";})()");
+	await closePrefs();
+	await page.tap("[id$=_addContactBtn]");
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_accountSelect]');return e && e.getBoundingClientRect().width>0;})()");
+	assert.strictEqual(await page.eval("document.querySelector('[id$=_accountSelect]').value"), GOOGLE);
+});
+
+t.test("prefs: accounts open in the Accounts app; Sync Now starts each account's sync", async function() {
+	await open();
+	await openPrefs();
+	await page.tapText(".prefs-account", "Acme");
+	await page.tap("[id$=_addAccountBtn]");
+	var launches = (await lunaCalls("applicationManager/launch")).map(function(c) { return c.params; });
+	assert.deepStrictEqual(launches, [
+		{id: "com.palm.app.accounts", params: {accountId: GOOGLE, capability: "CONTACTS"}},
+		{id: "com.palm.app.accounts", params: {capability: "CONTACTS", launchType: "add"}}
+	]);
+	await page.tap("[id$=_syncNowBtn]");
+	await sleep(200);
+	var syncs = (await lunaCalls("activitymanager/create")).map(function(c) { return c.params.activity.callback; });
+	assert.deepStrictEqual(syncs.sort(function(a, b) { return a.method < b.method ? -1 : 1; }), [
+		{method: "palm://com.palm.service.contacts.google/sync", params: {accountId: GOOGLE}},
+		{method: "palm://com.palm.service.contacts.sim/sync", params: {accountId: SIM}},
+		{method: "palm://com.palm.skype/sync", params: {accountId: SKYPE}}
+	]);
+	assert.ok((await banners()).some(function(b) { return /Syncing/.test(JSON.stringify(b)); }));
+});
+
+t.test("prefs: an account added in the Accounts app shows when Preferences opens again", async function() {
+	await open();
+	await openPrefs();
+	assert.strictEqual((await accountRows()).length, 4);
+	await closePrefs();
+	var added = data().accounts.concat([{_id: "acct-new", templateId: "com.example.carddav", alias: "CardDAV", username: "me@example.org",
+		capabilityProviders: [{capability: "CONTACTS", id: "com.example.carddav.contacts", sync: "palm://com.example.carddav/sync",
+			dbkinds: {contact: "com.example.carddav.contact:1"}}]}]);
+	await page.eval("__MOCK__.setAccounts(" + JSON.stringify(added) + ")");
+	await openPrefs();
+	await page.waitFor("document.querySelectorAll('.prefs-account').length === 5");
+	await page.waitFor("Array.prototype.some.call(document.querySelectorAll('.prefs-account'),function(e){return e.textContent.indexOf('0 contacts')>=0;})");
+});
+
 // --- run ---------------------------------------------------------------
 
 (async function() {

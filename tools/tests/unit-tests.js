@@ -147,6 +147,25 @@ t.test("accountRules: providers that can call an IM address", function() {
 	assert.strictEqual(accountRules.providersFor(ACCOUNTS, "PHONE", "type_aim").length, 0);
 	assert.strictEqual(accountRules.providersFor(ACCOUNTS, "MESSAGING", "type_gtalk").length, 1);
 });
+t.test("accountRules: the accounts listed in Preferences, and their Sync Now activity", function() {
+	var list = accountRules.contactsAccounts(ACCOUNTS);
+	assert.deepStrictEqual(list.map(function(inA) { return inA.templateId; }).sort(),
+		["com.palm.google", "com.palm.palmprofile", "com.palm.sim", "com.palm.skype"], "accounts without CONTACTS are left out");
+	var google = list.filter(function(inA) { return inA.accountId === GOOGLE; })[0];
+	assert.strictEqual(google.sync, "palm://com.palm.service.contacts.google/sync");
+	assert.deepStrictEqual(accountRules.syncActivity(google).activity.callback,
+		{method: "palm://com.palm.service.contacts.google/sync", params: {accountId: GOOGLE}});
+	assert.strictEqual(accountRules.syncActivity(google).start, true);
+	var palm = list.filter(function(inA) { return inA.accountId === PALM; })[0];
+	assert.strictEqual(palm.sync, "");
+	assert.strictEqual(accountRules.syncActivity(palm), null, "nothing to sync");
+	var deleting = JSON.parse(JSON.stringify(ACCOUNTS));
+	deleting[0].beingDeleted = true;
+	assert.strictEqual(accountRules.contactsAccounts(deleting).length, list.length - 1);
+	assert.deepStrictEqual(accountRules.contactsAccounts([{_id: "x", capabilityProviders: [{capability: "CONTACTS", sync: 5}]}]),
+		[{accountId: "x", name: "", username: "", icon: "", templateId: "", sync: ""}]);
+	assert.deepStrictEqual(accountRules.contactsAccounts(null), []);
+});
 
 // --- contactEdit -------------------------------------------------------
 

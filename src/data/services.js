@@ -45,4 +45,5 @@ function banner(inText) {
 }
 
 module.exports = {call: call, banner: banner, DB: "luna://com.palm.db", LINKER: "luna://com.palm.service.contacts.linker",
-    CONTACTS: "luna://com.palm.service.contacts", APPMANAGER: "luna://com.palm.applicationManager"};
+    CONTACTS: "luna://com.palm.service.contacts", APPMANAGER: "luna://com.palm.applicationManager",
+    ACTIVITY: "luna://com.webos.service.activitymanager"};
