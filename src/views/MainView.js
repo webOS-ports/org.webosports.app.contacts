@@ -138,7 +138,6 @@ module.exports = kind({
     },
     /** several fields, like favorite, reminder & ringtone, are only in person records */
     savePerson: function (inSender, inEvent) {
-    	var contactsBar = this.$.contactsBar;
     	inEvent.person.commit({success: function (rec, opts, res) {
     		// The fetch above handles updating the UI.
     	}});
@@ -323,7 +322,9 @@ module.exports = kind({
     },
     
     processLaunchParam: function (inSender, evt) {
-        if (!evt || !evt.detail) return;
+        if (!evt || !evt.detail) {
+            return;
+        }
         var launchParam = evt.detail;
     	this.log(typeof launchParam, launchParam);
     	if (launchParam.launchType === "newContact") {

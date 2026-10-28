@@ -38,7 +38,7 @@ module.exports = kind({
         var searchLength = searchText.length;
         this.empty();
         this.add(this.globalPersonCollection.filter(function (item) {
-            var i, allSearchTerms, name;
+            var i, allSearchTerms;
             try {
                 if (favorites && ! item.get("favorite")) {
                     return false;

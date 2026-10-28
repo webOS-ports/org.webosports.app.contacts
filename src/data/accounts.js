@@ -3,8 +3,6 @@
 
 var
     kind = require('enyo/kind'),
-    Collection = require('enyo/Collection'),
-    PersonModel = require('./PersonModel'),
     LunaService = require('enyo-webos/LunaService');
 
 

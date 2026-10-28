@@ -6,11 +6,6 @@ var
     Toolbar = require('onyx/Toolbar'),
     InputSearchStretch = require('enyo-animated/InputSearchStretch'),
     RadioGroup = require('onyx/RadioGroup'),
-    Panels = require('layout/Panels'),
-    CardArranger = require('layout/CardArranger'),
-    InputDecorator = require('onyx/InputDecorator'),
-    Input = require('onyx/Input'),
-    Image = require('enyo/Image'),
     AllPersonCollection = require('../data/AllPersonCollection'),
     ContactsList = require('./ContactsList'),
     $L = require('enyo/i18n').$L;   // no-op placeholder

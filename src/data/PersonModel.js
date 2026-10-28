@@ -171,12 +171,16 @@ module.exports = kind({
     },
 
     listPhoto: function () {
-        if (!this.get("photos")) return "";
+        if (!this.get("photos")) {
+            return "";
+        }
         return this.get("photos").squarePhotoPath || this.get("photos").bigPhotoPath || "";
     },
 
     displayPhoto: function () {
-        if (!this.get("photos")) return "";
+        if (!this.get("photos")) {
+            return "";
+        }
         return this.get("photos").bigPhotoPath || this.get("photos").squarePhotoPath || "";
     },
 
