@@ -3,7 +3,6 @@
 
 var
     kind = require('enyo/kind'),
-    utils = require('enyo/utils'),
     Model = require('enyo/Model'),
     ComputedSupport = require('enyo/ComputedSupport'),
     $L = require('enyo/i18n').$L;   // no-op placeholder
@@ -282,37 +281,6 @@ module.exports = kind({
         }
 
         return result;
-    },
-
-    toContactData: function (accountId, dbkind) {
-        var organization = this.get("organization"), orgArr = [];
-        if (organization.name || organization.department || organization.title || organization.description) {
-            orgArr.push(utils.clone(organization));   // TODO: deep-clone
-        }
-
-        var photos = this.get("photos"), photoArr = [];
-        if (photos.bigPhotoId || photos.bigPhotoPath || photos.listPhotoPath ||
-            photos.squarePhotoId || photos.squarePhotoPath) {
-            photoArr.push(utils.clone(photos));
-        }
-        return {
-            accountId: accountId,
-            _kind: dbkind,
-            name: utils.clone(this.get("name")),
-            nickname: this.get("nickname"),
-            birthday: this.get("birthday"),
-            anniversary: this.get("anniversary"),
-            gender: this.get("gender"),
-            note: this.get("notes").join("\n"),
-            emails: utils.clone(this.get("emails")),    // TODO: deep-clone
-            urls: utils.clone(this.get("urls")),   // TODO: deep-clone
-            phoneNumbers: utils.clone(this.get("phoneNumbers")),    // TODO: deep-clone
-            ims: utils.clone(this.get("ims")),    // TODO: deep-clone
-            photos: photoArr,
-            addresses: utils.clone(this.get("addresses")),    // TODO: deep-clone
-            organizations: orgArr,
-            relations: utils.clone(this.get("relations"))    // TODO: deep-clone
-        };
     }
 
 });

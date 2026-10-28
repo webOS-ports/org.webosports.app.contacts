@@ -582,6 +582,13 @@
 			return ok({});
 		},
 
+		"luna://com.palm.service.contacts/favoritePerson": function(inParams) {
+			return setFavorite(inParams.personId, true);
+		},
+		"luna://com.palm.service.contacts/unfavoritePerson": function(inParams) {
+			return setFavorite(inParams.personId, false);
+		},
+
 		"luna://com.palm.service.contacts/countVCardContacts": function(inParams) {
 			var v = (config.vcards || {})[inParams.filePath];
 			return v ? ok({count: v.contacts.length}) : fail(-1, "cannot read " + inParams.filePath);
@@ -617,6 +624,17 @@
 			return ok({activityId: nextId++});
 		}
 	};
+
+	function setFavorite(inPersonId, inFavorite) {
+		var person = db.byId(inPersonId);
+		if (!person || !isKindOf(person._kind, "com.palm.person:1")) {
+			return fail(-1, "no such person");
+		}
+		person.favorite = inFavorite;
+		db.store(person);
+		fireWatches(["com.palm.person:1"]);
+		return ok({});
+	}
 
 	function write(inObjects, inMerge) {
 		var out = [], kinds = [], contactIds = [], i, o, old, rec, err;

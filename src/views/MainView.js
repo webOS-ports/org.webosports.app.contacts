@@ -1,9 +1,7 @@
 /* MainView.js - main view of org.webosports.app.contacts */
-/*jsl:import ../data/PersonModel.js*/
 
 var
 	kind = require('enyo/kind'),
-	utils = require('enyo/utils'),
 	Panels = require('layout/Panels'),
 	CardArranger = require('layout/CardArranger'),
 	CollapsingArranger = require('layout/CollapsingArranger'),
@@ -13,10 +11,7 @@ var
 	Button = require('onyx/Button'),
 	ContactDetails = require('./ContactDetails'),
 	Signals = require('enyo/Signals'),
-	PersonModel = require('../data/PersonModel'),
 	PersonCollection = require('../data/PersonCollection'),
-	ContactModel = require('../data/ContactModel'),
-	ContactCollection = require('../data/ContactCollection'),
 	EditContact = require('./EditContact'),
 	$L = require('enyo/i18n').$L;   // no-op placeholder
 require('enyo-luneos');
@@ -58,7 +53,7 @@ module.exports = kind({
                                 },
                                 {
                                     style: "display: block; margin: 10px auto; text-align: center;",
-                                    content: "Please select a contact on the left to see more information."
+                                    content: $L("Please select a contact on the left to see more information.")
                                 }
                             ]
                         },
@@ -77,7 +72,7 @@ module.exports = kind({
         {
         	kind: EditContact,
         	onCancel: "hideEdit",
-        	onSave: "saveContact"
+        	onSaved: "editSaved"
         },
         {
             kind: Signals,
@@ -102,6 +97,7 @@ module.exports = kind({
         	console.log("views fetch complete - now " + collection.length + " items");
         	views.$.contactsBar.refilter();
 
+        	views.selectPendingPerson();
         	var selectedPersonId = views.$.contactDetails.person && views.$.contactDetails.person.get("_id");
         	console.log("selectedPersonId", selectedPersonId);
         	if (selectedPersonId) {
@@ -144,159 +140,34 @@ module.exports = kind({
     },
     
     showAdd: function (inSender, inEvent) {
-    	this.$.editContact.set("title", $L("New Contact"));
-    	this.$.editContact.set("doneLabel", $L("Create"));
-    	var oldPerson = new PersonModel();
-//    	oldPerson = new PersonModel({
-//    		addresses: [{
-//    			type: "type_work",
-//    			streetAddress: "1 Main St.",
-//    			locality: "Orlando",
-//    			region: "FL",
-//    			country: "USA",
-//    			postalCode: "32830"
-//    		}],
-//            birthday: "1928-11-18",
-//            emails: [{type: "type_work", value: "da_mouse@disney.com"}],
-//            favorite: true, 
-//            ims: [{type: "type_sametime", value: "the_mouse" }],
-//            name: {familyName: "Mouse", givenName: "Mickey"},
-//    		nickname: "Steamboat Willie",
-//            notes: ["Universal's Colony Theater\nLend a Paw\nUb Iwerks"],
-//    		organization: {title: "Greeter", department: "Hospitality",  name: "Disney World"},
-//    		phoneNumbers: [{type: "type_mobile", value: "407-555-1212"}],
-//            ringtone: [],
-//            relations: [],
-//            ringtone: {},
-//            urls: [{value: "http://mickey.disney.com/"}]
-//     	});
-    	this.$.editContact.set("oldPerson", oldPerson);
+    	this.$.editContact.newPerson(null);
     	this.setIndex(1);   // show Edit/Create
 	},
     showEdit: function (inSender, inEvent) {
-    	this.$.editContact.set("title", $L("Edit Contact"));
-    	this.$.editContact.set("doneLabel", $L("Save"));
-    	this.$.editContact.set("oldPerson", this.$.contactDetails.person);
+    	this.$.editContact.editPerson(this.$.contactDetails.person);
     	this.setIndex(1);   // show Edit/Create
     },
     hideEdit: function (inSender, inEvent) {
     	this.setIndex(0);   // hide Edit/Create
     },
-    /** the contactlinker will create or update person records */
-    saveContact: function (inSender, inEvent) {
-//    	this.log("newPerson:", inEvent.newPerson.attributes, inEvent.accountId, inEvent.dbkind);
-    	var views = this;
-    	var contactIds = inEvent.newPerson.get("contactIds");
-    	var contactCollection;
-    	
-    	if (contactIds.length === 0) {
-        	var contact = new ContactModel(inEvent.newPerson.toContactData(inEvent.accountId, inEvent.dbkind));
-        	this.log("new contact:", contact);
-        	contact.commit();
-    	} else {
-    		contactCollection = new ContactCollection();
-    		contactCollection.fetch({ids: contactIds, success: function (collection, opts, contacts) {
-    			views.log("fetched contacts:", contacts, "   collection.length:", collection.length);
-    			views.comparePersons(inEvent.oldPerson, inEvent.newPerson, collection, contacts);
-    		}});
+    /** EditContact saved through the linker; show the person it saved */
+    editSaved: function (inSender, inEvent) {
+    	this.setIndex(0);
+    	this.selectPersonId = inEvent.personId;
+    	this.selectPendingPerson();
+    	return true;
+    },
+    /** shows the person of selectPersonId once the list has it */
+    selectPendingPerson: function () {
+    	var id = this.selectPersonId;
+    	var person = id && this.globalPersonCollection.find(function (model) {
+    		return model.get("_id") === id;
+    	});
+    	if (person) {
+    		this.selectPersonId = null;
+    		this.showPerson(this, {person: person});
     	}
-    	
-    	this.setIndex(0);   // hides edit/create pane
-	},
-	comparePersons: function (oldPerson, newPerson, collection, contacts) {
-		this.log(arguments);
-		var changed = false;
-		
-		// TODO: photos
-		
-		compareMulti("name", ["honorificPrefix", "givenName", "middleName", "familyName", "honorificSuffix"]);
-		
-		if (newPerson.get("nickname") !== oldPerson.get("nickname")) {
-			copyAttr("nickname");
-		}
-		
-		compareMulti("organization", ["title", "department", "name"]);
-
-		compareMultiArry("phoneNumbers", ["value", "type"]);
-		
-		compareMultiArry("emails", ["value", "type"]);
-
-		compareMultiArry("ims", ["value", "type"]);
-		
-		compareMultiArry("addresses", ["streetAddress", "locality", "region", "country", "postalCode", "type"]);
-
-		compareMultiArry("urls", ["value"]);
-		
-		var newNotes = newPerson.get("notes").join("\n"),
-			oldNotes = oldPerson.get("notes").join("\n");
-		if (newNotes !== oldNotes) {
-			contacts.forEach(function (contact) {
-				console.log("updating", contact.get("displayName"), "with", newNotes);
-				contact.set("note", newNotes);
-			});
-			oldPerson.set("notes", utils.clone(newPerson.get("notes")));
-			changed = true;
-		}
-
-		if (newPerson.get("birthday") !== oldPerson.get("birthday")) {
-			copyAttr("birthday");
-		}
-
-		compareMultiArry("relations", ["value", "type"]);
-		
-		// TODO: ringtone
-		
-		// not in UI: anniversary, gender
-
-		if (changed) {
-			// TODO: commit collection (& implement that in db8Source.js)
-			contacts.forEach(function (contact) {
-				console.log("committing", contact.get("displayName"));
-				contact.commit();
-			});
-		} else {
-			this.log("no differences between old and new person");
-		}
-		
-		function compareMulti(attrName, subattrNames) {
-			var newAttr = newPerson.get(attrName);
-			var oldAttr = oldPerson.get(attrName);
-			for (var j=0; j<subattrNames.length; ++j) {
-				if (newAttr[subattrNames[j]] !== oldAttr[subattrNames[j]]) {
-					copyAttr(attrName); 
-					return;
-				}
-			}
-		}
-		
-		function compareMultiArry(attrName, subattrNames) {
-			var newItems = newPerson.get(attrName);
-			var oldItems = oldPerson.get(attrName);
-			var i;
-			if (newItems.length !== oldItems.length) {
-				copyAttr(attrName); 
-				return;
-			}
-			for (i=0; i<newItems.length; ++i) {
-				for (var j=0; j<subattrNames.length; ++j) {
-    				if (newItems[i][subattrNames[j]] !== oldItems[i][subattrNames[j]]) {
-    					copyAttr(attrName); 
-    					return;
-    				}
-				}
-			}
-		}
-
-		function copyAttr(attrName) {
-			var attr = newPerson.get(attrName);
-			contacts.forEach(function (contact) {
-				console.log("updating", contact.get("displayName"), "with", attrName, attr);
-				contact.set(attrName, attr);
-			});
-			oldPerson.set(attrName, attr);
-			changed = true;
-		}
-	},
+    },
 
 	alterSearch: function (inSender, inEvent) {
 		this.$.contactsBar.alterSearch(inEvent.searchText);
@@ -328,10 +199,7 @@ module.exports = kind({
         var launchParam = evt.detail;
     	this.log(typeof launchParam, launchParam);
     	if (launchParam.launchType === "newContact") {
-        	this.$.editContact.set("title", $L("New Contact"));
-        	this.$.editContact.set("doneLabel", $L("Create"));
-        	var oldPerson = new PersonModel(launchParam.contact);
-        	this.$.editContact.set("oldPerson", oldPerson);
+        	this.$.editContact.newPerson(launchParam.contact || null);
         	this.setIndex(1);
     	}
     }
