@@ -14,6 +14,8 @@ var
     Button = require('onyx/Button'),
     Icon = require('onyx/Icon'),
     LunaService = require('enyo-webos/LunaService'),
+    details = require('../util/details'),
+    services = require('../data/services'),
     $L = require('enyo/i18n').$L;   // no-op placeholder
 
 
@@ -25,7 +27,8 @@ var Detail = kind({
         onSmsTap: ''
     },
     components: [
-        { tag: "p", name: "value", classes: "value", allowHtml: true },
+        // Contact data is text, never markup: it comes from sync accounts, vCards and other apps.
+        { tag: "p", name: "value", classes: "value" },
         { tag: "p", name: "label", classes: "label" },
         { name: 'smsBtn', kind: Button, showing: false, style: "position: absolute; right: 0.5em; top: 50%; margin-top: -23px;", ontap: "smsTap", components: [
             {kind: Icon, src: "assets/Icon-messaging-64.png"}
@@ -33,7 +36,9 @@ var Detail = kind({
     ],
     bindings: [
         {from: "model.value", to: "$.value.content"},
-        {from: "model.label", to: "$.label.content"},
+        {from: "model.label", to: "$.label.content", transform: function (label) {
+            return $L(label);
+        }},
         {from: "model.smsShowing", to: "$.smsBtn.showing"}
     ],
     smsTap: function (inSender, inEvent) {
@@ -50,6 +55,8 @@ var DetailsModel = kind({
         value: "",
         label: "",
         key: "",
+        type: "",
+        date: "",
         personId: "",
         smsShowing: false
     }
@@ -88,14 +95,6 @@ module.exports = kind({
             kind: LunaService,
             service: 'luna://com.palm.applicationManager',
             method: 'launch',
-            onResponse: 'serviceResponse',
-            onError: 'serviceError'
-        },
-        {
-            name: 'telephonySrvc',
-            kind: LunaService,
-            service: 'luna://com.palm.telephony',
-            method: 'dial',
             onResponse: 'serviceResponse',
             onError: 'serviceError'
         },
@@ -153,177 +152,71 @@ module.exports = kind({
 
         this.$.details.set("collection", this.$.detailsCollection);
     },
-    //TODO: maybe move that somewhere else? Perhaps a computed property?
-    //TODO: some localization stuff will play into this, too... hmpf.
-    getAddressValue: function (address) {
-        var parts = [];
-        if (address.streetAddress) {
-            parts.push(address.streetAddress);
-        }
-        if (address.locality || address.postalCode) {
-            parts.push(address.locality + " " + address.postalCode);
-        }
-        if (address.region) {
-            parts.push(address.region);
-        }
-        if (address.country) {
-            parts.push(address.country);
-        }
-        return parts.join("<br />");
-    },
-    getLabelFromType: function (obj) {
-        //this is kind of a hack...
-        //assumes that type is of form "type_LABEL", i.e. "type_skype", "type_gtalk", "type_partner", ...
-        return typeof obj.type === "string" ? obj.type.substr(5) : "";
-    },
-
-    arrayValues: function (key, person) {
-        if (person.get(key).length > 0) {
-            person.get(key).forEach(function (obj) {
-                this.$.detailsCollection.add({
-                    type: obj.type,
-                    label: this.getLabelFromType(obj),
-                    value: obj.value,
-                    key: key,
-                    personId: person.get('_id'),
-                    smsShowing: key === 'phoneNumbers' && obj.type === 'type_mobile'
-                });
-            }.bind(this));
-        }
-    },
-    arrayAddresses: function (key, person) {
-        if (person.get(key).length > 0) {
-            person.get(key).forEach(function (address) {
-                this.$.detailsCollection.add({
-                    label: address.type === "type_home" ? $L("Home") : $L("Work"),
-                    value: this.getAddressValue(address),
-                    key: key,
-                    personId: person.get('_id')
-                });
-            }.bind(this));
-        }
-    },
-    notesValues: function (key, person) {
-        if (person.get(key).length > 0) {
-            person.get(key).forEach(function (note) {
-                this.$.detailsCollection.add({
-                    label: $L("Note"),
-                    value: note.replace(/\r?\n\r?/g, "<br />"),
-                    key: key,
-                    personId: person.get('_id')
-                });
-            }.bind(this));
-        }
-    },
-    simpleValue: function (key, person) {
-        if (this.person.get(key)) {
-            this.$.detailsCollection.add({
-                label: key,
-                value: person.get(key),
-                key: key,
-                personId: person.get('_id')
-            });
-        }
-    },
     personChanged: function (oldPerson, newPerson) { //fill details collection.
-        var keysOrdered = [
-            "phoneNumbers",
-            "emails",
-            "ims",
-            "addresses",
-            "urls",
-            "notes",
-            "birthday",
-            "anniversary",
-            "relations"
-        ],
-            processingMethods = {
-                phoneNumbers: this.arrayValues,
-                emails: this.arrayValues,
-                ims: this.arrayValues,
-                addresses: this.arrayAddresses,
-                urls: this.arrayValues,
-                notes: this.notesValues,
-                birthday: this.simpleValue,
-                anniversary: this.simpleValue,
-                relations: this.arrayValues
-            },
-            i;
-
-        if (newPerson) {
-            this.$.detailsCollection.empty();
-
-            for (i = 0; i < keysOrdered.length; i += 1) {
-                if (newPerson.get(keysOrdered[i])) {
-                    processingMethods[keysOrdered[i]].call(this, keysOrdered[i], newPerson);
-                }
-            }
+        this.$.detailsCollection.empty();
+        if (!newPerson) {
+            return;
         }
-        
+        var personId = newPerson.get("_id");
+        this.$.detailsCollection.add(details.rows(newPerson.raw()).map(function (inRow) {
+            return {
+                key: inRow.key,
+                type: inRow.type,
+                label: inRow.label,
+                value: inRow.value,
+                date: inRow.date || "",
+                personId: personId,
+                smsShowing: inRow.sms
+            };
+        }));
     },
 
     detailTap: function (inSender, inEvent) {
-        var url, type;
-        // this.log(inEvent.model.attributes);
-        if (inEvent.model.get('key') === 'birthday' || inEvent.model.get('key') === 'anniversary') {
-            var upcoming = new Date(inEvent.model.get('value'));
-            upcoming.setHours(upcoming.getHours() + 12);   // adjust for midnight
-            upcoming.setFullYear((new Date()).getFullYear());
-            if (upcoming < Date.now()) {
-                upcoming.setFullYear(upcoming.getFullYear() + 1);
+        var model = inEvent.model, key = model && model.get('key'), url;
+        if (!key) {
+            return;
+        }
+        if (key === 'birthday' || key === 'anniversary') {
+            var upcoming = details.nextOccurrence(model.get('date'));
+            if (upcoming) {
+                this.$.applicationManagerLaunchSrvc.send({id: "com.palm.app.calendar", params: {date: upcoming.valueOf()}});
             }
-            this.log("opening calendar to " + upcoming);
-
-            // The calshow: URL scheme is Apple-specific
-            this.$.applicationManagerLaunchSrvc.send({id: "com.palm.app.calendar", params: {date: upcoming.valueOf()}});
-        } else if (inEvent.model.get('key') === 'relations') {
-            this.doAlterSearch({searchText: inEvent.model.get('value')});
-        } else if (inEvent.model.get('key') === 'phoneNumbers') {
-            this.log("dialing " + inEvent.model.get('value'));
-            this.$.telephonySrvc.send({number: inEvent.model.get('value') /*, "blockId": false */});
+        } else if (key === 'relations') {
+            this.doAlterSearch({searchText: model.get('value')});
+        } else if (key === 'ims') {
+            url = this.imUrl(model);
         } else {
-            switch (inEvent.model.get('key')) {
-                case 'emails':
-                    url = 'mailto:' + encodeURIComponent(inEvent.model.get('value'));
-                    break;
-                case 'ims':
-                    var match = /([^@]+)(@([^@]+))?/.exec(inEvent.model.get('value'));
-                    this.log("recipient:" + match[1], "host:" + match[3]);
-                    var addr;
-                    if (match[3]) {
-                        addr = encodeURIComponent(match[1]) + "@" + encodeURIComponent(match[3]);
-                    } else if (match[1]) {
-                        addr = encodeURIComponent(match[1]);
-                    } else {
-                            window.PalmSystem.addBannerMessage($L("Not an address"));
-                            return;
-                    }
-                    url = 'im:' + addr + '?personId=' + inEvent.model.get('personId');
-                    type = inEvent.model.get('type');
-                    if (type.slice(0,5) === 'type_') {
-                        type = type.slice(5);
-                    }
-                    if (type && type !== 'other') {
-                        url += '&type=' + type;
-                    }
-                    break;
-                case 'urls':
-                    url = inEvent.model.get('value');
-                    break;
-                case 'addresses':
-                    url = 'maploc:' + encodeURIComponent(inEvent.model.get('value'));
-                    break;
-            }
-            if (url) {
-                this.log(url);
-                this.$.applicationManagerOpenSrvc.send({target: url});
-            }
+            url = details.target({key: key, value: model.get('value')});
+        }
+        if (url) {
+            this.$.applicationManagerOpenSrvc.send({target: url});
         }
     },
+    imUrl: function (inModel) {
+        var match = /([^@]+)(@([^@]+))?/.exec(inModel.get('value')), addr, type, url;
+        if (match && match[3]) {
+            addr = encodeURIComponent(match[1]) + "@" + encodeURIComponent(match[3]);
+        } else if (match && match[1]) {
+            addr = encodeURIComponent(match[1]);
+        } else {
+            services.banner($L("Not an address"));
+            return null;
+        }
+        url = 'im:' + addr + '?personId=' + encodeURIComponent(inModel.get('personId'));
+        type = inModel.get('type') || '';
+        if (type.slice(0, 5) === 'type_') {
+            type = type.slice(5);
+        }
+        if (type && type !== 'other') {
+            url += '&type=' + encodeURIComponent(type);
+        }
+        return url;
+    },
     smsTap: function (inSender, inModel) {
-        var url = 'sms:' + encodeURIComponent(inModel.get('value')) + '?personId=' + inModel.get('personId');
-        this.log(url);
-        this.$.applicationManagerOpenSrvc.send({target: url});
+        var url = details.smsTarget({key: inModel.get('key'), value: inModel.get('value')}, inModel.get('personId'));
+        if (url) {
+            this.$.applicationManagerOpenSrvc.send({target: url});
+        }
     },
     serviceResponse: function (inSender, inEvent) {
         this.log("processId:", inEvent.processId);
@@ -332,13 +225,13 @@ module.exports = kind({
         this.log("errorCode:", inEvent.errorCode, "   errorText:", inEvent.errorText);
         var errMsg;
         if (inEvent.errorText) {
-            errMsg = inEvent.errorText
+            errMsg = inEvent.errorText;
         } else {
             errMsg = $L("Is there a typo?");
             if (inEvent.errorCode) {
                 errMsg += " error code " + inEvent.errorCode;
             }
         }
-        window.PalmSystem.addBannerMessage(errMsg);
+        services.banner(errMsg);
     }
 });

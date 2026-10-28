@@ -15,6 +15,7 @@ var labels = require(path.join(SRC, "labels.js"));
 var accountRules = require(path.join(SRC, "accountRules.js"));
 var contactEdit = require(path.join(SRC, "contactEdit.js"));
 var launch = require(path.join(SRC, "launch.js"));
+var details = require(path.join(SRC, "details.js"));
 
 var ROOT = path.resolve(__dirname, "..", "..");
 var DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "mock", "db8-data.json"), "utf8"));
@@ -363,6 +364,69 @@ t.test("launch: a template keeps only contact fields of the right types", functi
 		phoneNumbers: [{value: "1", type: "type_work"}]});
 	assert.deepStrictEqual(launch.template([1]), {});
 	assert.deepStrictEqual(launch.template("x"), {});
+});
+
+// --- details -----------------------------------------------------------
+
+t.test("details: addresses have no 'undefined' and no markup", function() {
+	assert.strictEqual(details.addressText({streetAddress: "1 Main St.", locality: "Springfield", region: "IL", postalCode: "62701",
+		country: "USA"}), "1 Main St.\n62701 Springfield\nIL\nUSA");
+	assert.strictEqual(details.addressText({locality: "Utrecht"}), "Utrecht");
+	assert.strictEqual(details.addressText({postalCode: "1234 AB"}), "1234 AB");
+	assert.strictEqual(details.addressText({streetAddress: 5, locality: null}), "5");
+	assert.strictEqual(details.addressText(undefined), "");
+});
+t.test("details: rows and labels", function() {
+	var rows = details.rows({
+		phoneNumbers: [{value: "555 1", type: "type_mobile"}, {value: "555 2", type: "type_work_fax"}, {value: "", type: "type_home"},
+			{value: "555 3", type: "type_custom_thing"}],
+		addresses: [{streetAddress: "x", type: "type_other"}],
+		notes: ["line one\nline two  ", "  "],
+		birthday: "1980-03-14", anniversary: "--07-04",
+		relations: [{value: "Pieter", type: "type_spouse"}],
+		ims: [null, "junk", {value: "a@b", type: "type_jabber"}]
+	});
+	assert.deepStrictEqual(rows.map(function(r) { return [r.key, r.label, r.value, r.sms]; }), [
+		["phoneNumbers", "Mobile", "555 1", true],
+		["phoneNumbers", "Work fax", "555 2", false],
+		["phoneNumbers", "Custom thing", "555 3", true],
+		["ims", "Jabber / XMPP", "a@b", false],
+		["addresses", "Other", "x", false],
+		["notes", "Note", "line one\nline two", false],
+		["birthday", "Birthday", "March 14, 1980", false],
+		["anniversary", "Anniversary", "July 4", false],
+		["relations", "Spouse", "Pieter", false]
+	]);
+});
+t.test("details: links are built from allowed schemes only", function() {
+	function tgt(key, value) { return details.target({key: key, value: value}); }
+	assert.strictEqual(tgt("phoneNumbers", "+31 (20) 555-0101 ext"), "tel:%2B31205550101");
+	assert.strictEqual(tgt("phoneNumbers", "no digits"), null);
+	assert.strictEqual(tgt("emails", "anna@example.com"), "mailto:anna@example.com");
+	assert.strictEqual(tgt("emails", "a@b.c?subject=x&body=<script>"), null);
+	assert.strictEqual(tgt("emails", "not an address"), null);
+	assert.strictEqual(tgt("urls", "www.example.org"), "http://www.example.org");
+	assert.strictEqual(tgt("urls", "https://example.org/a?b#c"), "https://example.org/a?b#c");
+	assert.strictEqual(tgt("urls", "javascript:window.__xss=1"), null);
+	assert.strictEqual(tgt("urls", "JavaScript:alert(1)"), null);
+	assert.strictEqual(tgt("urls", "data:text/html,<script>"), null);
+	assert.strictEqual(tgt("urls", "file:///etc/passwd"), null);
+	assert.strictEqual(tgt("urls", "http://"), null);
+	assert.strictEqual(tgt("urls", "example"), null);
+	assert.strictEqual(tgt("addresses", "1 Main St.\nSpringfield"), "maploc:1%20Main%20St.%2C%20Springfield");
+	assert.strictEqual(tgt("notes", "x"), null);
+	assert.strictEqual(details.smsTarget({key: "phoneNumbers", value: "555 1"}, "p 1"), "sms:5551?personId=p%201");
+	assert.strictEqual(details.smsTarget({key: "emails", value: "a@b"}, "p"), null);
+});
+t.test("details: the next birthday", function() {
+	var now = new Date(2026, 9, 28, 9);
+	assert.strictEqual(details.nextOccurrence("1980-03-14", now).getTime(), new Date(2027, 2, 14, 12).getTime());
+	assert.strictEqual(details.nextOccurrence("1980-12-01", now).getTime(), new Date(2026, 11, 1, 12).getTime());
+	assert.strictEqual(details.nextOccurrence("1990-10-28", now).getTime(), new Date(2026, 9, 28, 12).getTime(), "today");
+	assert.strictEqual(details.nextOccurrence("--07-04", now).getTime(), new Date(2027, 6, 4, 12).getTime());
+	assert.strictEqual(details.nextOccurrence("2000-02-29", new Date(2027, 0, 1)).getTime(), new Date(2027, 2, 1, 12).getTime());
+	assert.strictEqual(details.nextOccurrence("someday", now), null);
+	assert.strictEqual(details.nextOccurrence("1980-13-01", now), null);
 });
 
 t.run();

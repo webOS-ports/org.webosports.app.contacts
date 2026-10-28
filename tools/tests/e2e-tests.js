@@ -149,6 +149,74 @@ t.test("details: tapping a person shows their details", async function() {
 	await shot("details");
 });
 
+// The detail rows as [label, value] pairs, as shown.
+function detailRows() {
+	return page.eval("Array.prototype.map.call(document.querySelectorAll('[id$=_contactDetails] .contacts-item')," +
+		"function(e){var l=e.querySelector('.label'),v=e.querySelector('.value');" +
+		"return [l?l.textContent:'', v?v.innerText:''];})");
+}
+async function tapDetail(inValue) {
+	await page.tapText("[id$=_contactDetails] .contacts-item .value", inValue);
+}
+function opened() {
+	return page.eval("__MOCK__.calls.filter(function(c){return c.kind==='luna'&&/applicationManager\\/(open|launch)$/.test(c.url);})" +
+		".map(function(c){return c.params.target||c.params.id;})");
+}
+
+t.test("details: markup in contact data is shown as text, never run", async function() {
+	await open();
+	await tapPerson("Hacker");
+	var rows = await detailRows();
+	assert.ok(rows.some(function(r) { return r[1] === "<script>window.__xss=2</script>\nsecond line"; }), JSON.stringify(rows));
+	assert.ok(rows.some(function(r) { return r[1] === "<b>bold</b> street\n<i>town</i>"; }), JSON.stringify(rows));
+	assert.ok(/<img src=x/.test(await text("[id$=_header_displayName]")));
+	assert.strictEqual(await page.eval("document.querySelectorAll('[id$=_contactDetails] .value b, [id$=_contactDetails] .value i, " +
+		"[id$=_contactDetails] .value script, [id$=_contactDetails] img[src=x]').length"), 0);
+	// A javascript: web address is shown but opens nothing.
+	await tapDetail("javascript:window.__xss=3");
+	await sleep(100);
+	assert.deepStrictEqual(await opened(), []);
+	await shot("details-hostile");
+});
+
+t.test("details: labels, addresses and dates read properly", async function() {
+	await open();
+	await tapPerson("Mary Ann Smith-Jones");
+	var rows = await detailRows();
+	var labelsShown = rows.map(function(r) { return r[0]; });
+	["Main", "Work fax", "Home", "Other", "Anniversary"].forEach(function(l) {
+		assert.ok(labelsShown.indexOf(l) >= 0, l + " not in " + JSON.stringify(labelsShown));
+	});
+	assert.ok(rows.some(function(r) { return r[1] === "1 Main St.\n62701 Springfield\nIL\nUSA"; }), JSON.stringify(rows));
+	assert.ok(!rows.some(function(r) { return /undefined|<br/.test(r[1]); }), JSON.stringify(rows));
+	await tapPerson("Oscar Other");
+	rows = await detailRows();
+	assert.deepStrictEqual(rows.filter(function(r) { return r[1] === "Utrecht" || r[1] === "3511"; }).map(function(r) { return r[0]; }),
+		["Other", "Home"]);
+	await tapPerson("Anna van der Berg");
+	assert.ok((await detailRows()).some(function(r) { return r[0] === "Birthday" && r[1] === "March 14, 1980"; }));
+});
+
+t.test("details: taps open the right app through a URL, never the telephony service", async function() {
+	await open();
+	await tapPerson("Mary Ann Smith-Jones");
+	await tapDetail("(555) 123-4567");
+	await tapDetail("www.example.org");
+	await tapDetail("1 Main St.");
+	assert.deepStrictEqual(await opened(), ["tel:5551234567", "http://www.example.org",
+		"maploc:1%20Main%20St.%2C%2062701%20Springfield%2C%20IL%2C%20USA"]);
+	assert.deepStrictEqual(await lunaCalls("com.palm.telephony"), []);
+	// Text messages: on the main number, not on the fax.
+	var sms = await page.eval("Array.prototype.map.call(document.querySelectorAll('[id$=_contactDetails] .contacts-item'),function(e){" +
+		"var b=e.querySelector('[id$=_smsBtn]');return e.querySelector('.value').textContent+':'+(!!b&&b.getBoundingClientRect().width>0);})");
+	assert.ok(sms.indexOf("(555) 123-4567:true") >= 0 && sms.indexOf("555 123 4568:false") >= 0, JSON.stringify(sms));
+	await page.tap("[id$=_contactDetails] .contacts-item [id$=_smsBtn]");
+	assert.strictEqual((await opened())[3], "sms:5551234567?personId=p-mary");
+	await tapPerson("Anna van der Berg");
+	await tapDetail("anna@example.com");
+	assert.strictEqual((await opened())[4], "mailto:anna@example.com");
+});
+
 t.test("startup: every service call is one the hub allows", async function() {
 	await open();
 	var denied = await page.eval("__MOCK__.calls.filter(function(c){return c.acg && !/^(granted|exempt|unchecked)/.test(c.acg);})");
