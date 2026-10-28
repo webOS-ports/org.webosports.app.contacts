@@ -401,6 +401,61 @@ function plan(inState, inContacts, inEdited) {
 	return result;
 }
 
+/**
+	The edit that adds a contact record's data to a person ("add to
+	existing", from another app): what plan() takes as inEdited.
+	The new entries go to the person's changeable contact in the default
+	account, else to the target, else to a new contact (as in the legacy
+	existingPersonSelected); entries the person already has are skipped. A
+	single value (name, company, ...) is taken only when the person has
+	none.
+*/
+function addData(inState, inTemplate, inDefaultAccountId) {
+	var edited = {favorite: inState.favorite, single: clone(inState.single), lists: {}};
+	var inDefault = inState.contacts.filter(function(inC) {
+		return !inC.readOnly && inC.accountId && inC.accountId === inDefaultAccountId;
+	})[0];
+	var dest = inDefault ? inDefault._id : inState.targetId;
+	var t = singleOf(inTemplate || {});
+	if (!hasName(edited.single.name) && hasName(t.name)) {
+		edited.single.name = t.name;
+	}
+	["nickname", "birthday", "anniversary"].forEach(function(inK) {
+		if (!edited.single[inK].trim() && t[inK].trim()) {
+			edited.single[inK] = t[inK];
+		}
+	});
+	var org = edited.single.organization;
+	if (!org.title.trim() && !org.department.trim() && !org.name.trim()) {
+		edited.single.organization = t.organization;
+	}
+	LIST_FIELDS.forEach(function(inF) {
+		var rows = clone(inState.lists[inF]);
+		entriesOf(inTemplate || {}, inF).forEach(function(inE) {
+			if (isBlank(inF, inE)) {
+				return;
+			}
+			var known = rows.some(function(inRow) {
+				return inF === "notes" ? str(inRow.entry.value).indexOf(str(inE.value).trim()) >= 0 :
+					JSON.stringify(withoutType(inF, inRow.entry)).toLowerCase() === JSON.stringify(withoutType(inF, inE)).toLowerCase();
+			});
+			if (!known) {
+				rows.push({contactId: dest, readOnly: false, entry: clone(inE), original: null});
+			}
+		});
+		edited.lists[inF] = rows;
+	});
+	return edited;
+}
+
+// An entry's visible value, without its type: the same number as "work"
+// and as "mobile" is the same number.
+function withoutType(inField, inEntry) {
+	var v = visible(inField, inEntry);
+	delete v.type;
+	return v;
+}
+
 function updateFor(ioResult, inId) {
 	for (var i = 0; i < ioResult.updates.length; i++) {
 		if (ioResult.updates[i]._id === inId) {
@@ -426,4 +481,5 @@ function isValidDate(inValue) {
 	return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3];
 }
 
-module.exports = {build: build, plan: plan, isValidDate: isValidDate, LIST_FIELDS: LIST_FIELDS, entriesOf: entriesOf};
+module.exports = {build: build, plan: plan, addData: addData, isValidDate: isValidDate, LIST_FIELDS: LIST_FIELDS,
+	entriesOf: entriesOf};

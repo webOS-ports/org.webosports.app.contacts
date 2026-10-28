@@ -14,6 +14,7 @@ var names = require(path.join(SRC, "names.js"));
 var labels = require(path.join(SRC, "labels.js"));
 var accountRules = require(path.join(SRC, "accountRules.js"));
 var contactEdit = require(path.join(SRC, "contactEdit.js"));
+var launch = require(path.join(SRC, "launch.js"));
 
 var ROOT = path.resolve(__dirname, "..", "..");
 var DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "mock", "db8-data.json"), "utf8"));
@@ -304,6 +305,64 @@ t.test("contactEdit: dates", function() {
 	assert.ok(!contactEdit.isValidDate("2023-02-29"));
 	assert.ok(!contactEdit.isValidDate("14-03-1980"));
 	assert.ok(!contactEdit.isValidDate("1980-13-01"));
+});
+
+t.test("contactEdit: add to existing puts new entries in the default account's contact, skips known ones", function() {
+	var cs = contactsOf("p-anna");
+	var state = contactEdit.build(person("p-anna"), cs, ACCOUNTS, GOOGLE);
+	var e = contactEdit.addData(state, {name: {givenName: "Someone", familyName: "Else"}, nickname: "Annie",
+		phoneNumbers: [{value: "+31 20 555 0101", type: "type_work"}, {value: "555 7777", type: "type_mobile"}],
+		emails: [{value: "ANNA@example.com"}], notes: "ignored: not a contact field"}, GOOGLE);
+	var p = contactEdit.plan(state, cs, e);
+	assert.strictEqual(p.create, null);
+	assert.strictEqual(p.updates.length, 2, JSON.stringify(p.updates));
+	var goog = p.updates.filter(function(u) { return u._id === "c-anna-goog"; })[0];
+	assert.deepStrictEqual(goog.fields.phoneNumbers.map(function(n) { return n.value; }), ["+31 20 555 0199", "555 7777"]);
+	assert.ok(!goog.fields.emails, "a known address, in other case, is not added again");
+	// Anna had no nickname: it is taken, and goes to the target as single values do. Her name stays.
+	var palm = p.updates.filter(function(u) { return u._id === "c-anna-palm"; })[0];
+	assert.deepStrictEqual(palm.fields, {nickname: "Annie"});
+});
+t.test("contactEdit: add to existing with only read-only contacts makes a linked contact", function() {
+	var cs = contactsOf("p-bob");
+	var state = contactEdit.build(person("p-bob"), cs, ACCOUNTS, "");
+	var p = contactEdit.plan(state, cs, contactEdit.addData(state, {phoneNumbers: [{value: "1"}]}, ""));
+	assert.deepStrictEqual(p.updates, []);
+	assert.deepStrictEqual(p.create.phoneNumbers, [{value: "1", type: "type_mobile"}]);
+	assert.strictEqual(p.create.name.familyName, "Cowboy");
+});
+
+// --- launch ------------------------------------------------------------
+
+t.test("launch: the legacy launch types", function() {
+	assert.deepStrictEqual(launch.parse({launchType: "editContact", contact: {_id: "c1"}}), {action: "edit", id: "c1"});
+	assert.deepStrictEqual(launch.parse({launchType: "editContact", person: {_id: "p1"}}), {action: "edit", id: "p1"});
+	assert.deepStrictEqual(launch.parse({launchType: "pseudo-card", contact: {phoneNumbers: [{value: "1"}]}}),
+		{action: "prompt", contact: {phoneNumbers: [{value: "1"}]}});
+	assert.strictEqual(launch.parse({launchType: "newContact", contact: {}, skipPrompt: true}).action, "new");
+	assert.strictEqual(launch.parse({launchType: "newContact", contact: {}, skipPrompt: "true"}).action, "prompt");
+	assert.strictEqual(launch.parse({launchType: "addToExisting", person: {name: {givenName: "A"}}}).action, "addToExisting");
+	assert.deepStrictEqual(launch.parse({launchType: "showPerson", id: "p1"}), {action: "show", id: "p1"});
+	assert.deepStrictEqual(launch.parse({id: "p1"}), {action: "show", id: "p1"});
+	assert.deepStrictEqual(launch.parse('{"id":"p1"}'), {action: "show", id: "p1"});
+	assert.deepStrictEqual(launch.parse({target: "file:///media/internal/a.vcf"}), {action: "vcard", target: "file:///media/internal/a.vcf"});
+});
+t.test("launch: nothing to do, or nonsense", function() {
+	[undefined, null, {}, "", "{", "[]", 7, {launchType: "editContact"}, {launchType: "editContact", contact: {_id: 5}},
+		{id: {}}, {id: ""}, {target: "http://evil.example/x.vcf"}, {target: "x.vcf"}, {launchType: "addToExisting"},
+		{"palm-command": "open-app-menu"}].forEach(function(inP) {
+		assert.strictEqual(launch.parse(inP), null, JSON.stringify(inP));
+	});
+});
+t.test("launch: a template keeps only contact fields of the right types", function() {
+	var t = launch.template({_id: "x", _kind: "com.palm.person:1", accountId: "a", _rev: 3,
+		name: {givenName: "A", familyName: 7, bogus: "b"}, nickname: ["n"], organization: {name: "Org", evil: {}},
+		notes: ["one", 2, "two"], phoneNumbers: [{value: "1", type: "type_work", _id: "e", normalizedValue: "x"}, "junk", null],
+		emails: "nope", photos: [{localPath: "/etc/passwd"}]});
+	assert.deepStrictEqual(t, {name: {givenName: "A"}, organizations: [{name: "Org"}], note: "one\n\ntwo",
+		phoneNumbers: [{value: "1", type: "type_work"}]});
+	assert.deepStrictEqual(launch.template([1]), {});
+	assert.deepStrictEqual(launch.template("x"), {});
 });
 
 t.run();

@@ -29,6 +29,7 @@ var
 	prefs = require('../data/prefs'),
 	services = require('../data/services'),
 	saveEdit = require('../data/saveEdit'),
+	persons = require('../data/persons'),
 	$L = require('enyo/i18n').$L;   // no-op placeholder
 
 var ADDRESS_PARTS = [
@@ -305,17 +306,12 @@ module.exports = kind({
 	/** Edits an existing person (a PersonModel or a person record). */
 	editPerson: function (inPerson) {
 		var person = inPerson && inPerson.raw ? inPerson.raw() : inPerson;
-		var ids = ((person && person.contactIds) || []).slice();
 		this.state = null;
 		this.set("title", $L("Edit Contact"));
 		this.$.doneBtn.set("content", $L("Save"));
-		services.call(services.DB, "get", {ids: ids}, this.bindSafely(function (inResponse) {
-			// db8 leaves out ids it has no record for; keep the person's order.
-			var byId = {};
-			(inResponse.results || []).forEach(function (inC) { byId[inC._id] = inC; });
-			var contacts = ids.map(function (inId) { return byId[inId]; }).filter(function (inC) { return !!inC; });
+		persons.contactsOf(person, this.bindSafely(function (inContacts) {
 			this.whenReady(this.bindSafely(function () {
-				this.start(person, contacts, null);
+				this.start(person, inContacts, null);
 			}));
 		}), this.bindSafely(function (inError) {
 			console.error("EditContact: cannot load the contacts:", inError.errorCode, inError.errorText);

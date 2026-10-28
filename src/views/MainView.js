@@ -13,17 +13,25 @@ var
 	Signals = require('enyo/Signals'),
 	PersonCollection = require('../data/PersonCollection'),
 	EditContact = require('./EditContact'),
+	AddToContactsPrompt = require('./AddToContactsPrompt'),
+	PersonPicker = require('./PersonPicker'),
+	ConfirmDialog = require('./ConfirmDialog'),
+	launch = require('../util/launch'),
+	persons = require('../data/persons'),
+	saveEdit = require('../data/saveEdit'),
+	services = require('../data/services'),
 	$L = require('enyo/i18n').$L;   // no-op placeholder
 require('enyo-luneos');
 
-//App
+// The cards (list and details, or the edit view) are a Panels of their
+// own: a popup inside a Panels would be one of its panels, and hidden by
+// every transition.
 module.exports = kind({
     name: "MainView",
-	kind: Panels,
-	arrangerKind: CardArranger,
-	draggable: false,
+	classes: "enyo-fit",
 	globalPersonCollection: new PersonCollection({options: {}}),
     components: [
+        {name: "cards", kind: Panels, arrangerKind: CardArranger, draggable: false, classes: "enyo-fit", components: [
         {
             name: "main",
             kind: Panels,
@@ -73,11 +81,15 @@ module.exports = kind({
         	kind: EditContact,
         	onCancel: "hideEdit",
         	onSaved: "editSaved"
-        },
+        }
+        ]},
+        {name: "addPrompt", kind: AddToContactsPrompt, onAddNew: "promptAddNew", onAddToExisting: "promptAddToExisting"},
+        {name: "personPicker", kind: PersonPicker, onPicked: "personPicked"},
+        {name: "confirm", kind: ConfirmDialog},
         {
             kind: Signals,
 			onbackgesture: "goBack",
-            onwebOSRelaunch: "processLaunchParam"
+            onwebOSRelaunch: "relaunch"
         }
     ],
     create: function () {
@@ -85,7 +97,7 @@ module.exports = kind({
         this.handleResize();
         
         if (window.PalmSystem) {
-        	this.processLaunchParam(null, webOS.window.launchParams());
+        	this.handleLaunch(webOS.window.launchParams());
         }
 
         this.log("==========> Telling global list to fetch contacts...");
@@ -141,18 +153,18 @@ module.exports = kind({
     
     showAdd: function (inSender, inEvent) {
     	this.$.editContact.newPerson(null);
-    	this.setIndex(1);   // show Edit/Create
+    	this.$.cards.setIndex(1);   // show Edit/Create
 	},
     showEdit: function (inSender, inEvent) {
     	this.$.editContact.editPerson(this.$.contactDetails.person);
-    	this.setIndex(1);   // show Edit/Create
+    	this.$.cards.setIndex(1);   // show Edit/Create
     },
     hideEdit: function (inSender, inEvent) {
-    	this.setIndex(0);   // hide Edit/Create
+    	this.$.cards.setIndex(0);   // hide Edit/Create
     },
     /** EditContact saved through the linker; show the person it saved */
     editSaved: function (inSender, inEvent) {
-    	this.setIndex(0);
+    	this.$.cards.setIndex(0);
     	this.selectPersonId = inEvent.personId;
     	this.selectPendingPerson();
     	return true;
@@ -177,8 +189,8 @@ module.exports = kind({
 	},
     
     goBack: function () {
-    	if (this.get("index") > 0) {
-    		this.set("index", 0);   // hide Edit/Create
+    	if (this.$.cards.get("index") > 0) {
+    		this.$.cards.set("index", 0);   // hide Edit/Create
     	} else if (Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
             this.$.main.setIndex(0);
         } else {
@@ -192,15 +204,133 @@ module.exports = kind({
         }
     },
     
-    processLaunchParam: function (inSender, evt) {
-        if (!evt || !evt.detail) {
-            return;
-        }
-        var launchParam = evt.detail;
-    	this.log(typeof launchParam, launchParam);
-    	if (launchParam.launchType === "newContact") {
-        	this.$.editContact.newPerson(launchParam.contact || null);
-        	this.setIndex(1);
+    /**
+		A launch while running: the event's detail holds the launch
+		parameters. WAM sends the event and also calls Mojo.relaunch(), which
+		enyo-luneos turns into a second event: the same parameters again
+		within a second are the same relaunch.
+    */
+    relaunch: function (inSender, inEvent) {
+    	var params = inEvent && inEvent.detail, key, now = Date.now();
+    	try {
+    		key = JSON.stringify(params);
+    	} catch (e) {
+    		return;
     	}
+    	if (key === this.lastRelaunch && now - this.lastRelaunchTime < 1000) {
+    		return;
+    	}
+    	this.lastRelaunch = key;
+    	this.lastRelaunchTime = now;
+    	this.handleLaunch(params);
+    },
+    /** what another app (or the launcher) asks for; see src/util/launch.js */
+    handleLaunch: function (inParams) {
+    	var what = launch.parse(inParams);
+    	if (!what) {
+    		return;
+    	}
+    	this.log(what.action);
+    	this.$.addPrompt.hide();
+    	this.$.personPicker.hide();
+    	this.$.confirm.hide();
+    	switch (what.action) {
+    	case "show":
+    		persons.find(what.id, this.bindSafely(function (inPerson) {
+    			if (inPerson) {
+    				this.$.cards.setIndex(0);
+    				this.selectPersonId = inPerson._id;
+    				this.selectPendingPerson();
+    			}
+    		}));
+    		break;
+    	case "edit":
+    		persons.find(what.id, this.bindSafely(function (inPerson) {
+    			if (!inPerson) {
+    				services.banner($L("This contact no longer exists"));
+    				return;
+    			}
+    			this.selectPersonId = inPerson._id;
+    			this.selectPendingPerson();
+    			this.$.editContact.editPerson(inPerson);
+    			this.$.cards.setIndex(1);
+    		}));
+    		break;
+    	case "new":
+    		this.promptAddNew(this, {contact: what.contact});
+    		break;
+    	case "prompt":
+    		this.$.addPrompt.ask(what.contact);
+    		break;
+    	case "addToExisting":
+    		this.promptAddToExisting(this, {contact: what.contact});
+    		break;
+    	case "vcard":
+    		this.importVCard(what.target);
+    		break;
+    	}
+    },
+    promptAddNew: function (inSender, inEvent) {
+    	this.$.editContact.newPerson(inEvent.contact);
+    	this.$.cards.setIndex(1);
+    	return true;
+    },
+    promptAddToExisting: function (inSender, inEvent) {
+    	this.contactToAdd = inEvent.contact;
+    	this.$.cards.setIndex(0);
+    	this.$.personPicker.pick($L("Add to which contact?"), this.globalPersonCollection, "");
+    	return true;
+    },
+    personPicked: function (inSender, inEvent) {
+    	var template = this.contactToAdd;
+    	this.contactToAdd = null;
+    	if (!template) {
+    		return true;
+    	}
+    	saveEdit.addToPerson(inEvent.person.raw(), template, this.bindSafely(function (inPersonId, inError) {
+    		if (inError) {
+    			services.banner($L("Could not save the contact") +
+    				(inError.errorCode !== undefined ? " (" + inError.errorCode + ")" : ""));
+    			return;
+    		}
+    		this.selectPersonId = inPersonId;
+    		this.selectPendingPerson();
+    	}));
+    	return true;
+    },
+    /**
+		A vCard file, as the legacy VCardHelper did: one contact opens as a
+		new contact (asking first), several are imported after a question.
+    */
+    importVCard: function (inTarget) {
+    	var fail = this.bindSafely(function () {
+    		this.$.confirm.ask($L("There was a problem reading this vCard."), null, $L("OK"), $L("Import vCard"));
+    	});
+    	services.call(services.CONTACTS, "countVCardContacts", {filePath: inTarget}, this.bindSafely(function (inResponse) {
+    		var count = inResponse.count;
+    		if (typeof count !== "number" || count < 1) {
+    			fail();
+    		} else if (count === 1) {
+    			services.call(services.CONTACTS, "readVCard", {filePath: inTarget}, this.bindSafely(function (inRead) {
+    				var contact = inRead.contacts && inRead.contacts[0];
+    				if (contact) {
+    					this.$.addPrompt.ask(launch.template(contact));
+    				} else {
+    					fail();
+    				}
+    			}), fail);
+    		} else {
+    			var question = $L("Would you like to import {count} contacts? This could take a few minutes.").replace("{count}", count);
+    			this.$.confirm.ask(question, this.bindSafely(function () {
+    				services.banner($L("Importing vCard..."));
+    				services.call(services.CONTACTS, "importVCard", {filePath: inTarget}, function () {
+    					services.banner($L("{count} contacts imported").replace("{count}", count));
+    				}, function (inError) {
+    					// Logged only: the legacy app saw this fail after contacts were imported.
+    					console.error("importVCard failed:", inError.errorCode, inError.errorText);
+    				});
+    			}), $L("Import"), $L("Import vCard"));
+    		}
+    	}), fail);
     }
 });

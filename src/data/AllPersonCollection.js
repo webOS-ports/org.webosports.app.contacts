@@ -20,7 +20,8 @@ module.exports = kind({
     published: {
         globalPersonCollection: null,
         favorites: false,
-        searchText: ""
+        searchText: "",
+        excludeId: ""   // a person left out (the one a picker links to)
     },
     create: function () {
         this.log(arguments);
@@ -33,7 +34,7 @@ module.exports = kind({
         this.refilter.apply(this, arguments);
     },
     refilter: function () {
-        var favorites = this.favorites;
+        var favorites = this.favorites, excludeId = this.excludeId;
         var searchText = this.searchText.trim().toLowerCase();
         var searchLength = searchText.length;
         this.empty();
@@ -41,6 +42,9 @@ module.exports = kind({
             var i, allSearchTerms;
             try {
                 if (favorites && ! item.get("favorite")) {
+                    return false;
+                }
+                if (excludeId && item.get("_id") === excludeId) {
                     return false;
                 }
                 allSearchTerms = item.get("allSearchTerms") || [""];

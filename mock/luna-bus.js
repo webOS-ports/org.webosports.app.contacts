@@ -815,11 +815,20 @@
 		watches = watches.filter(function(inW) { return inW.bridge !== self; });
 	};
 
+	// What WAM's WebPageBase::SendRelaunchEvent does: a webOSRelaunch
+	// CustomEvent with the parameters as detail, then Mojo.relaunch() for
+	// legacy apps (which enyo-luneos turns into a second webOSRelaunch).
 	mock.relaunch = function(inParams) {
-		palm.launchParams = JSON.stringify(inParams || {});
-		if (window.Mojo && window.Mojo.relaunch) {
-			window.Mojo.relaunch();
-		}
+		var detail = clone(inParams || {});
+		setTimeout(function() {
+			document.dispatchEvent(new CustomEvent("webOSRelaunch", {detail: detail}));
+			if (typeof window.Mojo !== "undefined") {
+				palm.launchParams = JSON.stringify(detail);
+				if (window.Mojo.relaunch) {
+					window.Mojo.relaunch();
+				}
+			}
+		}, 1);
 	};
 	mock.set = function(inUrl, inRule) {
 		(config.luna = config.luna || {})[inUrl] = inRule;

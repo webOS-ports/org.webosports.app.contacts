@@ -898,3 +898,58 @@ border-top-color:rgba(255,255,255,0.5);
     background: #F9f9f9 url(../../assets/defaultview-panel-tile.png) bottom left repeat-x;
 }
 
+
+/* Dialogs */
+
+.dialog {
+    width: 24rem;
+    max-width: 90%;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+.dialog-title {
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+}
+.dialog-message {
+    margin-bottom: 1rem;
+    word-wrap: break-word;
+}
+.dialog-buttons {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-justify-content: flex-end;
+    justify-content: flex-end;
+}
+.dialog-buttons > * + * {
+    margin-left: 0.5rem;
+}
+.dialog-buttons-stacked {
+    -webkit-flex-direction: column;
+    flex-direction: column;
+}
+.dialog-buttons-stacked > * + * {
+    margin-left: 0;
+    margin-top: 0.5rem;
+}
+.person-picker {
+    height: 80%;
+    max-height: 40rem;
+}
+.person-picker-rows {
+    padding: 1rem;
+}
+.person-picker-search {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+.person-picker-search input {
+    width: 100%;
+    box-sizing: border-box;
+}
+.person-picker .dialog-buttons {
+    margin-top: 0.5rem;
+}
+.person-picker .contacts-list {
+    color: #222;
+}

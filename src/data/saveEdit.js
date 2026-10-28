@@ -13,7 +13,11 @@
 //     legacy app (favoritePerson / unfavoritePerson).
 
 var
-    services = require('./services');
+    services = require('./services'),
+    persons = require('./persons'),
+    accounts = require('./accounts'),
+    prefs = require('./prefs'),
+    contactEdit = require('../util/contactEdit');
 
 function noop() {}
 
@@ -119,4 +123,24 @@ function run(inState, inPlan, inDone) {
     next();
 }
 
-module.exports = {run: run};
+/**
+	Adds the data of a contact record (from another app) to an existing
+	person, as the legacy "Add To Existing" did: without an edit view.
+	inDone(personId, error) as for run().
+*/
+function addToPerson(inPerson, inTemplate, inDone) {
+    persons.contactsOf(inPerson, function (inContacts) {
+        accounts.whenReady(function () {
+            prefs.whenReady(function () {
+                var defaultId = prefs.get("defaultAccountId");
+                var state = contactEdit.build(inPerson, inContacts, accounts.list, defaultId, null);
+                var plan = contactEdit.plan(state, inContacts, contactEdit.addData(state, inTemplate, defaultId));
+                run(state, plan, inDone);
+            });
+        });
+    }, function (inError) {
+        inDone(null, inError || {});
+    });
+}
+
+module.exports = {run: run, addToPerson: addToPerson};

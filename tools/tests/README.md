@@ -4,7 +4,8 @@ Tests
     tools/run-tests.sh                 ES5/syntax check, eslint, unit tests, dev build, end-to-end tests
     tools/run-tests.sh --built         ... and the end-to-end tests again on the production build
     tools/run-tests.sh --screenshots   save a screenshot per step to test-output/shots/
-    TEST_FILTER=edit tools/run-tests.sh
+    TEST_FILTER=edit tools/run-tests.sh   only the tests whose name matches (a regular expression)
+    TEST_VERBOSE=1 tools/run-tests.sh    print whole assertion diffs and stacks, not six lines
 
 You need Node 22 or later (for its built-in `fetch` and `WebSocket`), a
 Chromium, and enyo-dev for the build: by default the one the LuneOS build

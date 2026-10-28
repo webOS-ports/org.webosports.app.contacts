@@ -405,6 +405,138 @@ t.test("new: no accounts at all does not crash", async function() {
 	assert.strictEqual((await lunaCalls("linker/saveNewPersonAndContacts")).length, 1);
 });
 
+// --- launch ------------------------------------------------------------
+
+async function waitForDetails(inName) {
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_header_displayName]');" +
+		"return e && e.getBoundingClientRect().width>0 && e.textContent.indexOf(" + JSON.stringify(inName) + ")>=0;})()");
+}
+async function waitForEdit(inName) {
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_nameInput]');" +
+		"return e && e.getBoundingClientRect().width>0 && e.value===" + JSON.stringify(inName) + ";})()");
+}
+async function relaunch(inParams) {
+	await page.eval("__MOCK__.relaunch(" + JSON.stringify(inParams) + ")");
+	await sleep(150);
+}
+function visible(inSelector) {
+	return page.eval("(function(){var e=document.querySelector(" + JSON.stringify(inSelector) + ");" +
+		"return !!e && e.getBoundingClientRect().width>0;})()");
+}
+
+t.test("launch: a cold launch with a person id shows that person", async function() {
+	await open({launchParams: {id: "p-gina"}});
+	await waitForDetails("Gina Talk");
+});
+
+t.test("launch: a cold launch with a contact id to edit opens its person's edit view", async function() {
+	await open({launchParams: {launchType: "editContact", contact: {_id: "c-mary"}}});
+	await waitForEdit("Dr. Mary Ann Smith-Jones, PhD");
+});
+
+t.test("launch: showPerson on relaunch, and an unknown id does nothing", async function() {
+	await open();
+	await relaunch({launchType: "showPerson", id: "p-emile"});
+	await waitForDetails("Émile Zola");
+	await relaunch({id: "no-such-id"});
+	await relaunch({launchType: "editContact", person: {_id: "gone"}});
+	await sleep(200);
+	assert.ok((await banners()).some(function(b) { return /no longer exists/.test(b); }));
+	assert.strictEqual(await text("[id$=_header_displayName]"), "Émile Zola");
+});
+
+t.test("launch: the same relaunch delivered twice (WAM event and Mojo.relaunch) is handled once", async function() {
+	await open();
+	await page.eval("(function(){var d={launchType:'showPerson',id:'p-emile'};" +
+		"document.dispatchEvent(new CustomEvent('webOSRelaunch',{detail:d}));" +
+		"document.dispatchEvent(new CustomEvent('webOSRelaunch',{detail:JSON.parse(JSON.stringify(d))}));})()");
+	await waitForDetails("Émile Zola");
+	var gets = (await lunaCalls("com.palm.db/get")).filter(function(c) { return c.params.ids[0] === "p-emile"; });
+	assert.strictEqual(gets.length, 1);
+});
+
+t.test("launch: pseudo-card asks first, then opens a new contact with the data", async function() {
+	await open();
+	await relaunch({launchType: "pseudo-card", contact: {phoneNumbers: [{value: "4151234567"}],
+		_kind: "com.palm.person:1", accountId: "++HnY2Qbp2pHNVFT", _id: "evil"}});
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_addPrompt]');return e && e.getBoundingClientRect().width>0;})()");
+	assert.ok(/4151234567/.test(await text("[id$=_addPrompt]")));
+	await shot("launch-prompt");
+	await page.tap("[id$=_addNewBtn]");
+	await page.waitFor("(function(){var e=document.querySelector(" + JSON.stringify(row("phoneNumbers", 1) + " input") + ");" +
+		"return e && e.value==='4151234567' && e.getBoundingClientRect().width>0;})()");
+	await page.fill("[id$=_nameInput]", "Caller");
+	await save();
+	var c = (await lunaCalls("linker/saveNewPersonAndContacts"))[0].params.contacts[0];
+	assert.strictEqual(c._kind, "com.palm.contact.palmprofile:1", "the launch cannot pick the kind");
+	assert.strictEqual(c.accountId, "++HoXVTTqIccE0m1", "or the account");
+	assert.strictEqual(c._id, undefined);
+	await waitForDetails("Caller");
+});
+
+t.test("launch: newContact with skipPrompt goes straight to the edit view", async function() {
+	await open({noWait: true, launchParams: {launchType: "newContact", skipPrompt: true,
+		contact: {name: {givenName: "Ada", familyName: "Lovelace"}}}});
+	await waitForEdit("Ada Lovelace");
+	assert.strictEqual(await visible("[id$=_addPrompt]"), false);
+});
+
+t.test("launch: add to existing picks a person and adds the data to it", async function() {
+	await open();
+	await relaunch({launchType: "addToExisting", contact: {phoneNumbers: [{value: "555 4242", type: "type_work"}],
+		emails: [{value: "gina@example.com"}]}});
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_personPicker]');return e && e.getBoundingClientRect().width>0;})()");
+	await page.fill("[id$=_personPicker] input", "gin");
+	await page.waitFor("document.querySelectorAll('[id$=_personPicker] .contacts-item .name').length === 1");
+	await shot("launch-picker");
+	await page.tapText("[id$=_personPicker] .contacts-item", "Gina Talk");
+	await waitForDetails("Gina Talk");
+	var c = await record("c-gina");
+	assert.deepStrictEqual(c.phoneNumbers, [{value: "555 4242", type: "type_work"}]);
+	assert.ok(c.emails.some(function(e) { return e.value === "gina@example.com"; }));
+});
+
+t.test("launch: the prompt's Add To Existing goes to the picker; cancel writes nothing", async function() {
+	await open();
+	await relaunch({launchType: "newContact", contact: {emails: [{value: "x@example.com"}]}});
+	await page.tap("[id$=_addToExistingBtn]");
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_personPicker]');return e && e.getBoundingClientRect().width>0;})()");
+	await page.tap("[id$=_personPicker] [id$=_cancelBtn]");
+	await sleep(200);
+	assert.deepStrictEqual(await lunaCalls("com.palm.db/merge"), []);
+	assert.deepStrictEqual(await lunaCalls("linker"), []);
+});
+
+var VCARD_ONE = {contacts: [{name: {givenName: "Vera", familyName: "Card"}, emails: [{value: "vera@example.com", type: "type_work"}]}]};
+var VCARD_TWO = {contacts: [{name: {givenName: "Uno", familyName: "Card"}}, {name: {givenName: "Dos", familyName: "Card"}}]};
+
+t.test("launch: a vCard of one contact asks, then opens it as a new contact", async function() {
+	await open({launchParams: {target: "file:///media/internal/one.vcf"}, vcards: {"file:///media/internal/one.vcf": VCARD_ONE}});
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_addPrompt]');return e && e.getBoundingClientRect().width>0;})()");
+	assert.ok(/Vera Card/.test(await text("[id$=_addPrompt]")));
+	await page.tap("[id$=_addNewBtn]");
+	await waitForEdit("Vera Card");
+});
+
+t.test("launch: a vCard of several contacts is imported after a question", async function() {
+	await open({vcards: {"/media/internal/two.vcf": VCARD_TWO}});
+	await relaunch({target: "/media/internal/two.vcf"});
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_confirm]');return e && e.getBoundingClientRect().width>0;})()");
+	assert.ok(/import 2 contacts/.test(await text("[id$=_confirm]")));
+	await page.tap("[id$=_confirm] [id$=_okBtn]");
+	await waitForList(15);
+	assert.ok((await listNames()).indexOf("Uno Card") >= 0);
+	assert.ok((await banners()).some(function(b) { return /2 contacts imported/.test(b); }));
+});
+
+t.test("launch: an unreadable vCard says so", async function() {
+	await open();
+	await relaunch({target: "file:///media/internal/missing.vcf"});
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_confirm]');return e && e.getBoundingClientRect().width>0;})()");
+	assert.ok(/problem reading/.test(await text("[id$=_confirm]")));
+	assert.strictEqual(await visible("[id$=_confirm] [id$=_cancelBtn]"), false);
+});
+
 // --- run ---------------------------------------------------------------
 
 (async function() {
