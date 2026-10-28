@@ -42,6 +42,8 @@ module.exports = kind({
                 ]}
             ]
         },
+        // Why the list is empty: no contacts, no favourites, or no match.
+        { name: "message", classes: "contacts-list-message", showing: false },
         { name: "allContactsList", kind: ContactsList, fit: true, collection: new AllPersonCollection(), ontap: "selectPerson" }
     ],
 
@@ -63,10 +65,34 @@ module.exports = kind({
         }
     },
 
+    create: function () {
+        this.inherited(arguments);
+        var collection = this.$.allContactsList.collection;
+        ["add", "remove", "reset"].forEach(function (inEvent) {
+            collection.on(inEvent, this.updateMessage, this);
+        }, this);
+    },
+
     refilter: function () {
-    	var searchText = this.$.allContactsList.collection.get("searchText");
-    	// Forces refiltering without changing searchText.
-    	this.$.allContactsList.collection.searchTextChanged(searchText, searchText, "searchText");
+        this.loaded = true;   // the persons have been fetched at least once
+        this.$.allContactsList.collection.refilter();
+        this.updateMessage();
+    },
+
+    updateMessage: function () {
+        var collection = this.$.allContactsList.collection, message = "";
+        if (this.loaded && collection.length === 0) {
+            if ((collection.searchText || "").trim()) {
+                message = $L("No search results found");
+            } else if (collection.favorites) {
+                message = $L("No favorites yet");
+            } else {
+                message = $L("No contacts yet. Tap + to add one.");
+            }
+        }
+        this.$.message.set("content", message);
+        this.$.message.set("showing", !!message);
+        this.resize();
     },
 
     selectPerson: function (inSender, inEvent) {

@@ -122,7 +122,9 @@ t.test("list: shows every person in sortKey order", async function() {
 	await waitForList(13);
 	var names = await listNames();
 	assert.strictEqual(names.length, 13, names.join(", "));
-	assert.strictEqual(names[0], "Anna Berg");
+	// db8 collates the sortKey index ("secondary"): Ångström is an A.
+	assert.strictEqual(names[0], "Zoë Ångström", names.join(", "));
+	assert.strictEqual(names[1], "Anna Berg", names.join(", "));
 	assert.ok(names.indexOf("Anna van der Berg") > names.indexOf("Mary Ann Smith-Jones") ||
 		names.indexOf("Anna van der Berg") > 0, names.join(", "));
 	await shot("list");
@@ -163,6 +165,91 @@ t.test("list: search narrows the list by name, nickname, company and email", asy
 	await page.fill("[id$=_inputSearchStretch_input]", "glob");
 	await page.waitFor("document.querySelectorAll('[id*=_allContactsList] .contacts-item .name').length === 1");
 	assert.deepStrictEqual(await listNames(), ["Globex Corporation"]);
+});
+
+//* [name, divider or ""] of every person in the list collection, in order.
+function listGroups() {
+	return page.eval("(function(){var c=contactsApp.view.$.contactsBar.$.allContactsList.collection, out=[];" +
+		"for(var i=0;i<c.length;i++){out.push([c.at(i).get('displayName'), c.dividers[c.at(i).euid]||'']);}return out;})()");
+}
+async function search(inQuery, inCount) {
+	await page.fill("[id$=_inputSearchStretch_input]", inQuery);
+	await page.waitFor("document.querySelectorAll('[id*=_allContactsList] .contacts-item .name').length === " + inCount);
+	return (await listNames()).sort();
+}
+function listMessage() {
+	return page.eval("(function(){var e=document.querySelector('.contacts-list-message');" +
+		"return e && e.getBoundingClientRect().height>0 ? e.textContent : '';})()");
+}
+function waitForMessage() {
+	return page.waitFor("(function(){var e=document.querySelector('.contacts-list-message');" +
+		"return e && e.getBoundingClientRect().height>0;})()");
+}
+
+t.test("list: a letter divider heads each group, accents folded, '#' for no name", async function() {
+	await open();
+	await waitForList(13);
+	var groups = await listGroups(), all = JSON.stringify(groups);
+	var dividers = groups.filter(function(g) { return g[1]; }).map(function(g) { return g[1]; });
+	// Each group once.
+	assert.strictEqual(dividers.length, dividers.filter(function(d, i) { return dividers.indexOf(d) === i; }).length, all);
+	var under = {}, current = "";
+	groups.forEach(function(g) { current = g[1] || current; under[g[0]] = current; });
+	// LAST_FIRST: Zoë Ångström sorts with the A's (collation), Émile Zola under Z.
+	assert.strictEqual(under["Zoë Ångström"], "A", all);
+	assert.strictEqual(under["Émile Zola"], "Z", all);
+	assert.strictEqual(under["Anna Berg"], "B", all);
+	assert.strictEqual(under["李小龙"], "李", all);
+	assert.ok(groups[0][1], "the first row has a divider: " + all);
+	// The rendered row shows its divider.
+	await page.waitFor("Array.prototype.some.call(document.querySelectorAll('[id*=_allContactsList] .list-divider')," +
+		"function(e){return e.textContent==='A' && e.getBoundingClientRect().height>0;})");
+	await shot("list-dividers");
+});
+
+t.test("list: a person with no name is listed as [No Name Available], last, under '#'", async function() {
+	var d = data();
+	d.contacts.push({_id: "c-noname", _kind: "com.palm.contact.palmprofile:1", accountId: "++HoXVTTqIccE0m1"});
+	d.persons.push({_id: "p-noname", favorite: false, contactIds: ["c-noname"]});
+	await open({data: d});
+	await waitForList(14);
+	var groups = await listGroups(), last = groups[groups.length - 1];
+	assert.deepStrictEqual(last, ["[No Name Available]", "#"], JSON.stringify(groups));
+	assert.ok(groups.some(function(g) { return g[0] === "李小龙"; }), JSON.stringify(groups));
+});
+
+t.test("list: search ignores accents and case, matches every word, finds phone digits", async function() {
+	await open();
+	await waitForList(13);
+	assert.deepStrictEqual(await search("zoe", 1), ["Zoë Ångström"]);
+	assert.deepStrictEqual(await search("EMILE", 1), ["Émile Zola"]);
+	assert.deepStrictEqual(await search("anna berg", 2), ["Anna Berg", "Anna van der Berg"]);
+	assert.deepStrictEqual(await search("123-4567", 1), ["Dr. Mary Ann Smith-Jones, PhD"]);
+	assert.deepStrictEqual(await search("李", 1), ["李小龙"]);
+	await search("anna smith", 0);
+});
+
+t.test("list: messages for no search results, no favourites and no contacts", async function() {
+	await open();
+	await waitForList(13);
+	assert.strictEqual(await listMessage(), "");
+	await search("qqqqq", 0);
+	await waitForMessage();
+	assert.strictEqual(await listMessage(), "No search results found");
+
+	var d = data();
+	d.persons.forEach(function(p) { p.favorite = false; });
+	await open({data: d});
+	await page.tapText("[id$=_contactsBar_tabs] *", "Favourites");
+	await waitForMessage();
+	assert.strictEqual(await listMessage(), "No favorites yet");
+
+	d.contacts = [];
+	d.persons = [];
+	await open({data: d, noWait: true});
+	await waitForMessage();
+	assert.strictEqual(await listMessage(), "No contacts yet. Tap + to add one.");
+	await shot("list-empty");
 });
 
 t.test("details: tapping a person shows their details", async function() {

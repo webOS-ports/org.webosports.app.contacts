@@ -68,10 +68,6 @@ ContactsUI CSS
     font-size:16px;
 }
 .contacts-list .contacts-item {
-    display: table;
-    table-layout: fixed;
-    width: 100%;
-    min-height: 68px;
     border-width:1px 0;
     border-style:solid none solid none;
     border-top-color:rgba(255,255,255,0.5);
@@ -87,9 +83,30 @@ ContactsUI CSS
     background-color:#d1e5f5;
     border-color:#B3d9f2
 }
-.contacts-list .contacts-item > div {
+.contacts-list .contacts-item-row {
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+    min-height: 68px;
+    height: 68px;
+    position: relative;
+}
+.contacts-list .contacts-item-row > div {
     display: table-cell;
     vertical-align:middle;
+}
+.contacts-list .list-divider {
+    padding: 2px 14px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #1879cd;
+    background: rgba(0,0,0,0.05);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+.contacts-list-message {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: #888;
 }
 .contacts-list .contacts-item .icon {
     width: 78px;   /* 50+2*14 */

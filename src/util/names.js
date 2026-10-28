@@ -187,4 +187,51 @@ function equal(inA, inB) {
 	});
 }
 
-module.exports = {format: format, parse: parse, equal: equal};
+function firstValue(inList) {
+	var list = Array.isArray(inList) ? inList : [];
+	for (var i = 0; i < list.length; i++) {
+		if (list[i] && str(list[i].value)) {
+			return str(list[i].value);
+		}
+	}
+	return "";
+}
+
+/**
+	The name a person record is listed by, as the legacy
+	Person.generateDisplayNameFromRawPerson made it: the full name, else
+	the nickname, else "title, company", else the first email, IM address
+	or phone number. "" when there is nothing (the view shows
+	"[No Name Available]").
+*/
+function displayName(inPerson) {
+	var p = inPerson || {}, org = (p.organization && typeof p.organization === "object") ? p.organization : {};
+	var title = str(org.title), company = str(org.name);
+	return format(p.name) || str(p.nickname).trim() ||
+		[title, company].filter(function(inP) { return inP; }).join(", ") ||
+		firstValue(p.emails) || firstValue(p.ims) || firstValue(p.phoneNumbers);
+}
+
+// Letters and digits of every script, for the divider of a sort key.
+var LETTER = /[A-Za-zÀ-ɏͰ-ϿЀ-ӿ֐-׿؀-ۿ぀-ヿ㐀-䶿一-鿿가-힯]/;
+var NO_SORT_KEY = "𧻓";   // SortKey.DEFAULT_CHAR: sorts after every letter
+
+/**
+	The divider a person is listed under, as the legacy PersonList's
+	getGroupName: the first letter of the sort key, without its accent and
+	in upper case; for the company orders the first letter of the company.
+	"#" when the person has none (the sort key starts with
+	SortKey.DEFAULT_CHAR).
+*/
+function dividerText(inPerson, inSortOrder) {
+	var p = inPerson || {}, key = str(p.sortKey), text;
+	if (!key || key.charAt(0) === NO_SORT_KEY || key.charAt(0) === "￿") {
+		return "#";
+	}
+	text = /^COMPANY/.test(str(inSortOrder)) ? str(p.organization && p.organization.name).trim() : key;
+	text = text.normalize ? text.normalize("NFD") : text;
+	var first = text.charAt(0);
+	return first && LETTER.test(first) ? first.toUpperCase() : "#";
+}
+
+module.exports = {format: format, parse: parse, equal: equal, displayName: displayName, dividerText: dividerText};

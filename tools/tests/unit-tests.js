@@ -16,6 +16,7 @@ var accountRules = require(path.join(SRC, "accountRules.js"));
 var contactEdit = require(path.join(SRC, "contactEdit.js"));
 var launch = require(path.join(SRC, "launch.js"));
 var details = require(path.join(SRC, "details.js"));
+var search = require(path.join(SRC, "search.js"));
 
 var ROOT = path.resolve(__dirname, "..", "..");
 var DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "mock", "db8-data.json"), "utf8"));
@@ -451,6 +452,63 @@ t.test("details: im: links", function() {
 	assert.strictEqual(details.imTarget("x&y=1", "type_other", "p"), "im:x%26y%3D1?personId=p");
 	assert.strictEqual(details.imTarget("a@b@c", "type_jabber", "p"), null);
 	assert.strictEqual(details.imTarget("  ", "type_jabber", "p"), null);
+});
+
+t.test("names: display names, as the legacy app made them", function() {
+	assert.strictEqual(names.displayName({name: {givenName: "小龙", familyName: "李"}}), "李小龙");
+	assert.strictEqual(names.displayName({name: {honorificPrefix: "Dr.", givenName: "Mary", middleName: "Ann", familyName: "Smith-Jones",
+		honorificSuffix: "PhD"}}), "Dr. Mary Ann Smith-Jones, PhD");
+	assert.strictEqual(names.displayName({name: {}, nickname: "Annie"}), "Annie");
+	assert.strictEqual(names.displayName({organization: {name: "Globex"}}), "Globex");
+	assert.strictEqual(names.displayName({organization: {title: "CEO", name: "Globex"}}), "CEO, Globex");
+	assert.strictEqual(names.displayName({organization: {title: "CEO"}}), "CEO");
+	assert.strictEqual(names.displayName({emails: [{value: ""}, {value: "a@b"}]}), "a@b");
+	assert.strictEqual(names.displayName({phoneNumbers: [{value: "555"}]}), "555");
+	assert.strictEqual(names.displayName({organization: "junk", emails: "junk"}), "");
+	assert.strictEqual(names.displayName(null), "");
+});
+t.test("names: list dividers", function() {
+	assert.strictEqual(names.dividerText({sortKey: "berg\tanna"}, "LAST_FIRST"), "B");
+	assert.strictEqual(names.dividerText({sortKey: "émile\tzola"}, "FIRST_LAST"), "E");
+	assert.strictEqual(names.dividerText({sortKey: "\ufad7555"}, "LAST_FIRST"), "#");
+	assert.strictEqual(names.dividerText({sortKey: "\ufad7\ufad7"}, "LAST_FIRST"), "#");
+	assert.strictEqual(names.dividerText({sortKey: ""}, "LAST_FIRST"), "#");
+	assert.strictEqual(names.dividerText({sortKey: "李\t小龙"}, "LAST_FIRST"), "李");
+	assert.strictEqual(names.dividerText({sortKey: "acme\tberg", organization: {name: "Acme"}}, "COMPANY_LAST_FIRST"), "A");
+	assert.strictEqual(names.dividerText({sortKey: "\ufad7\ufad7\tberg", organization: {}}, "COMPANY_LAST_FIRST"), "#");
+});
+
+// --- search ------------------------------------------------------------
+
+function finds(inPerson, inQuery) {
+	return search.matches(search.terms(inPerson), search.digits(inPerson), inQuery);
+}
+t.test("search: word starts, without case or accents, every word", function() {
+	var zoe = {name: {givenName: "Zoë", familyName: "Ångström"}};
+	assert.ok(finds(zoe, "zoe"));
+	assert.ok(finds(zoe, "ANGST"));
+	assert.ok(finds(zoe, "zo ang"));
+	assert.ok(!finds(zoe, "zoe smith"));
+	assert.ok(!finds(zoe, "oe"));
+	var anna = {names: [{givenName: "Anna", familyName: "van der Berg"}], nickname: "Annie B", organization: {name: "Acme Corp"},
+		emails: [{value: "anna.berg@acme.example"}], ims: [{value: "anna.vdberg"}]};
+	["berg", "anna berg", "van der", "annie", "acme", "corp", "vdberg"].forEach(function(q) {
+		assert.ok(finds(anna, q), q);
+	});
+	assert.ok(!finds(anna, "example"), "the domain of an address is not a name");
+	assert.ok(finds({name: {givenName: "小龙", familyName: "李"}}, "李小"));
+	assert.ok(finds({name: {givenName: "小龙", familyName: "李"}}, "小龙"));
+	assert.ok(finds({}, ""));
+	assert.ok(finds({}, "   "));
+	assert.ok(!finds({}, "x"));
+});
+t.test("search: digits find phone numbers", function() {
+	var mary = {phoneNumbers: [{value: "(555) 123-4567"}, {value: null}]};
+	assert.ok(finds(mary, "1234"));
+	assert.ok(finds(mary, "555 123"));
+	assert.ok(!finds(mary, "12"), "too short to search numbers");
+	assert.ok(!finds(mary, "999"));
+	assert.deepStrictEqual(search.digits(mary), ["5551234567"]);
 });
 
 t.run();

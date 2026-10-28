@@ -244,16 +244,21 @@
 			return matchOne(value, inClause.op, inClause.val);
 		});
 	}
+	var collator = new Intl.Collator("en", {sensitivity: "accent"});
 	function find(inQuery) {
 		var found = db.all(inQuery.from).filter(function(inR) {
 			return !inR._del && matches(inR, inQuery.where);
 		});
 		if (inQuery.orderBy) {
 			found.sort(function(a, b) {
-				var x = propValue(a, inQuery.orderBy), y = propValue(b, inQuery.orderBy);
+				var x = propValue(a, inQuery.orderBy), y = propValue(b, inQuery.orderBy), c;
 				x = x === undefined ? "" : x;
 				y = y === undefined ? "" : y;
-				return x < y ? -1 : x > y ? 1 : (a._id < b._id ? -1 : 1);
+				// db8 orders strings by the index's ICU collation; the person
+				// kind's sortKey index is collate "secondary" (case ignored,
+				// accents not), so "ångström" sorts among the A's.
+				c = typeof x === "string" && typeof y === "string" ? collator.compare(x, y) : (x < y ? -1 : x > y ? 1 : 0);
+				return c || (a._id < b._id ? -1 : 1);
 			});
 		}
 		if (inQuery.desc) {
@@ -310,21 +315,46 @@
 		var p = db.all("com.palm.app.contacts.prefs:1")[0];
 		return (p && p.listSortOrder) || "LAST_FIRST";
 	}
-	// The sort key the contacts service writes (SortKey in the contacts
-	// framework): names lowercased, tab separated; company first for the
-	// COMPANY_ orders. A person without the needed parts sorts last.
+	// The sort key the contacts service writes: the legacy contacts
+	// framework's SortKey._generateSortKeyHelper. Tab separated, lower case;
+	// the company first for the COMPANY_ orders (DEFAULT_CHAR twice when
+	// there is none); the display name when there is no given or family
+	// name; DEFAULT_CHAR in front of anything that does not start with a
+	// letter, so it sorts last.
+	var SORT_DEFAULT_CHAR = "\ufad7";
+	function displayNameOf(inPerson) {
+		var n = inPerson.name || {}, org = inPerson.organization || {};
+		var full = [n.honorificPrefix, n.givenName, n.middleName, n.familyName].filter(function(inP) { return inP; }).join(" ");
+		var first = function(inList) { return ((inList || []).filter(function(inE) { return inE && inE.value; })[0] || {}).value; };
+		return full || inPerson.nickname || [org.title, org.name].filter(function(inP) { return inP; }).join(", ") ||
+			first(inPerson.emails) || first(inPerson.ims) || first(inPerson.phoneNumbers) || "";
+	}
 	function sortKeyFor(inPerson) {
-		var order = sortOrder(), name = inPerson.name || {}, org = (inPerson.organization || {}).name || "";
-		var given = (name.givenName || "").toLowerCase(), family = (name.familyName || "").toLowerCase();
-		var names = /FIRST_LAST$/.test(order) ? [given, family] : [family, given];
+		var order = sortOrder(), name = inPerson.name || {}, key = "", tab = "\t";
+		var given = (name.givenName || "").trim(), family = (name.familyName || "").trim();
+		var company = ((inPerson.organization || {}).name || "").trim();
 		if (/^COMPANY/.test(order)) {
-			names.unshift(org.toLowerCase());
+			key += (company || SORT_DEFAULT_CHAR + SORT_DEFAULT_CHAR) + tab;
 		}
-		var key = names.filter(function(inN) { return inN; }).join("\t");
-		if (!key) {
-			key = (inPerson.nickname || org || (inPerson.emails[0] || {}).value || "").toLowerCase();
+		if (given || family) {
+			var parts = /FIRST_LAST$/.test(order) ? [given, family] : [family, given];
+			parts.forEach(function(inP) {
+				if (inP) {
+					key += inP + tab;
+				}
+			});
+		} else {
+			key += displayNameOf(inPerson).trim() + tab;
 		}
-		return key || "￿";
+		key = key.trim();
+		if (key) {
+			if (key.charAt(0) !== SORT_DEFAULT_CHAR && !/[^\u0000-\u0040\u005b-\u0060\u007b-\u00bf]/.test(key.charAt(0))) {
+				key = SORT_DEFAULT_CHAR + key;
+			}
+		} else {
+			key = SORT_DEFAULT_CHAR + SORT_DEFAULT_CHAR;
+		}
+		return key.toLocaleLowerCase().trim();
 	}
 	function sameValue(a, b) {
 		return String(a.value || "").toLowerCase().replace(/[\s()\-.]/g, "") === String(b.value || "").toLowerCase().replace(/[\s()\-.]/g, "");
