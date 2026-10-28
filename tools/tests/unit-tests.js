@@ -20,6 +20,7 @@ var search = require(path.join(SRC, "search.js"));
 var profiles = require(path.join(SRC, "profiles.js"));
 var presence = require(path.join(SRC, "presence.js"));
 var l10n = require(path.join(SRC, "l10n.js"));
+var gal = require(path.join(SRC, "gal.js"));
 
 var ROOT = path.resolve(__dirname, "..", "..");
 var DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "mock", "db8-data.json"), "utf8"));
@@ -187,6 +188,69 @@ t.test("accountRules: deleting a person deletes its writable contacts only", fun
 	assert.deepStrictEqual(accountRules.deletePlan([null, {}], ACCOUNTS), {action: "orphan", ids: []});
 	assert.deepStrictEqual(accountRules.deletePlan([{_id: "x", accountId: "gone"}], ACCOUNTS),
 		{action: "none", ids: [], readOnlyName: ""});
+});
+
+// --- global address lookup ---------------------------------------------
+
+var EAS = {_id: "acct-eas", templateId: "com.palm.eas", capabilityProviders: [
+	{capability: "CONTACTS", id: "com.palm.eas.contacts", query: "palm://com.palm.eas/notGal"},
+	{capability: "REMOTECONTACTS", id: "com.palm.eas.remotecontacts", query: "palm://com.palm.eas/queryGal"}]};
+
+t.test("gal: the accounts that can be searched, from their REMOTECONTACTS query", function() {
+	assert.deepStrictEqual(gal.providers(ACCOUNTS), [], "the mock accounts have none");
+	assert.deepStrictEqual(gal.providers(ACCOUNTS.concat([EAS])), [{accountId: "acct-eas", service: "luna://com.palm.eas", method: "queryGal"}]);
+	var luna = JSON.parse(JSON.stringify(EAS));
+	luna.capabilityProviders[1].query = "luna://org.example.gal/directory/find";
+	assert.deepStrictEqual(gal.providers([luna]), [{accountId: "acct-eas", service: "luna://org.example.gal", method: "directory/find"}]);
+	["", "queryGal", "palm://com.palm.eas/", "javascript:alert(1)", "palm://com.palm.eas/queryGal?x=1", 5, null].forEach(function(inQuery) {
+		var a = JSON.parse(JSON.stringify(EAS));
+		a.capabilityProviders[1].query = inQuery;
+		assert.deepStrictEqual(gal.providers([a]), [], JSON.stringify(inQuery));
+	});
+	var gone = JSON.parse(JSON.stringify(EAS));
+	gone.beingDeleted = true;
+	assert.deepStrictEqual(gal.providers([gone, null, {}, {_id: "x", capabilityProviders: "no"}]), []);
+	assert.deepStrictEqual(gal.providers(undefined), []);
+});
+t.test("gal: the results of every account as one list by name, nameless ones left out", function() {
+	var merged = gal.merge([
+		[{displayName: "Zed Zimmer"}, {givenName: "Anna", familyName: "Berg"}, null, "x", [], {}],
+		[{emails: [{value: "bob@corp.example"}]}, {displayName: "  "}],
+		"not a list"
+	]);
+	assert.deepStrictEqual(merged.map(gal.displayName), ["Anna Berg", "bob@corp.example", "Zed Zimmer"]);
+	assert.deepStrictEqual(gal.merge(null), []);
+});
+t.test("gal: a result as a contact, and as a person for the details", function() {
+	var r = {displayName: "Berg, Anna", givenName: "Anna", familyName: "Berg", companyName: "Acme", jobTitle: "Engineer",
+		phoneNumbers: [{value: "+31 20 555 0101", type: "type_mobile"}, {value: " ", type: "type_home"}, {value: "+31 20 555 0199"}],
+		emails: [{value: "anna.berg@acme.example", type: "type_work"}],
+		addresses: [{value: "Damrak 1\n1012 LG Amsterdam", type: "type_work"}, "Rokin 2"]};
+	assert.deepStrictEqual(gal.contact(r), {
+		name: {givenName: "Anna", familyName: "Berg"},
+		organizations: [{name: "Acme", title: "Engineer"}],
+		phoneNumbers: [{value: "+31 20 555 0101", type: "type_mobile"}, {value: "+31 20 555 0199", type: "type_work"}],
+		emails: [{value: "anna.berg@acme.example", type: "type_work"}],
+		addresses: [{streetAddress: "Damrak 1\n1012 LG Amsterdam", type: "type_work"}, {streetAddress: "Rokin 2", type: "type_work"}]
+	});
+	var p = gal.person(r);
+	assert.deepStrictEqual(p.organization, {name: "Acme", title: "Engineer"});
+	assert.strictEqual(p.organizations, undefined);
+	assert.deepStrictEqual(gal.contact({displayName: "Conference Room 3"}).name, {givenName: "Conference Room 3", familyName: ""});
+	assert.deepStrictEqual(gal.contact({phoneNumbers: "x", emails: [null, 5]}), {phoneNumbers: [], emails: [], addresses: []});
+	assert.deepStrictEqual(gal.person({}).organization, {});
+	// What Add to Contacts starts from keeps all of it.
+	var template = launch.template(gal.contact(r));
+	assert.deepStrictEqual(template.name, {givenName: "Anna", familyName: "Berg"});
+	assert.strictEqual(template.phoneNumbers.length, 2);
+	assert.strictEqual(template.organizations[0].name, "Acme");
+});
+t.test("gal: what the list says under the results", function() {
+	assert.strictEqual(gal.message(0), "none");
+	assert.strictEqual(gal.message(1), "");
+	assert.strictEqual(gal.message(99), "");
+	assert.strictEqual(gal.message(100), "tooMany");
+	assert.strictEqual(gal.LIMIT, 100);
 });
 
 // --- localisation ------------------------------------------------------

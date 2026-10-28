@@ -50,7 +50,7 @@ var server, browser, page;
 
 /**
 	Opens the app on a fresh mock bus.
-	inOptions: {data, launchParams, width, height, luna, vcards, acg, delay, firstLaunch, locale}
+	inOptions: {data, launchParams, width, height, luna, vcards, gal, acg, delay, firstLaunch, locale}
 */
 async function open(inOptions) {
 	var o = inOptions || {};
@@ -62,6 +62,7 @@ async function open(inOptions) {
 		launchParams: o.launchParams || {},
 		luna: o.luna || {},
 		vcards: o.vcards || {},
+		gal: o.gal || {},
 		acg: o.acg || ACG,
 		delay: o.delay || 0,
 		firstLaunch: !!o.firstLaunch,
@@ -1299,6 +1300,143 @@ t.test("first use: back leaves it for good; not over another app's launch, nor o
 	assert.strictEqual((await lunaCalls("com.palm.db/find")).filter(function(c) {
 		return c.params.query.from === "com.palm.firstlaunch:1";
 	}).length, 1, "checked once");
+});
+
+// --- global address lookup ---------------------------------------------
+
+// An Exchange account as the legacy com.palm.eas template had it: its
+// REMOTECONTACTS provider names the GAL query.
+var EAS_ACCOUNT = {_id: "acct-eas", templateId: "com.palm.eas", alias: "Exchange", username: "me@corp.example",
+	capabilityProviders: [{capability: "REMOTECONTACTS", id: "com.palm.eas.remotecontacts",
+		implementation: "palm://com.palm.eas/", query: "palm://com.palm.eas/queryGal"}]};
+// What the legacy EasGalContactAdapter wrote for an entry.
+var GAL_ENTRIES = [
+	{displayName: "Berg, Annelies", givenName: "Annelies", familyName: "Berg", companyName: "Acme", jobTitle: "Lawyer",
+		phoneNumbers: [{value: "+31 20 555 0300", type: "type_work"}, {value: "+31 6 5550 0301", type: "type_mobile"}],
+		emails: [{value: "annelies.berg@corp.example", type: "type_work"}],
+		addresses: [{value: "Damrak 1, 1012 LG Amsterdam", type: "type_work"}]},
+	{displayName: "Annex Meeting Room", emails: [{value: "annex@corp.example", type: "type_work"}]},
+	{displayName: "Zander Zee", givenName: "Zander", familyName: "Zee", emails: [{value: "zz@corp.example", type: "type_work"}]}
+];
+// com.palm.eas has no ACG table on LuneOS yet (see the test below), and
+// org.example.gal is made up: let them through here.
+function galAcg() {
+	return {groups: ACG.groups, granted: ACG.granted, exempt: ["^luna://com\\.palm\\.eas/", "^luna://org\\.example\\.gal/"]};
+}
+async function openGal(inOptions) {
+	var d = data(), o = inOptions || {};
+	d.accounts = d.accounts.concat(o.accounts || [EAS_ACCOUNT]);
+	await open({data: d, gal: o.gal || {"acct-eas": GAL_ENTRIES}, acg: galAcg(), luna: o.luna});
+}
+function galShowing() {
+	return visible("[id$=_galSearchBtn]");
+}
+function galItems() {
+	return page.eval("Array.prototype.map.call(document.querySelectorAll('.gal-item'),function(e){return e.textContent;})");
+}
+function galMessage() {
+	return page.eval("(function(){var e=document.querySelector('.gal-message');" +
+		"return e && e.getBoundingClientRect().height>0 ? e.textContent : '';})()");
+}
+
+t.test("gal: searching All offers the global address list; a result shows read-only and can be added", async function() {
+	await openGal();
+	assert.strictEqual(await galShowing(), false, "not without a search");
+	await search("anne", 0);
+	assert.strictEqual(await galShowing(), true);
+	await page.tapText("[id$=_tabs] .onyx-radiobutton", "Favourites");
+	await sleep(200);
+	assert.strictEqual(await galShowing(), false, "not on Favourites");
+	await page.tapText("[id$=_tabs] .onyx-radiobutton", "All");
+	await page.waitFor("document.querySelector('[id$=_galSearchBtn]').getBoundingClientRect().width > 0");
+	await page.tap("[id$=_galSearchBtn]");
+	await page.waitFor("document.querySelectorAll('.gal-item').length === 2");
+	assert.deepStrictEqual(await galItems(), ["Annex Meeting Room", "Berg, Annelies"], "sorted by name");
+	assert.deepStrictEqual((await lunaCalls("com.palm.eas/queryGal")).map(function(c) { return c.params; }),
+		[{accountId: "acct-eas", query: "anne", limit: 100}]);
+	assert.strictEqual(await galMessage(), "");
+	await shot("gal-results");
+
+	await page.tapText(".gal-item", "Berg, Annelies");
+	await waitForDetails("Annelies Berg");
+	assert.strictEqual(await text("[id$=_header_job]"), "Lawyer, Acme");
+	var rows = await detailRows();
+	assert.ok(rows.some(function(r) { return r[0] === "Work" && r[1] === "+31 20 555 0300"; }), JSON.stringify(rows));
+	assert.ok(rows.some(function(r) { return r[0] === "Mobile" && r[1] === "+31 6 5550 0301"; }));
+	assert.ok(rows.some(function(r) { return r[1] === "annelies.berg@corp.example"; }));
+	assert.ok(rows.some(function(r) { return r[1] === "Damrak 1, 1012 LG Amsterdam"; }));
+	assert.strictEqual(await visible("[id$=_editContactBtn]"), false, "no edit");
+	assert.strictEqual(await visible("[id$=_header_favourite]"), false, "no favourite");
+	assert.strictEqual(await visible("[id$=_header_profilesButton]"), false, "no linked profiles");
+	assert.strictEqual(await visible("[id$=_addToContactsBtn]"), true);
+	await shot("gal-details");
+
+	await page.tap("[id$=_addToContactsBtn]");
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_addPrompt]');return e && e.getBoundingClientRect().width>0;})()");
+	await page.tap("[id$=_addNewBtn]");
+	await waitForEdit("Annelies Berg");
+	assert.strictEqual(await page.eval("document.querySelector('[id$=_organizationInput]').value"), "Acme");
+	await save();
+	var c = (await lunaCalls("linker/saveNewPersonAndContacts"))[0].params.contacts[0];
+	assert.deepStrictEqual([c.name.givenName, c.name.familyName], ["Annelies", "Berg"]);
+	assert.deepStrictEqual(c.phoneNumbers.map(function(p) { return p.value; }), ["+31 20 555 0300", "+31 6 5550 0301"]);
+	assert.strictEqual(c.emails[0].value, "annelies.berg@corp.example");
+	assert.strictEqual(c.organizations[0].name, "Acme");
+	await waitForDetails("Annelies Berg");
+	assert.strictEqual(await visible("[id$=_editContactBtn]"), true, "now a contact of the device");
+	assert.strictEqual(await visible("[id$=_addToContactsBtn]"), false);
+});
+
+t.test("gal: none found, over 100, a failing account skipped, and a new search drops the old results", async function() {
+	var many = [];
+	for (var i = 0; i < 120; i++) {
+		many.push({displayName: "Anne " + (1000 + i), emails: [{value: "ann" + i + "@big.example", type: "type_work"}]});
+	}
+	var other = {_id: "acct-other", templateId: "org.example.gal", alias: "Directory",
+		capabilityProviders: [{capability: "REMOTECONTACTS", query: "palm://org.example.gal/query"}]};
+	await openGal({accounts: [EAS_ACCOUNT, other], gal: {"acct-eas": many},
+		luna: {"luna://org.example.gal/query": {error: {errorCode: -1, errorText: "offline"}}}});
+	await search("anne", 0);
+	await page.tap("[id$=_galSearchBtn]");
+	await page.waitFor("document.querySelectorAll('.gal-item').length === 100");
+	assert.strictEqual(await galMessage(), "Over 100 results found. Please narrow your search query.");
+	assert.strictEqual((await lunaCalls("org.example.gal/query")).length, 1, "the other account was asked too");
+
+	await search("annq", 0);
+	assert.deepStrictEqual(await galItems(), [], "a new search drops the old results");
+	assert.strictEqual(await galMessage(), "");
+	await page.tap("[id$=_galSearchBtn]");
+	await page.waitFor("(function(){var e=document.querySelector('.gal-message');return e && e.textContent.length > 0;})()");
+	assert.strictEqual(await galMessage(), "No search results found");
+
+	// An answer that comes after the search changed is not shown.
+	await page.eval("__MOCK__.set('luna://com.palm.eas/queryGal', {json: {results: [{displayName: 'Late Larry'}]}, delay: 500})");
+	await page.tap("[id$=_galSearchBtn]");
+	await search("anne", 0);
+	await sleep(800);
+	assert.deepStrictEqual(await galItems(), []);
+	assert.strictEqual(await galMessage(), "");
+	assert.strictEqual(await visible(".gal-spinner"), false);
+});
+
+t.test("gal: no section without an account that has one; LuneOS's hub has no ACG group for com.palm.eas yet", async function() {
+	await open();
+	await search("anne", 0);
+	assert.strictEqual(await galShowing(), false);
+
+	// With the device's ACG tables the query is refused: whoever packages
+	// mojomail-eas gives com.palm.eas/queryGal an ACG group, and this app
+	// asks for it in appinfo.json; this test then fails, as a reminder.
+	var d = data();
+	d.accounts = d.accounts.concat([EAS_ACCOUNT]);
+	await open({data: d, gal: {"acct-eas": GAL_ENTRIES}});
+	await search("anne", 0);
+	await page.tap("[id$=_galSearchBtn]");
+	await page.waitFor("(function(){var e=document.querySelector('.gal-message');return e && e.textContent.length > 0;})()");
+	assert.strictEqual(await galMessage(), "No search results found", "a refused account is skipped");
+	var calls = await page.eval("__MOCK__.calls.filter(function(c){return /com\\.palm\\.eas\\/queryGal/.test(c.url);}).map(function(c){return c.acg;})");
+	assert.deepStrictEqual(calls, ["unknown"]);
+	await page.eval("__MOCK__.calls.forEach(function(c){if(/com\\.palm\\.eas\\//.test(c.url)){c.acg='expected-denial: '+c.acg;}})");
 });
 
 // --- localisation ------------------------------------------------------

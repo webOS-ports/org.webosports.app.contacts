@@ -1172,3 +1172,54 @@ border-top-color:rgba(255,255,255,0.5);
     float: left;
     margin: 0.1em 0.5em 0 0;
 }
+
+/* Global address lookup (ContactsBar's galBox) */
+
+.gal-box {
+    border-top: 1px solid #bbb;
+    background-color: #e5e5e5;
+    /* clear of the list's floating add button */
+    padding-bottom: 4rem;
+}
+.gal-divider {
+    padding: 2px 14px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #1879cd;
+    background: rgba(0,0,0,0.05);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+.gal-search-row {
+    padding: 0.5rem;
+}
+.gal-search-row .onyx-button {
+    min-width: 12rem;
+    vertical-align: middle;
+}
+.gal-spinner {
+    vertical-align: middle;
+    margin-left: 0.5rem;
+}
+.gal-results {
+    max-height: 40vh;
+}
+.gal-item {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #d0d0d0;
+    background-color: #fff;
+    text-align: left;
+    font-size: 20px;
+}
+.gal-item.selected,
+.gal-item:active {
+    background-color: #c8dff3;
+}
+.gal-message {
+    padding: 0.75rem 1rem;
+    color: #888;
+}
+.details-add-gal.onyx-button {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.5rem;
+}

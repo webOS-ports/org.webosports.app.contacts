@@ -79,7 +79,8 @@ module.exports = kind({
 							onPersonChanged: "savePerson",
 							onEdit: "showEdit",
 							onLinkProfiles: "linkProfiles",
-							onAlterSearch: 'alterSearch'
+							onAlterSearch: 'alterSearch',
+							onAddToContacts: "addGalContact"
 						}
                     ]
                 }
@@ -367,6 +368,11 @@ module.exports = kind({
     		this.importVCard(what.target);
     		break;
     	}
+    },
+    // A global address list entry: add it as a new contact, or to one.
+    addGalContact: function (inSender, inEvent) {
+    	this.$.addPrompt.ask(launch.template(inEvent.contact));
+    	return true;
     },
     promptAddNew: function (inSender, inEvent) {
     	this.$.editContact.newPerson(inEvent.contact);

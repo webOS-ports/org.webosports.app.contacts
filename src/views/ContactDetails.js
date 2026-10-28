@@ -96,7 +96,8 @@ module.exports = kind({
     events: {
     	onPersonChanged: "",
     	onEdit: "",
-        onAlterSearch: ''
+        onAlterSearch: '',
+        onAddToContacts: ""   // {contact}: a global address list entry, to be added
     },
     components: [
         {
@@ -166,7 +167,9 @@ module.exports = kind({
         ]},
         { name: "editContactBtn", kind: Button, style: "position: absolute; right: 0.5rem; bottom: 0.5rem;", ontap: "doEdit", components: [
             {kind: Icon, src: "assets/btn_edit.png"}
-        ]}
+        ]},
+        { name: "addToContactsBtn", kind: Button, classes: "onyx-affirmative details-add-gal", showing: false,
+            content: $L("Add to Contacts"), ontap: "addToContactsTap" }
 
     ],
     bindings: [
@@ -207,7 +210,11 @@ module.exports = kind({
         if (!newPerson) {
             return;
         }
-        var personId = newPerson.get("_id");
+        // A global address list entry is no contact of the device's.
+        var personId = newPerson.get("_id"), remote = !!newPerson.get("gal");
+        this.$.header.set("remote", remote);
+        this.$.editContactBtn.set("showing", !remote);
+        this.$.addToContactsBtn.set("showing", remote);
         this.$.detailsCollection.add(details.rows(newPerson.raw(), i18n.formatDate).map(function (inRow) {
             return {
                 key: inRow.key,
@@ -221,6 +228,14 @@ module.exports = kind({
                 presence: inRow.key === "ims" ? presence.addressClass(inRow.entry) : ""
             };
         }));
+    },
+
+    addToContactsTap: function () {
+        var contact = this.person && this.person.get("galContact");
+        if (contact) {
+            this.doAddToContacts({contact: contact});
+        }
+        return true;
     },
 
     detailTap: function (inSender, inEvent) {

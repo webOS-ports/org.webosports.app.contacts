@@ -28,6 +28,7 @@
 	  - com.palm.service.accounts/listAccounts, com.palm.applicationManager
 	    open/launch, com.webos.service.activitymanager/create: recorded and
 	    answered.
+	  - com.palm.eas/queryGal, the Exchange global address list, from config.gal.
 	  - ls-hubd's ACG check, when config.acg is given (see the weather app's
 	    tools/tests for the same scheme).
 
@@ -42,6 +43,7 @@
 	  firstLaunch: true   the app has never run: First use shows (unless
 	                   data.firstLaunch says otherwise)
 	  vcards: {"/path.vcf": {contacts: [...]}}
+	  gal: {accountId: [{displayName, givenName, ...}]}   com.palm.eas/queryGal's entries
 	  luna: {"luna://svc/method": rule}   overrides, rule = {json} | {error} | {delay} | {never}
 	  delay: ms        answer every call this late (default 0)
 	  acg: {groups, granted, exempt}
@@ -660,6 +662,31 @@
 		},
 		"luna://com.webos.service.activitymanager/create": function() {
 			return ok({activityId: nextId++});
+		},
+
+		// The legacy mojomail-eas queryGal (EasBusDispatcher::QueryGal and
+		// EasGalContactAdapter): accountId, query and limit are required;
+		// it answers {results, count, total}. Here the entries of
+		// config.gal[accountId] whose displayName or email holds the query.
+		"luna://com.palm.eas/queryGal": function(inParams) {
+			var p = inParams || {};
+			if (typeof p.accountId !== "string" || typeof p.query !== "string" || typeof p.limit !== "number") {
+				return fail(-1, "required property not found");
+			}
+			if (!p.query) {
+				return fail(22, "Invalid query string");
+			}
+			if (p.limit <= 0) {
+				return fail(22, "Invalid limit.  Must be > 0");
+			}
+			var q = p.query.toLowerCase();
+			var all = ((config.gal || {})[p.accountId] || []).filter(function(inR) {
+				return (inR.displayName || "").toLowerCase().indexOf(q) >= 0 || (inR.emails || []).some(function(inE) {
+					return (inE.value || "").toLowerCase().indexOf(q) >= 0;
+				});
+			});
+			var results = clone(all.slice(0, p.limit));
+			return ok({results: results, count: results.length, total: all.length});
 		}
 	};
 

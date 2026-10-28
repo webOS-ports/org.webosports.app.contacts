@@ -23,7 +23,8 @@ module.exports = kind({
         nickname: "",
         job: "",
         favorite: "",
-        contactIds: ""
+        contactIds: "",
+        remote: false   // a global address list entry: no favourite, no linked profiles
     },
     events: {
         onProfileTap: "",     // {contactId}
@@ -86,6 +87,13 @@ module.exports = kind({
         }
     ],
     
+    remoteChanged: function () {
+        this.$.favourite.set("showing", !this.remote);
+        this.$.profilesButton.set("showing", !this.remote);
+        if (this.remote) {
+            this.$.profilesDrwr.set("open", false);
+        }
+    },
     contactIdsChanged: function () {
         var count = Array.isArray(this.contactIds) ? this.contactIds.length : 0;
         this.$.profilesCount.set("content", count === 1 ? $L("1 profile") :
