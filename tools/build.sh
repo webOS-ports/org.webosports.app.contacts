@@ -38,7 +38,7 @@ if [ "$1" = "--production" ]; then
 	fi
 else
 	enyo pack --clean
-	# The mock bus has to be in place before enyo-luneos looks for PalmSystem.
+	# The mock bus has to be in place before webos-lib looks for PalmSystem.
 	sed 's|<script src="enyo.js"></script>|<script src="mock/luna-bus.js"></script>\n    &|' dist/index.html > dist/debug.html
 	grep -q 'mock/luna-bus.js' dist/debug.html
 fi

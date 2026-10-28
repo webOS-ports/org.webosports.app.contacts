@@ -28,7 +28,7 @@ var
 	links = require('../data/links'),
 	services = require('../data/services'),
 	$L = require('enyo/i18n').$L;
-require('enyo-luneos');
+require('webos-lib');
 
 // The cards (list and details, or the edit view) are a Panels of their
 // own: a popup inside a Panels would be one of its panels, and hidden by
@@ -111,7 +111,7 @@ module.exports = kind({
             onwebOSRelaunch: "relaunch",
             onactivate: "windowActivated",
             // A tap on the app's name in the status bar relaunches the app
-            // with palm-command "open-app-menu", which enyo-luneos passes on
+            // with palm-command "open-app-menu", which webos-lib passes on
             // as menubutton.
             onmenubutton: "toggleAppMenu"
         }
@@ -237,7 +237,7 @@ module.exports = kind({
 		}
 	},
     
-    // enyo-webos and enyo-luneos both pass the menubutton event on, so
+    // enyo-webos and webos-lib both pass the menubutton event on, so
     // each tap arrives twice: the same event is one tap.
     toggleAppMenu: function (inSender, inEvent) {
     	if (inEvent && inEvent === this.lastMenuEvent) {
@@ -306,7 +306,7 @@ module.exports = kind({
     /**
 		A launch while running: the event's detail holds the launch
 		parameters. WAM sends the event and also calls Mojo.relaunch(), which
-		enyo-luneos turns into a second event: the same parameters again
+		webos-lib turns into a second event: the same parameters again
 		within a second are the same relaunch.
     */
     relaunch: function (inSender, inEvent) {

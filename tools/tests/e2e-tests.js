@@ -1091,9 +1091,10 @@ t.test("launch: an unreadable vCard says so", async function() {
 var GOOGLE = "++HqVF6BEhSPSfq0", PALM = "++HoXVTTqIccE0m1", SIM = "++HoXVohVCoSQNS7", SKYPE = "++HnY2Qbp2pHNVFT";
 
 // The status bar's app name: WAM relaunches with palm-command
-// "open-app-menu", and enyo-luneos turns that into a menubutton event.
+// "open-app-menu", and webos-lib turns that into a menubutton event. The
+// test sends only the relaunch, so the library has to recognise the device.
 async function menuButton() {
-	await page.eval("__MOCK__.relaunch({'palm-command': 'open-app-menu'}); document.dispatchEvent(new Event('menubutton'))");
+	await page.eval("__MOCK__.relaunch({'palm-command': 'open-app-menu'})");
 }
 async function openPrefs() {
 	await menuButton();

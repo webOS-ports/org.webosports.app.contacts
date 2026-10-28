@@ -795,7 +795,10 @@
 	var palm = {
 		identifier: CALLER + " 0",
 		launchParams: JSON.stringify(config.launchParams || {}),
-		deviceInfo: JSON.stringify({modelName: "Mock", platformVersion: "LuneOS mock",
+		// The version as a LuneOS device reports it (qemux86-64, WAM 151):
+		// a minor version of 0, which enyo-webos's platform test misses.
+		deviceInfo: JSON.stringify({modelName: "Mock", platformVersion: "3.0.5", platformVersionMajor: 3,
+			platformVersionMinor: 0, platformVersionDot: 5,
 			screenWidth: window.innerWidth, screenHeight: window.innerHeight, keyboardType: "QWERTY"}),
 		locale: config.locale || "en_us",
 		localeRegion: "us",
@@ -886,7 +889,7 @@
 
 	// What WAM's WebPageBase::SendRelaunchEvent does: a webOSRelaunch
 	// CustomEvent with the parameters as detail, then Mojo.relaunch() for
-	// legacy apps (which enyo-luneos turns into a second webOSRelaunch).
+	// legacy apps (which webos-lib turns into a second webOSRelaunch).
 	mock.relaunch = function(inParams) {
 		var detail = clone(inParams || {});
 		setTimeout(function() {
