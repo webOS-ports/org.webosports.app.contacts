@@ -24,7 +24,8 @@ module.exports = kind({
         globalPersonCollection: null,
         favorites: false,
         searchText: "",
-        excludeId: ""   // a person left out (the one a picker links to)
+        excludeId: "",   // a person left out (the one a picker links to)
+        nonFavorites: false   // only persons that are not favourites (Add Favorite)
     },
     dividers: null,
 
@@ -35,13 +36,17 @@ module.exports = kind({
         this.refilter.apply(this, arguments);
     },
     refilter: function () {
-        var favorites = this.favorites, excludeId = this.excludeId, searchText = this.searchText || "";
+        var favorites = this.favorites, nonFavorites = this.nonFavorites, excludeId = this.excludeId,
+            searchText = this.searchText || "";
         this.empty();
         if (!this.globalPersonCollection) {
             return;
         }
         var found = this.globalPersonCollection.filter(function (item) {
             if (favorites && !item.get("favorite")) {
+                return false;
+            }
+            if (nonFavorites && item.get("favorite")) {
                 return false;
             }
             if (excludeId && item.get("_id") === excludeId) {

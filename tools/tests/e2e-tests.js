@@ -167,6 +167,33 @@ t.test("list: search narrows the list by name, nickname, company and email", asy
 	assert.deepStrictEqual(await listNames(), ["Globex Corporation"]);
 });
 
+t.test("list: Add Favorite on the Favourites tab offers the others, and makes the pick a favourite", async function() {
+	await open();
+	assert.strictEqual(await visible("[id$=_addFavoriteBtn]"), false, "not on the All tab");
+	await page.tapText("[id$=_contactsBar_tabs] *", "Favourites");
+	await page.waitFor("document.querySelectorAll('[id*=_allContactsList] .contacts-item .name').length === 2");
+	assert.strictEqual(await visible("[id$=_addFavoriteBtn]"), true);
+	await page.tap("[id$=_addFavoriteBtn]");
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_personPicker]');return e && e.getBoundingClientRect().width>0;})()");
+	var offered = await page.eval("(function(){var c=contactsApp.view.$.personPicker.$.list.collection,o=[];" +
+		"for(var i=0;i<c.length;i++){o.push(c.at(i).get('displayName'));}return o;})()");
+	assert.strictEqual(offered.length, 11, offered.join(", "));
+	assert.ok(offered.indexOf("Anna van der Berg") < 0 && offered.indexOf("Émile Zola") < 0, "favourites are not offered");
+	await page.fill("[id$=_personPicker] input", "gina");
+	await page.waitFor("document.querySelectorAll('[id$=_personPicker] .contacts-item .name').length === 1");
+	await page.tapText("[id$=_personPicker] .contacts-item", "Gina Talk");
+	await page.waitFor("document.querySelectorAll('[id*=_allContactsList] .contacts-item .name').length === 3");
+	assert.deepStrictEqual((await lunaCalls("service.contacts/favoritePerson")).map(function(c) { return c.params; }),
+		[{personId: "p-gina"}]);
+	assert.deepStrictEqual((await listNames()).sort(), ["Anna van der Berg", "Gina Talk", "Émile Zola"]);
+	// The picker's other uses still offer everyone.
+	await page.tapText("[id$=_contactsBar_tabs] *", "All");
+	assert.strictEqual(await visible("[id$=_addFavoriteBtn]"), false);
+	await relaunch({launchType: "addToExisting", contact: {emails: [{value: "x@example.com"}]}});
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_personPicker]');return e && e.getBoundingClientRect().width>0;})()");
+	assert.strictEqual(await page.eval("contactsApp.view.$.personPicker.$.list.collection.length"), 13);
+});
+
 //* [name, divider or ""] of every person in the list collection, in order.
 function listGroups() {
 	return page.eval("(function(){var c=contactsApp.view.$.contactsBar.$.allContactsList.collection, out=[];" +
@@ -367,8 +394,11 @@ t.test("startup: every service call is one the hub allows", async function() {
 
 async function openEdit(inName) {
 	await tapPerson(inName);
-	// On a narrow screen the details slide in first.
-	await page.waitFor("!contactsApp.view.$.main.transitionPoints.length");
+	// The details slide in first (on a narrow screen, the whole card).
+	await page.waitFor("!contactsApp.view.$.main.transitionPoints.length && " +
+		"!contactsApp.view.$.detailsPanel.transitionPoints.length && (function(){" +
+		"var r=document.querySelector('[id$=_editContactBtn]').getBoundingClientRect();" +
+		"return r.width>0 && r.left>=0 && r.right<=window.innerWidth;})()");
 	await page.tap("[id$=_editContactBtn]");
 	await page.waitFor("(function(){var e=document.querySelector('[id$=_nameInput]');return e && e.getBoundingClientRect().width > 0;})()");
 }

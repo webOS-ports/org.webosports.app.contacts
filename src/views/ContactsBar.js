@@ -6,6 +6,7 @@ var
     Toolbar = require('onyx/Toolbar'),
     InputSearchStretch = require('enyo-animated/InputSearchStretch'),
     RadioGroup = require('onyx/RadioGroup'),
+    Button = require('onyx/Button'),
     AllPersonCollection = require('../data/AllPersonCollection'),
     ContactsList = require('./ContactsList'),
     $L = require('enyo/i18n').$L;   // no-op placeholder
@@ -20,7 +21,8 @@ module.exports = kind({
         globalPersonCollection: null
     },
     events: {
-        onSelected: ""
+        onSelected: "",
+        onAddFavorite: ""
     },
     components: [
         {
@@ -44,6 +46,9 @@ module.exports = kind({
         },
         // Why the list is empty: no contacts, no favourites, or no match.
         { name: "message", classes: "contacts-list-message", showing: false },
+        // On the Favourites tab only, as the legacy list's Add Favorite.
+        { name: "addFavoriteBtn", kind: Button, classes: "contacts-add-favorite", content: $L("Add Favorite"),
+            showing: false, ontap: "addFavoriteTap" },
         { name: "allContactsList", kind: ContactsList, fit: true, collection: new AllPersonCollection(), ontap: "selectPerson" }
     ],
 
@@ -55,6 +60,8 @@ module.exports = kind({
     paneChange: function (inSender, inEvent) {
         if (inEvent.originator.getActive()) {
             this.$.allContactsList.collection.set('favorites', inEvent.originator.favorites);
+            this.$.addFavoriteBtn.set("showing", !!inEvent.originator.favorites);
+            this.resize();
         }
     },
 
@@ -93,6 +100,11 @@ module.exports = kind({
         this.$.message.set("content", message);
         this.$.message.set("showing", !!message);
         this.resize();
+    },
+
+    addFavoriteTap: function () {
+        this.doAddFavorite();
+        return true;
     },
 
     selectPerson: function (inSender, inEvent) {

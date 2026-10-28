@@ -44,7 +44,7 @@ module.exports = kind({
             fit: true,
             components: [
                 { style: "width: 38.2%;" /* golden ratio */, components: [
-                	{ name: "contactsBar", kind: ContactsBar, classes: "enyo-fit", onSelected: "showPerson" },
+                	{ name: "contactsBar", kind: ContactsBar, classes: "enyo-fit", onSelected: "showPerson", onAddFavorite: "addFavorite" },
                     { name: "addContactBtn", kind: Button, style: "position: absolute; right: 0.5rem; bottom: 0.5rem;", ontap: "showAdd", components: [
                         {kind: Icon, src: "assets/btn_add_contact.png"}
                     ]}
@@ -336,52 +336,57 @@ module.exports = kind({
     	this.$.cards.setIndex(1);
     	return true;
     },
+    // The person picker serves three purposes; pickFor says which one is
+    // under way: {link: personId} | {addTo: contact template} | {favorite: true}.
     // "Link More Profiles": pick another person, whose contacts join this one.
     linkProfiles: function () {
     	var person = this.$.contactDetails.person;
     	if (!person) {
     		return true;
     	}
-    	this.contactToAdd = null;
-    	this.linkTo = person.get("_id");
+    	this.pickFor = {link: person.get("_id")};
     	this.$.personPicker.pick($L("Link which contact to {name}?").replace("{name}", person.get("displayName")),
-    		this.globalPersonCollection, this.linkTo);
+    		this.globalPersonCollection, person.get("_id"));
     	return true;
     },
     promptAddToExisting: function (inSender, inEvent) {
-    	this.linkTo = null;
-    	this.contactToAdd = inEvent.contact;
+    	this.pickFor = {addTo: inEvent.contact};
     	this.$.cards.setIndex(0);
     	this.$.personPicker.pick($L("Add to which contact?"), this.globalPersonCollection, "");
     	return true;
     },
+    // The Favourites tab's Add Favorite, as the legacy AddFavoriteList: only
+    // persons that are not favourites yet are offered.
+    addFavorite: function () {
+    	this.pickFor = {favorite: true};
+    	this.$.personPicker.pick($L("Add a favorite"), this.globalPersonCollection, "", true);
+    	return true;
+    },
     personPicked: function (inSender, inEvent) {
-    	var template = this.contactToAdd, linkTo = this.linkTo;
-    	this.contactToAdd = null;
-    	this.linkTo = null;
-    	if (linkTo) {
-    		if (inEvent.person.get("_id") !== linkTo) {
-    			links.link(linkTo, inEvent.person.get("_id"), this.bindSafely(function (inError) {
+    	var pickFor = this.pickFor || {}, personId = inEvent.person.get("_id");
+    	this.pickFor = null;
+    	if (pickFor.link) {
+    		if (personId !== pickFor.link) {
+    			links.link(pickFor.link, personId, this.bindSafely(function (inError) {
     				if (inError) {
     					services.banner($L("Could not link the contacts") +
     						(inError.errorCode !== undefined ? " (" + inError.errorCode + ")" : ""));
     				}
     			}));
     		}
-    		return true;
+    	} else if (pickFor.favorite) {
+    		services.call(services.CONTACTS, "favoritePerson", {personId: personId});
+    	} else if (pickFor.addTo) {
+    		saveEdit.addToPerson(inEvent.person.raw(), pickFor.addTo, this.bindSafely(function (inPersonId, inError) {
+    			if (inError) {
+    				services.banner($L("Could not save the contact") +
+    					(inError.errorCode !== undefined ? " (" + inError.errorCode + ")" : ""));
+    				return;
+    			}
+    			this.selectPersonId = inPersonId;
+    			this.selectPendingPerson();
+    		}));
     	}
-    	if (!template) {
-    		return true;
-    	}
-    	saveEdit.addToPerson(inEvent.person.raw(), template, this.bindSafely(function (inPersonId, inError) {
-    		if (inError) {
-    			services.banner($L("Could not save the contact") +
-    				(inError.errorCode !== undefined ? " (" + inError.errorCode + ")" : ""));
-    			return;
-    		}
-    		this.selectPersonId = inPersonId;
-    		this.selectPendingPerson();
-    	}));
     	return true;
     },
     /**

@@ -12,7 +12,9 @@ var
     $L = require('enyo/i18n').$L;   // no-op placeholder
 
 /**
-	pick(title, globalPersonCollection, excludeId) opens the list; tapping a
+	pick(title, globalPersonCollection, excludeId, nonFavorites) opens the
+	list, without the person excludeId and, with nonFavorites, without
+	favourites; tapping a
 	person sends onPicked {person} (a PersonModel) and closes it.
 */
 module.exports = kind({
@@ -43,12 +45,13 @@ module.exports = kind({
         this.inherited(arguments);
         this.$.list.set("collection", new AllPersonCollection());
     },
-    pick: function (inTitle, inGlobalPersonCollection, inExcludeId) {
+    pick: function (inTitle, inGlobalPersonCollection, inExcludeId, inNonFavorites) {
         var collection = this.$.list.collection;
         this.$.title.set("content", inTitle);
         this.$.search.set("value", "");
         collection.set("globalPersonCollection", inGlobalPersonCollection);
         collection.set("excludeId", inExcludeId || "");
+        collection.set("nonFavorites", !!inNonFavorites);
         collection.set("searchText", "");
         collection.refilter();
         this.show();
