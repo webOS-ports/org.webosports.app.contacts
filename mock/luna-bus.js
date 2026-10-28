@@ -873,4 +873,9 @@
 	mock.setAccounts = function(inAccounts) {
 		accounts = clone(inAccounts);
 	};
+	// IM presence a connector wrote to tempdb (com.palm.imbuddystatus:1).
+	mock.setBuddies = function(inBuddies) {
+		(config.tempdb = config.tempdb || {})["com.palm.imbuddystatus:1"] = clone(inBuddies);
+		fireWatches(["com.palm.imbuddystatus:1"]);
+	};
 })();

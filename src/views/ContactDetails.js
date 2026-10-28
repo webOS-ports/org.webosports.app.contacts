@@ -16,6 +16,7 @@ var
     LunaService = require('enyo-webos/LunaService'),
     Popup = require('onyx/Popup'),
     details = require('../util/details'),
+    presence = require('../data/presence'),
     profiles = require('../util/profiles'),
     accounts = require('../data/accounts'),
     persons = require('../data/persons'),
@@ -31,7 +32,11 @@ var Detail = kind({
     events: {
         onSmsTap: ''
     },
+    published: {
+        presence: ""   // an IM address's status class (src/util/presence.js), "" for none
+    },
     components: [
+        { name: "status", classes: "im-status", showing: false },
         // Contact data is text, never markup: it comes from sync accounts, vCards and other apps.
         { tag: "p", name: "value", classes: "value" },
         { tag: "p", name: "label", classes: "label" },
@@ -44,8 +49,18 @@ var Detail = kind({
         {from: "model.label", to: "$.label.content", transform: function (label) {
             return $L(label);
         }},
-        {from: "model.smsShowing", to: "$.smsBtn.showing"}
+        {from: "model.smsShowing", to: "$.smsBtn.showing"},
+        {from: "model.presence", to: "presence"}
     ],
+    presenceChanged: function (inOld) {
+        if (inOld) {
+            this.$.status.removeClass(inOld);
+        }
+        if (this.presence) {
+            this.$.status.addClass(this.presence);
+        }
+        this.$.status.set("showing", !!this.presence);
+    },
     smsTap: function (inSender, inEvent) {
         this.doSmsTap(this.model);
         return true;
@@ -63,7 +78,9 @@ var DetailsModel = kind({
         type: "",
         date: "",
         personId: "",
-        smsShowing: false
+        smsShowing: false,
+        im: null,
+        presence: ""
     }
 });
 
@@ -174,6 +191,15 @@ module.exports = kind({
         this.inherited(arguments);
 
         this.$.details.set("collection", this.$.detailsCollection);
+        presence.onChange(this.bindSafely("showPresence"));
+    },
+    // IM rows show their address's status, which changes on its own.
+    showPresence: function () {
+        this.$.detailsCollection.forEach(function (inModel) {
+            if (inModel.get("im")) {
+                inModel.set("presence", presence.addressClass(inModel.get("im")));
+            }
+        });
     },
     personChanged: function (oldPerson, newPerson) { //fill details collection.
         this.$.detailsCollection.empty();
@@ -189,7 +215,9 @@ module.exports = kind({
                 value: inRow.value,
                 date: inRow.date || "",
                 personId: personId,
-                smsShowing: inRow.sms
+                smsShowing: inRow.sms,
+                im: inRow.key === "ims" ? inRow.entry : null,
+                presence: inRow.key === "ims" ? presence.addressClass(inRow.entry) : ""
             };
         }));
     },

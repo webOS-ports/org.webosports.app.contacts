@@ -8,6 +8,7 @@ var
     RadioGroup = require('onyx/RadioGroup'),
     Button = require('onyx/Button'),
     AllPersonCollection = require('../data/AllPersonCollection'),
+    presence = require('../data/presence'),
     ContactsList = require('./ContactsList'),
     $L = require('enyo/i18n').$L;   // no-op placeholder
 
@@ -78,6 +79,14 @@ module.exports = kind({
         ["add", "remove", "reset"].forEach(function (inEvent) {
             collection.on(inEvent, this.updateMessage, this);
         }, this);
+        presence.onChange(this.bindSafely("presenceChanged"));
+    },
+
+    // The rows show IM status: draw them again when it changes.
+    presenceChanged: function () {
+        if (this.$.allContactsList.hasNode()) {
+            this.$.allContactsList.refresh();
+        }
     },
 
     refilter: function () {

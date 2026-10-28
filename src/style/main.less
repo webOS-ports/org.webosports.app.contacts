@@ -256,13 +256,6 @@ ContactsUI CSS
     margin:0 0 10px;
 }
 
-.im-status {
-    height: 28px;
-    background: url(../../assets/status-away.png) no-repeat 0 0;
-    position: absolute;
-    left: 0px;
-    top: 0px;
-}
 .edit-contact.button {
     background:none;
     border-image:none;
@@ -1126,4 +1119,32 @@ border-top-color:rgba(255,255,255,0.5);
     display: block;
     margin: 0.5rem auto;
     min-width: 12rem;
+}
+
+/* IM presence (src/util/presence.js classes), the legacy 16px icons */
+
+.im-status::before {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    background: no-repeat 50% 50%;
+}
+.im-status.status-available::before {
+    background-image: url(../../assets/status-available.png);
+}
+.im-status.status-busy::before {
+    background-image: url(../../assets/status-away.png);
+}
+.im-status.status-offline::before {
+    background-image: url(../../assets/status-offline.png);
+}
+.contacts-list .contacts-item-row > .im-status {
+    width: 22px;
+    text-align: center;
+}
+.details .contacts-item .im-status {
+    float: left;
+    margin: 0.1em 0.5em 0 0;
 }

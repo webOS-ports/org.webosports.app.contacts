@@ -372,6 +372,39 @@ t.test("details: an IM address an account can call offers chat and a call", asyn
 	assert.deepStrictEqual(await opened(), ["com.palm.app.phone", "im:anna.vdberg?personId=p-anna&type=skype"]);
 });
 
+t.test("details and list: IM presence shows, and follows the connectors", async function() {
+	await open();
+	await page.eval("__MOCK__.setBuddies([" +
+		"{username: 'Cowboy_Bob', serviceName: 'type_skype', availability: 4}," +
+		"{username: 'anna.vdberg', serviceName: 'type_skype', availability: 2}," +
+		"{username: 'anna.vdberg', serviceName: 'type_skype', availability: 0}])");
+	function rowStatus(inName) {
+		return page.eval("(function(){var r=Array.prototype.filter.call(document.querySelectorAll('[id*=_allContactsList] .contacts-item')," +
+			"function(e){return e.querySelector('.name').textContent===" + JSON.stringify(inName) + ";})[0];" +
+			"var s=r&&r.querySelector('.im-status');return s&&s.getBoundingClientRect().width>0?s.className:'';})()");
+	}
+	await scrollToPerson("Anna van der Berg");
+	await page.waitFor("(function(){return Array.prototype.some.call(document.querySelectorAll('[id*=_allContactsList] .im-status')," +
+		"function(e){return /status-available/.test(e.className)&&e.getBoundingClientRect().width>0;});})()");
+	assert.ok(/status-available/.test(await rowStatus("Anna van der Berg")), "the best of the address's statuses");
+	assert.strictEqual(await rowStatus("Oscar Other"), "", "no IM address, no status");
+
+	await tapPerson("Anna van der Berg");
+	var imStatus = "(function(){var r=Array.prototype.filter.call(document.querySelectorAll('[id$=_contactDetails] .contacts-item')," +
+		"function(e){return e.querySelector('.value').textContent==='anna.vdberg';})[0];" +
+		"var s=r&&r.querySelector('.im-status');return s&&s.getBoundingClientRect().width>0?s.className:'';})()";
+	await page.waitFor("/status-available/.test(" + imStatus + ")");
+	await shot("details-presence");
+	// The connector reports a change: the details and the list follow.
+	await page.eval("__MOCK__.setBuddies([{username: 'anna.vdberg', serviceName: 'type_skype', availability: 4}])");
+	await page.waitFor("/status-offline/.test(" + imStatus + ")");
+	await page.waitFor("/status-offline/.test(" + "(function(){var r=Array.prototype.filter.call(document.querySelectorAll('[id*=_allContactsList] .contacts-item')," +
+		"function(e){return e.querySelector('.name').textContent==='Anna van der Berg';})[0];var s=r&&r.querySelector('.im-status');return s?s.className:'';})()" + ")");
+	// No connector data: nothing shown.
+	await page.eval("__MOCK__.setBuddies([])");
+	await page.waitFor("(" + imStatus + ")===''");
+});
+
 t.test("details: an IM address only Messaging handles opens a chat at once", async function() {
 	await open();
 	await tapPerson("Gina Talk");

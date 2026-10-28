@@ -1,7 +1,8 @@
 var
     kind = require('enyo/kind'),
     Image = require('enyo/Image'),
-    Icon = require('onyx/Icon');
+    Icon = require('onyx/Icon'),
+    presence = require('../data/presence');
 
 
 module.exports = kind({
@@ -32,6 +33,8 @@ module.exports = kind({
                 { classes: "list-mask"}
             ] },
             { name: "name", content: "", classes: "name" },
+            // The best IM status of the person's addresses, as the legacy list.
+            { name: "status", classes: "im-status flex-none", showing: false },
             { name: "favCell", classes: "favorite-cell", showing: false, components: [
                 { name: "favIcon", classes: "favorite", kind: Icon }
             ]}
@@ -43,9 +46,22 @@ module.exports = kind({
     teardownRender: function () {
         this.inherited(arguments);
         this.updateDivider();
+        this.updatePresence();
     },
     modelChanged: function () {
         this.updateDivider();
+        this.updatePresence();
+    },
+    updatePresence: function () {
+        var cls = this.model ? presence.personClass(this.model.attributes) : "";
+        if (this.presenceClass) {
+            this.$.status.removeClass(this.presenceClass);
+        }
+        this.presenceClass = cls;
+        if (cls) {
+            this.$.status.addClass(cls);
+        }
+        this.$.status.set("showing", !!cls);
     },
     updateDivider: function () {
         var list = this.parent;

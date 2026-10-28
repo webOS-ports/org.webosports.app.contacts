@@ -18,6 +18,7 @@ var launch = require(path.join(SRC, "launch.js"));
 var details = require(path.join(SRC, "details.js"));
 var search = require(path.join(SRC, "search.js"));
 var profiles = require(path.join(SRC, "profiles.js"));
+var presence = require(path.join(SRC, "presence.js"));
 
 var ROOT = path.resolve(__dirname, "..", "..");
 var DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "mock", "db8-data.json"), "utf8"));
@@ -177,6 +178,32 @@ t.test("accountRules: deleting a person deletes its writable contacts only", fun
 	assert.deepStrictEqual(accountRules.deletePlan([null, {}], ACCOUNTS), {action: "orphan", ids: []});
 	assert.deepStrictEqual(accountRules.deletePlan([{_id: "x", accountId: "gone"}], ACCOUNTS),
 		{action: "none", ids: [], readOnlyName: ""});
+});
+
+// --- presence ----------------------------------------------------------
+
+t.test("presence: an address shows its most online status, a person its best address", function() {
+	var idx = presence.index([
+		{username: "Cowboy_Bob", serviceName: "type_skype", availability: 4},
+		{username: "cowboy_bob", serviceName: "type_skype", availability: 2},
+		{username: "anna.vdberg", serviceName: "type_skype", availability: 0},
+		{username: "anna.vdberg", serviceName: "type_gtalk", availability: 4},
+		{username: "", serviceName: "type_skype", availability: 0},
+		{username: "x", serviceName: "type_skype", availability: "0"},
+		null
+	]);
+	assert.deepStrictEqual(idx, {"type_skype|cowboy_bob": 2, "type_skype|anna.vdberg": 0, "type_gtalk|anna.vdberg": 4});
+	assert.strictEqual(presence.ofAddress(idx, {value: "COWBOY_BOB", type: "type_skype"}), 2, "case ignored");
+	assert.strictEqual(presence.ofAddress(idx, {value: "anna.vdberg", type: "type_aim"}), 6, "another service");
+	assert.strictEqual(presence.ofAddress(idx, {value: 5, type: "type_skype"}), 6);
+	assert.strictEqual(presence.ofPerson(idx, {ims: [{value: "anna.vdberg", type: "type_gtalk"},
+		{value: "anna.vdberg", type: "type_skype"}]}), 0);
+	assert.strictEqual(presence.ofPerson(idx, {ims: "junk"}), 6);
+	assert.strictEqual(presence.ofPerson(idx, null), 6);
+});
+t.test("presence: status classes as the legacy app, mobile counts as available", function() {
+	assert.deepStrictEqual([0, 1, 2, 3, 4, 5, 6, undefined].map(presence.className),
+		["status-available", "status-available", "status-busy", "status-offline", "status-offline", "", "", ""]);
 });
 
 // --- profiles ----------------------------------------------------------
