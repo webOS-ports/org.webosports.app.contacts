@@ -7,9 +7,9 @@ var
     $L = require('enyo/i18n').$L;   // no-op placeholder
 
 /**
-	ask(message, onOk, okLabel, title) shows the message (as text, never
-	markup) and calls onOk when OK is tapped. Without onOk it is a notice
-	with one button.
+	ask(message, onOk, okLabel, title, destructive) shows the message (as
+	text, never markup) and calls onOk when OK is tapped. Without onOk it is
+	a notice with one button. A destructive OK is red.
 */
 module.exports = kind({
     name: "ConfirmDialog",
@@ -28,12 +28,14 @@ module.exports = kind({
             {name: "okBtn", kind: Button, classes: "onyx-affirmative", content: $L("OK"), ontap: "okTap"}
         ]}
     ],
-    ask: function (inMessage, inOnOk, inOkLabel, inTitle) {
+    ask: function (inMessage, inOnOk, inOkLabel, inTitle, inDestructive) {
         this.onOk = inOnOk || null;
         this.$.title.set("content", inTitle || "");
         this.$.title.set("showing", !!inTitle);
         this.$.message.set("content", String(inMessage));
         this.$.okBtn.set("content", inOkLabel || $L("OK"));
+        this.$.okBtn.addRemoveClass("onyx-affirmative", !inDestructive);
+        this.$.okBtn.addRemoveClass("onyx-negative", !!inDestructive);
         this.$.cancelBtn.set("showing", !!inOnOk);
         this.show();
     },

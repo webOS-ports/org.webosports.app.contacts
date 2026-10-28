@@ -83,7 +83,8 @@ module.exports = kind({
         {
         	kind: EditContact,
         	onCancel: "hideEdit",
-        	onSaved: "editSaved"
+        	onSaved: "editSaved",
+        	onDeleted: "editDeleted"
         },
         {name: "preferences", kind: Preferences, onDone: "closePreferences"}
         ]},
@@ -182,6 +183,22 @@ module.exports = kind({
     	this.$.cards.setIndex(0);
     	this.selectPersonId = inEvent.personId;
     	this.selectPendingPerson();
+    	return true;
+    },
+    /** EditContact deleted the person, or only its writable contacts */
+    editDeleted: function (inSender, inEvent) {
+    	this.$.cards.setIndex(0);
+    	if (inEvent.gone) {
+    		// The list's watch empties the details once the person is gone;
+    		// a narrow screen goes back to the list, not to empty details.
+    		this.selectPersonId = null;
+    		if (Panels.isScreenNarrow()) {
+    			this.$.main.setIndex(0);
+    		}
+    	} else {
+    		this.selectPersonId = inEvent.personId;
+    		this.selectPendingPerson();
+    	}
     	return true;
     },
     /** shows the person of selectPersonId once the list has it */

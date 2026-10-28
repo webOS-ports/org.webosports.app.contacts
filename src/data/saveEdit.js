@@ -143,4 +143,26 @@ function addToPerson(inPerson, inTemplate, inDone) {
     });
 }
 
-module.exports = {run: run, addToPerson: addToPerson};
+/**
+	Deletes a person as accountRules.deletePlan says: its writable contacts
+	through db8 (the linker then drops them from the person, and the person
+	once it has none), or, for a person without contacts, the person itself
+	through the linker, since the app may not delete persons.
+	inDone(error) with error null on success.
+*/
+function deletePerson(inPersonId, inPlan, inDone) {
+    var fail = function (inError) {
+        var error = inError || {};
+        console.error("deletePerson failed:", error.errorCode, error.errorText);
+        inDone(error);
+    };
+    if (inPlan.action === "orphan") {
+        services.call(services.LINKER, "deleteOrphanedPerson", {personId: inPersonId}, function () { inDone(null); }, fail);
+    } else if (inPlan.ids.length) {
+        services.call(services.DB, "del", {ids: inPlan.ids}, function () { inDone(null); }, fail);
+    } else {
+        inDone(null);
+    }
+}
+
+module.exports = {run: run, addToPerson: addToPerson, deletePerson: deletePerson};

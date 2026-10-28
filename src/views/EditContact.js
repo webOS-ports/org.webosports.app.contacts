@@ -31,6 +31,7 @@ var
 	saveEdit = require('../data/saveEdit'),
 	persons = require('../data/persons'),
 	choose = require('./choose'),
+	ConfirmDialog = require('./ConfirmDialog'),
 	$L = require('enyo/i18n').$L;   // no-op placeholder
 
 var ADDRESS_PARTS = [
@@ -209,7 +210,8 @@ module.exports = kind({
 	},
 	events: {
 		onCancel: "",
-		onSaved: ""     // {personId, isNew}
+		onSaved: "",    // {personId, isNew}
+		onDeleted: ""   // {personId, gone}: gone when the person went with its contacts
 	},
 	components: [
 		{name: "topToolbar", kind: Toolbar, layoutKind: FittableHeaderLayout, components: [
@@ -268,6 +270,8 @@ module.exports = kind({
 					]}
 				]},
 				{name: "relationsGroup", kind: EditGroup, field: "relations"},
+				{name: "deleteBtn", kind: Button, classes: "onyx-negative edit-delete", content: $L("Delete Contact"),
+					ontap: "deleteTap", showing: false},
 				{style: "height: 1rem;"}   // the scroller cuts off the last item otherwise
 			]}
 		]},
@@ -276,6 +280,7 @@ module.exports = kind({
 			{fit: true},
 			{name: "doneBtn", kind: Button, content: $L("Save"), classes: "onyx-affirmative edit-toolbar-button", ontap: "doneTap"}
 		]},
+		{name: "deleteConfirm", kind: ConfirmDialog},
 		{name: "nameDetails", kind: Popup, classes: "edit-name-popup", centered: true, modal: true, floating: true,
 			scrim: true, autoDismiss: false, components: [
 				{content: $L("Name details"), classes: "edit-popup-title"},
@@ -336,6 +341,7 @@ module.exports = kind({
 		this.contacts = inContacts;
 		this.state = contactEdit.build(inPerson, inContacts, accounts.list, prefs.get("defaultAccountId"), inTemplate);
 		this.saving = false;
+		this.$.deleteBtn.set("showing", !this.state.isNew);
 		this.renderState();
 		this.$.scroller.scrollToTop();
 	},
@@ -468,7 +474,44 @@ module.exports = kind({
 		return true;
 	},
 
+	// As the legacy Delete: contacts of read-only accounts stay, the
+	// dialog says so, and offers to delete the others.
+	deleteTap: function () {
+		if (!this.state || this.state.isNew || this.saving) {
+			return true;
+		}
+		var state = this.state, plan = accountRules.deletePlan(this.contacts, accounts.list);
+		var readOnlyName = plan.readOnlyName || $L("Read-only");
+		var go = this.bindSafely(function () {
+			this.saving = true;
+			saveEdit.deletePerson(state.personId, plan, this.bindSafely(function (inError) {
+				this.saving = false;
+				if (inError) {
+					services.banner($L("Could not delete the contact") +
+						(inError.errorCode !== undefined ? " (" + inError.errorCode + ")" : ""));
+					return;
+				}
+				this.state = null;
+				this.doDeleted({personId: state.personId, gone: plan.action !== "others"});
+			}));
+		});
+		switch (plan.action) {
+		case "none":
+			this.$.deleteConfirm.ask($L("{type} profiles cannot be deleted.").replace("{type}", readOnlyName));
+			break;
+		case "others":
+			this.$.deleteConfirm.ask($L("{type} profiles cannot be deleted. Delete all other profiles?").replace("{type}", readOnlyName),
+				go, $L("Delete other profiles"), null, true);
+			break;
+		default:
+			this.$.deleteConfirm.ask($L("Delete {name}?").replace("{name}", names.format(state.single.name) || $L("this contact")),
+				go, plan.action === "all" && this.contacts.length > 1 ? $L("Delete All Profiles") : $L("Delete"), null, true);
+		}
+		return true;
+	},
+
 	cancelTap: function () {
+		this.$.deleteConfirm.hide();
 		this.$.nameDetails.hide();
 		this.state = null;
 		this.doCancel();

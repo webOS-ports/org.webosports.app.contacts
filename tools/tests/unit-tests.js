@@ -166,6 +166,17 @@ t.test("accountRules: the accounts listed in Preferences, and their Sync Now act
 		[{accountId: "x", name: "", username: "", icon: "", templateId: "", sync: ""}]);
 	assert.deepStrictEqual(accountRules.contactsAccounts(null), []);
 });
+t.test("accountRules: deleting a person deletes its writable contacts only", function() {
+	assert.deepStrictEqual(accountRules.deletePlan(contactsOf("p-mary"), ACCOUNTS), {action: "all", ids: ["c-mary"]});
+	assert.deepStrictEqual(accountRules.deletePlan(contactsOf("p-anna"), ACCOUNTS),
+		{action: "others", ids: ["c-anna-palm", "c-anna-goog"], readOnlyName: "Skype"});
+	assert.deepStrictEqual(accountRules.deletePlan(contactsOf("p-bob"), ACCOUNTS), {action: "none", ids: [], readOnlyName: "Skype"});
+	assert.deepStrictEqual(accountRules.deletePlan(contactsOf("p-sim"), ACCOUNTS), {action: "none", ids: [], readOnlyName: "SIM"});
+	assert.deepStrictEqual(accountRules.deletePlan([], ACCOUNTS), {action: "orphan", ids: []});
+	assert.deepStrictEqual(accountRules.deletePlan([null, {}], ACCOUNTS), {action: "orphan", ids: []});
+	assert.deepStrictEqual(accountRules.deletePlan([{_id: "x", accountId: "gone"}], ACCOUNTS),
+		{action: "none", ids: [], readOnlyName: ""});
+});
 
 // --- contactEdit -------------------------------------------------------
 

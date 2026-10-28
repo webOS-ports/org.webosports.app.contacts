@@ -367,6 +367,8 @@ t.test("startup: every service call is one the hub allows", async function() {
 
 async function openEdit(inName) {
 	await tapPerson(inName);
+	// On a narrow screen the details slide in first.
+	await page.waitFor("!contactsApp.view.$.main.transitionPoints.length");
 	await page.tap("[id$=_editContactBtn]");
 	await page.waitFor("(function(){var e=document.querySelector('[id$=_nameInput]');return e && e.getBoundingClientRect().width > 0;})()");
 }
@@ -553,6 +555,106 @@ t.test("edit: a bad date is refused, a partial stored one is kept", async functi
 	await save();
 	assert.ok((await banners()).some(function(b) { return /YYYY-MM-DD/.test(b); }), "no banner");
 	assert.strictEqual((await record("c-gina")).birthday, "--07-04");
+});
+
+// --- delete ------------------------------------------------------------
+
+async function tapDelete() {
+	await page.eval("(function(){var v=contactsApp.view.$.editContact;v.$.scroller.scrollToControl(v.$.deleteBtn);})()");
+	await sleep(300);
+	await page.tap("[id$=_editContact_deleteBtn]");
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_deleteConfirm]');return e && e.getBoundingClientRect().width>0;})()");
+	return {
+		message: await text("[id$=_deleteConfirm] .dialog-message"),
+		ok: await text("[id$=_deleteConfirm] [id$=_okBtn]"),
+		cancel: await visible("[id$=_deleteConfirm] [id$=_cancelBtn]")
+	};
+}
+function dbDeletes() {
+	return lunaCalls("com.palm.db/del").then(function(inCalls) { return inCalls.map(function(c) { return c.params.ids; }); });
+}
+
+t.test("delete: a person of writable contacts is deleted after a question, cancel keeps it", async function() {
+	await open();
+	await openEdit("Mary Ann Smith-Jones");
+	var dialog = await tapDelete();
+	assert.deepStrictEqual(dialog, {message: "Delete Dr. Mary Ann Smith-Jones, PhD?", ok: "Delete", cancel: true});
+	await page.tap("[id$=_deleteConfirm] [id$=_cancelBtn]");
+	await sleep(200);
+	assert.deepStrictEqual(await dbDeletes(), []);
+	assert.ok(await record("c-mary"));
+
+	await tapDelete();
+	await page.tap("[id$=_deleteConfirm] [id$=_okBtn]");
+	await waitForMainCard();
+	await page.waitFor("contactsApp.view.globalPersonCollection.length === 12");
+	assert.deepStrictEqual(await dbDeletes(), [["c-mary"]]);
+	assert.strictEqual(await record("c-mary"), null);
+	assert.strictEqual(await record("p-mary"), null, "the linker drops the empty person");
+	assert.strictEqual(await page.eval("contactsApp.view.$.detailsPanel.index"), 0, "details show nothing");
+	assert.ok((await listNames()).every(function(n) { return n.indexOf("Mary") < 0; }));
+});
+
+t.test("delete: on a narrow screen, deleting goes back to the list", async function() {
+	await open({width: 480, height: 800});
+	await openEdit("Mary Ann Smith-Jones");
+	await tapDelete();
+	await page.tap("[id$=_deleteConfirm] [id$=_okBtn]");
+	await page.waitFor("contactsApp.view.globalPersonCollection.length === 12");
+	await page.waitFor("contactsApp.view.$.main.index === 0 && contactsApp.view.$.cards.index === 0");
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_inputSearchStretch_input]');" +
+		"var r=e&&e.getBoundingClientRect();return r && r.width>0 && r.left>=0 && r.left<480;})()");
+});
+
+t.test("delete: read-only profiles stay, the others go after saying so", async function() {
+	await open();
+	await openEdit("Anna van der Berg");
+	var dialog = await tapDelete();
+	assert.deepStrictEqual(dialog, {message: "Skype profiles cannot be deleted. Delete all other profiles?",
+		ok: "Delete other profiles", cancel: true});
+	await shot("delete-confirm");
+	await page.tap("[id$=_deleteConfirm] [id$=_okBtn]");
+	await waitForMainCard();
+	assert.deepStrictEqual(await dbDeletes(), [["c-anna-palm", "c-anna-goog"]]);
+	assert.ok(await record("c-anna-skype"));
+	assert.deepStrictEqual((await record("p-anna")).contactIds, ["c-anna-skype"]);
+	await waitForDetails("Anna");
+});
+
+t.test("delete: a person of read-only contacts only can not be deleted", async function() {
+	await open();
+	await openEdit("Bob Cowboy");
+	assert.deepStrictEqual(await tapDelete(), {message: "Skype profiles cannot be deleted.", ok: "OK", cancel: false});
+	await page.tap("[id$=_deleteConfirm] [id$=_okBtn]");
+	await sleep(200);
+	assert.deepStrictEqual(await dbDeletes(), []);
+	assert.ok(await visible("[id$=_editContact_doneBtn]"), "still editing");
+});
+
+t.test("delete: a person left without contacts is deleted through the linker", async function() {
+	var d = data();
+	d.persons.push({_id: "p-orphan", favorite: false, contactIds: ["c-orphan"]});
+	d.contacts.push({_id: "c-orphan", _kind: "com.palm.contact.palmprofile:1", accountId: PALM, name: {givenName: "Orphan", familyName: "Annie"}});
+	await open({data: d});
+	await openEdit("Orphan Annie");
+	// The contact goes elsewhere (a sync) while the person is being edited.
+	await page.eval("__MOCK__.db.remove('c-orphan')");
+	await page.eval("contactsApp.view.$.editContact.contacts = []");
+	var dialog = await tapDelete();
+	assert.strictEqual(dialog.ok, "Delete");
+	await page.tap("[id$=_deleteConfirm] [id$=_okBtn]");
+	await waitForMainCard();
+	var calls = await lunaCalls("deleteOrphanedPerson");
+	assert.deepStrictEqual(calls.map(function(c) { return c.params; }), [{personId: "p-orphan"}]);
+	assert.strictEqual(await record("p-orphan"), null);
+	assert.deepStrictEqual(await dbDeletes(), []);
+});
+
+t.test("delete: a new contact has no Delete", async function() {
+	await open();
+	await page.tap("[id$=_addContactBtn]");
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_nameInput]');return e && e.getBoundingClientRect().width>0;})()");
+	assert.strictEqual(await visible("[id$=_editContact_deleteBtn]"), false);
 });
 
 // --- new contact -------------------------------------------------------

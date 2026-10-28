@@ -162,8 +162,36 @@ function syncActivity(inAccount) {
 	};
 }
 
+/**
+	What deleting a person does, as the legacy Edit view's Delete decided:
+	the contacts that may be deleted go, read-only ones stay.
+		{action: "all", ids}             every contact goes, and the person with them
+		{action: "others", ids, readOnlyName}  the writable ones go, the person stays
+		{action: "none", ids: [], readOnlyName} nothing may be deleted
+		{action: "orphan", ids: []}      no contacts left: the linker deletes the person
+	readOnlyName is the account of the first read-only contact ("" if gone).
+*/
+function deletePlan(inContacts, inAccounts) {
+	var contacts = (inContacts || []).filter(function(inC) { return inC && inC._id; }), ids = [], readOnly = [];
+	contacts.forEach(function(inC) {
+		if (isReadOnly(inC, inAccounts)) {
+			readOnly.push(inC);
+		} else {
+			ids.push(inC._id);
+		}
+	});
+	if (!contacts.length) {
+		return {action: "orphan", ids: []};
+	}
+	if (!readOnly.length) {
+		return {action: "all", ids: ids};
+	}
+	return {action: ids.length ? "others" : "none", ids: ids, readOnlyName: name(inAccounts, readOnly[0].accountId)};
+}
+
 module.exports = {
 	contactsProvider: contactsProvider, contactKind: contactKind, byId: byId, isReadOnly: isReadOnly,
 	writableAccounts: writableAccounts, defaultAccount: defaultAccount, icon: icon, name: name,
-	providersFor: providersFor, contactsAccounts: contactsAccounts, syncActivity: syncActivity
+	providersFor: providersFor, contactsAccounts: contactsAccounts, syncActivity: syncActivity,
+	deletePlan: deletePlan
 };
