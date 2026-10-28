@@ -1,5 +1,4 @@
 // PersonModel.js for LuneOS Contacts app
-/*jsl:import ContactModel.js*/
 
 var
     kind = require('enyo/kind'),

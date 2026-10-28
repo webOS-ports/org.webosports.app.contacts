@@ -17,6 +17,7 @@ var contactEdit = require(path.join(SRC, "contactEdit.js"));
 var launch = require(path.join(SRC, "launch.js"));
 var details = require(path.join(SRC, "details.js"));
 var search = require(path.join(SRC, "search.js"));
+var profiles = require(path.join(SRC, "profiles.js"));
 
 var ROOT = path.resolve(__dirname, "..", "..");
 var DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "mock", "db8-data.json"), "utf8"));
@@ -176,6 +177,33 @@ t.test("accountRules: deleting a person deletes its writable contacts only", fun
 	assert.deepStrictEqual(accountRules.deletePlan([null, {}], ACCOUNTS), {action: "orphan", ids: []});
 	assert.deepStrictEqual(accountRules.deletePlan([{_id: "x", accountId: "gone"}], ACCOUNTS),
 		{action: "none", ids: [], readOnlyName: ""});
+});
+
+// --- profiles ----------------------------------------------------------
+
+t.test("profiles: one row per linked contact, the first the primary", function() {
+	var rows = profiles.rows(contactsOf("p-anna"), ACCOUNTS);
+	assert.deepStrictEqual(rows.map(function(r) { return [r.contactId, r.accountName, r.readOnly, r.primary]; }), [
+		["c-anna-palm", "LuneOS Account", false, true],
+		["c-anna-goog", "Acme", false, false],
+		["c-anna-skype", "Skype", true, false]
+	]);
+	assert.strictEqual(rows[0].name, "Anna van der Berg");
+	assert.ok(rows[1].icon, "account icon");
+	assert.strictEqual(profiles.rows([{_id: "x", organizations: [{name: "Initech"}]}], ACCOUNTS)[0].name, "Initech");
+	assert.deepStrictEqual(profiles.rows(null, ACCOUNTS), []);
+});
+t.test("profiles: what may be done to a linked profile", function() {
+	var anna = person("p-anna").contactIds;
+	var none = {unlink: false, primary: false, remove: false};
+	assert.deepStrictEqual(profiles.actions(anna, contact("c-anna-palm"), ACCOUNTS), {unlink: true, primary: false, remove: true},
+		"the primary");
+	assert.deepStrictEqual(profiles.actions(anna, contact("c-anna-goog"), ACCOUNTS), {unlink: true, primary: true, remove: true});
+	assert.deepStrictEqual(profiles.actions(anna, contact("c-anna-skype"), ACCOUNTS), {unlink: true, primary: true, remove: false},
+		"read-only");
+	assert.deepStrictEqual(profiles.actions(["c-mary"], contact("c-mary"), ACCOUNTS), none, "a single profile");
+	assert.deepStrictEqual(profiles.actions(anna, contact("c-mary"), ACCOUNTS), none, "not this person's");
+	assert.deepStrictEqual(profiles.actions(null, null, ACCOUNTS), none);
 });
 
 // --- contactEdit -------------------------------------------------------

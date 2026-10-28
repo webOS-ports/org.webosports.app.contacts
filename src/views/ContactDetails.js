@@ -16,7 +16,10 @@ var
     LunaService = require('enyo-webos/LunaService'),
     Popup = require('onyx/Popup'),
     details = require('../util/details'),
+    profiles = require('../util/profiles'),
     accounts = require('../data/accounts'),
+    persons = require('../data/persons'),
+    links = require('../data/links'),
     services = require('../data/services'),
     $L = require('enyo/i18n').$L;   // no-op placeholder
 
@@ -110,7 +113,7 @@ module.exports = kind({
                         classes: "content",
                         kind: FittableRows,
                         components: [
-                            { name: "header", kind: ContactHeader},
+                            { name: "header", kind: ContactHeader, onProfileTap: "profileTap"},
                             {
                                 name: "details",
                                 kind: DataRepeater,
@@ -130,6 +133,18 @@ module.exports = kind({
             {name: "imChatBtn", kind: Button, content: $L("Chat"), ontap: "imChatTap"},
             {name: "imVoiceBtn", kind: Button, content: $L("Voice Call"), ontap: "imVoiceTap"},
             {name: "imVideoBtn", kind: Button, content: $L("Video Call"), ontap: "imVideoTap"}
+        ]},
+        // What may be done to one linked profile, as the legacy LinkDetails dialog.
+        {name: "profilePopup", kind: Popup, classes: "dialog profile-popup", centered: true, floating: true, modal: true,
+            scrim: true, components: [
+            {name: "profileTitle", classes: "dialog-title"},
+            {classes: "dialog-buttons dialog-buttons-stacked", components: [
+                {name: "unlinkBtn", kind: Button, content: $L("Unlink this profile"), ontap: "unlinkTap"},
+                {name: "primaryBtn", kind: Button, content: $L("Set as primary profile"), ontap: "primaryTap"},
+                {name: "removeProfileBtn", kind: Button, classes: "onyx-negative", content: $L("Delete this profile"),
+                    ontap: "removeProfileTap"},
+                {name: "profileCancelBtn", kind: Button, content: $L("Cancel"), ontap: "profileCancelTap"}
+            ]}
         ]},
         { name: "editContactBtn", kind: Button, style: "position: absolute; right: 0.5rem; bottom: 0.5rem;", ontap: "doEdit", components: [
             {kind: Icon, src: "assets/btn_edit.png"}
@@ -254,6 +269,68 @@ module.exports = kind({
         if (url) {
             this.$.applicationManagerOpenSrvc.send({target: url});
         }
+    },
+    profileTap: function (inSender, inEvent) {
+        var person = this.person && this.person.raw();
+        if (!person) {
+            return true;
+        }
+        persons.contactsOf(person, this.bindSafely(function (inContacts) {
+            accounts.whenReady(this.bindSafely(function () {
+                var contact = inContacts.filter(function (inC) { return inC._id === inEvent.contactId; })[0];
+                var can = profiles.actions(person.contactIds, contact, accounts.list);
+                if (!can.unlink || !this.person || this.person.get("_id") !== person._id) {
+                    return;   // a single profile: nothing to do, as before
+                }
+                var row = profiles.rows([contact], accounts.list)[0];
+                this.profileAction = {personId: person._id, contactId: contact._id};
+                this.$.profileTitle.set("content", row.name + (row.accountName ? " (" + row.accountName + ")" : ""));
+                this.$.primaryBtn.set("showing", can.primary);
+                this.$.removeProfileBtn.set("showing", can.remove);
+                this.$.profilePopup.show();
+            }));
+        }), function (inError) {
+            console.error("ContactDetails: cannot load the profiles:", inError.errorCode, inError.errorText);
+        });
+        return true;
+    },
+    // The list's watch shows the result: the person's details follow.
+    profileDone: function (inError) {
+        if (inError) {
+            services.banner($L("Could not change the linked profiles") +
+                (inError.errorCode !== undefined ? " (" + inError.errorCode + ")" : ""));
+        }
+    },
+    takeProfileAction: function () {
+        var action = this.profileAction;
+        this.profileAction = null;
+        this.$.profilePopup.hide();
+        return action;
+    },
+    unlinkTap: function () {
+        var a = this.takeProfileAction();
+        if (a) {
+            links.unlink(a.personId, a.contactId, this.bindSafely("profileDone"));
+        }
+        return true;
+    },
+    primaryTap: function () {
+        var a = this.takeProfileAction();
+        if (a) {
+            links.makePrimary(a.personId, a.contactId, this.bindSafely("profileDone"));
+        }
+        return true;
+    },
+    removeProfileTap: function () {
+        var a = this.takeProfileAction();
+        if (a) {
+            links.remove(a.contactId, this.bindSafely("profileDone"));
+        }
+        return true;
+    },
+    profileCancelTap: function () {
+        this.takeProfileAction();
+        return true;
     },
     serviceResponse: function (inSender, inEvent) {
         this.log("processId:", inEvent.processId);

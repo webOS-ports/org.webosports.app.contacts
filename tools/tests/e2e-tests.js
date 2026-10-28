@@ -557,6 +557,129 @@ t.test("edit: a bad date is refused, a partial stored one is kept", async functi
 	assert.strictEqual((await record("c-gina")).birthday, "--07-04");
 });
 
+// --- linked profiles ---------------------------------------------------
+
+//* [name, account line] of each profile in the open drawer.
+function profileRows() {
+	return page.eval("Array.prototype.map.call(document.querySelectorAll('[id$=_contactDetails] .profile-row'),function(e){" +
+		"return [e.querySelector('.profile-name').textContent, e.querySelector('.profile-account').textContent];})");
+}
+async function openProfiles(inCount) {
+	await page.tap("[id$=_profilesButton]");
+	await page.waitFor("document.querySelectorAll('[id$=_contactDetails] .profile-row').length === " + inCount);
+	await sleep(400);   // the drawer opens
+}
+async function tapProfile(inText) {
+	await page.tapText("[id$=_contactDetails] .profile-row", inText);
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_profilePopup]');return e && e.getBoundingClientRect().width>0;})()");
+	return {
+		title: await text("[id$=_profileTitle]"),
+		primary: await visible("[id$=_primaryBtn]"),
+		remove: await visible("[id$=_removeProfileBtn]")
+	};
+}
+
+t.test("profiles: the drawer lists the linked profiles, the primary first", async function() {
+	await open();
+	await tapPerson("Anna van der Berg");
+	assert.strictEqual(await text("[id$=_profilesCount]"), "3 linked profiles");
+	await openProfiles(3);
+	assert.deepStrictEqual(await profileRows(), [["Anna van der Berg", "LuneOS Account · Primary"],
+		["Anna van der Berg", "Acme"], ["Anna van der Berg", "Skype"]]);
+	assert.deepStrictEqual(await tapProfile("Skype"), {title: "Anna van der Berg (Skype)", primary: true, remove: false},
+		"a read-only profile can not be deleted");
+	await page.tap("[id$=_profileCancelBtn]");
+	assert.deepStrictEqual(await tapProfile("Primary"), {title: "Anna van der Berg (LuneOS Account)", primary: false, remove: true});
+	await shot("profiles");
+	await page.tap("[id$=_profileCancelBtn]");
+	await sleep(200);
+	assert.deepStrictEqual(await lunaCalls("linker/manual"), []);
+});
+
+t.test("profiles: a person of one profile offers nothing to do to it", async function() {
+	await open();
+	await tapPerson("Mary Ann Smith-Jones");
+	assert.strictEqual(await text("[id$=_profilesCount]"), "1 profile");
+	await openProfiles(1);
+	await page.tapText("[id$=_contactDetails] .profile-row", "LuneOS Account");
+	await sleep(300);
+	assert.strictEqual(await visible("[id$=_profilePopup]"), false);
+});
+
+t.test("profiles: unlink makes the profile a person of its own", async function() {
+	await open();
+	await tapPerson("Anna van der Berg");
+	await openProfiles(3);
+	await tapProfile("Skype");
+	await page.tap("[id$=_unlinkBtn]");
+	await page.waitFor("document.querySelectorAll('[id$=_contactDetails] .profile-row').length === 2");
+	assert.deepStrictEqual((await lunaCalls("linker/manualUnlink")).map(function(c) { return c.params; }),
+		[{personToRemoveLinkFrom: "p-anna", contactToRemoveFromPerson: "c-anna-skype"}]);
+	assert.strictEqual(await text("[id$=_profilesCount]"), "2 linked profiles");
+	await page.waitFor("contactsApp.view.globalPersonCollection.length === 14");
+});
+
+t.test("profiles: set as primary puts the profile first", async function() {
+	await open();
+	await tapPerson("Anna van der Berg");
+	await openProfiles(3);
+	await tapProfile("Acme");
+	await page.tap("[id$=_primaryBtn]");
+	await page.waitFor("Array.prototype.some.call(document.querySelectorAll('[id$=_contactDetails] .profile-row .profile-account')," +
+		"function(e){return e.textContent==='Acme · Primary';})");
+	assert.deepStrictEqual((await record("p-anna")).contactIds, ["c-anna-goog", "c-anna-palm", "c-anna-skype"]);
+	assert.deepStrictEqual((await profileRows()).map(function(r) { return r[1]; }), ["Acme · Primary", "LuneOS Account", "Skype"]);
+});
+
+t.test("profiles: the person takes its name from the new primary", async function() {
+	var d = data();
+	d.contacts.forEach(function(c) {
+		if (c._id === "c-anna-skype") {
+			c.name = {givenName: "Annie", familyName: "van der Berg"};
+		}
+	});
+	await open({data: d});
+	await tapPerson("Anna van der Berg");
+	await openProfiles(3);
+	await tapProfile("Skype");
+	await page.tap("[id$=_primaryBtn]");
+	// The linker rebuilds a person when a contact changes, not when contactIds do.
+	await waitForDetails("Annie van der Berg");
+	assert.ok((await listNames()).indexOf("Annie van der Berg") >= 0);
+});
+
+t.test("profiles: delete this profile deletes that contact only", async function() {
+	await open();
+	await tapPerson("Anna van der Berg");
+	await openProfiles(3);
+	await tapProfile("Acme");
+	await page.tap("[id$=_removeProfileBtn]");
+	await page.waitFor("document.querySelectorAll('[id$=_contactDetails] .profile-row').length === 2");
+	assert.deepStrictEqual(await dbDeletes(), [["c-anna-goog"]]);
+	assert.deepStrictEqual((await record("p-anna")).contactIds, ["c-anna-palm", "c-anna-skype"]);
+});
+
+t.test("profiles: Link More Profiles links a picked person in, never the person itself", async function() {
+	await open();
+	await tapPerson("Anna van der Berg");
+	await openProfiles(3);
+	await page.tap("[id$=_linkProfile]");
+	await page.waitFor("(function(){var e=document.querySelector('[id$=_personPicker]');return e && e.getBoundingClientRect().width>0;})()");
+	assert.ok(/Link which contact to Anna van der Berg\?/.test(await text("[id$=_personPicker] .dialog-title")));
+	await page.fill("[id$=_personPicker] input", "anna");
+	await page.waitFor("document.querySelectorAll('[id$=_personPicker] .contacts-item .name').length === 1");
+	assert.deepStrictEqual(await page.eval("Array.prototype.map.call(document.querySelectorAll('[id$=_personPicker] .contacts-item .name'),function(e){return e.textContent;})"),
+		["Anna Berg"], "the person itself is not offered");
+	await page.tapText("[id$=_personPicker] .contacts-item", "Anna Berg");
+	await page.waitFor("document.querySelectorAll('[id$=_contactDetails] .profile-row').length === 4");
+	assert.deepStrictEqual((await lunaCalls("linker/manualLink")).map(function(c) { return c.params; }),
+		[{personToLinkTo: "p-anna", personToLink: "p-anna2"}]);
+	assert.deepStrictEqual((await record("p-anna")).contactIds, ["c-anna-palm", "c-anna-goog", "c-anna-skype", "c-anna2"]);
+	await page.waitFor("contactsApp.view.globalPersonCollection.length === 12");
+	// The add-to-existing flow is not confused with it afterwards.
+	assert.deepStrictEqual(await lunaCalls("com.palm.db/merge"), []);
+});
+
 // --- delete ------------------------------------------------------------
 
 async function tapDelete() {

@@ -22,6 +22,7 @@ var
 	launch = require('../util/launch'),
 	persons = require('../data/persons'),
 	saveEdit = require('../data/saveEdit'),
+	links = require('../data/links'),
 	services = require('../data/services'),
 	$L = require('enyo/i18n').$L;   // no-op placeholder
 require('enyo-luneos');
@@ -74,6 +75,7 @@ module.exports = kind({
 							fit: true,
 							onPersonChanged: "savePerson",
 							onEdit: "showEdit",
+							onLinkProfiles: "linkProfiles",
 							onAlterSearch: 'alterSearch'
 						}
                     ]
@@ -334,15 +336,40 @@ module.exports = kind({
     	this.$.cards.setIndex(1);
     	return true;
     },
+    // "Link More Profiles": pick another person, whose contacts join this one.
+    linkProfiles: function () {
+    	var person = this.$.contactDetails.person;
+    	if (!person) {
+    		return true;
+    	}
+    	this.contactToAdd = null;
+    	this.linkTo = person.get("_id");
+    	this.$.personPicker.pick($L("Link which contact to {name}?").replace("{name}", person.get("displayName")),
+    		this.globalPersonCollection, this.linkTo);
+    	return true;
+    },
     promptAddToExisting: function (inSender, inEvent) {
+    	this.linkTo = null;
     	this.contactToAdd = inEvent.contact;
     	this.$.cards.setIndex(0);
     	this.$.personPicker.pick($L("Add to which contact?"), this.globalPersonCollection, "");
     	return true;
     },
     personPicked: function (inSender, inEvent) {
-    	var template = this.contactToAdd;
+    	var template = this.contactToAdd, linkTo = this.linkTo;
     	this.contactToAdd = null;
+    	this.linkTo = null;
+    	if (linkTo) {
+    		if (inEvent.person.get("_id") !== linkTo) {
+    			links.link(linkTo, inEvent.person.get("_id"), this.bindSafely(function (inError) {
+    				if (inError) {
+    					services.banner($L("Could not link the contacts") +
+    						(inError.errorCode !== undefined ? " (" + inError.errorCode + ")" : ""));
+    				}
+    			}));
+    		}
+    		return true;
+    	}
     	if (!template) {
     		return true;
     	}
