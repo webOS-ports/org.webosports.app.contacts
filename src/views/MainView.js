@@ -1,9 +1,7 @@
 /* MainView.js - main view of org.webosports.app.contacts */
-/*jsl:import ../data/PersonModel.js*/
 
 var
 	kind = require('enyo/kind'),
-	utils = require('enyo/utils'),
 	Panels = require('layout/Panels'),
 	CardArranger = require('layout/CardArranger'),
 	CollapsingArranger = require('layout/CollapsingArranger'),
@@ -13,22 +11,34 @@ var
 	Button = require('onyx/Button'),
 	ContactDetails = require('./ContactDetails'),
 	Signals = require('enyo/Signals'),
-	PersonModel = require('../data/PersonModel'),
 	PersonCollection = require('../data/PersonCollection'),
-	ContactModel = require('../data/ContactModel'),
-	ContactCollection = require('../data/ContactCollection'),
 	EditContact = require('./EditContact'),
-	$L = require('enyo/i18n').$L;   // no-op placeholder
-require('enyo-luneos');
+	AddToContactsPrompt = require('./AddToContactsPrompt'),
+	PersonPicker = require('./PersonPicker'),
+	ConfirmDialog = require('./ConfirmDialog'),
+	Preferences = require('./Preferences'),
+	FirstLaunch = require('./FirstLaunch'),
+	Menu = require('onyx/Menu'),
+	MenuItem = require('onyx/MenuItem'),
+	launch = require('../util/launch'),
+	persons = require('../data/persons'),
+	accounts = require('../data/accounts'),
+	firstLaunch = require('../data/firstLaunch'),
+	saveEdit = require('../data/saveEdit'),
+	links = require('../data/links'),
+	services = require('../data/services'),
+	$L = require('enyo/i18n').$L;
+require('webos-lib');
 
-//App
+// The cards (list and details, or the edit view) are a Panels of their
+// own: a popup inside a Panels would be one of its panels, and hidden by
+// every transition.
 module.exports = kind({
     name: "MainView",
-	kind: Panels,
-	arrangerKind: CardArranger,
-	draggable: false,
+	classes: "enyo-fit",
 	globalPersonCollection: new PersonCollection({options: {}}),
     components: [
+        {name: "cards", kind: Panels, arrangerKind: CardArranger, draggable: false, classes: "enyo-fit", components: [
         {
             name: "main",
             kind: Panels,
@@ -37,7 +47,7 @@ module.exports = kind({
             fit: true,
             components: [
                 { style: "width: 38.2%;" /* golden ratio */, components: [
-                	{ name: "contactsBar", kind: ContactsBar, classes: "enyo-fit", onSelected: "showPerson" },
+                	{ name: "contactsBar", kind: ContactsBar, classes: "enyo-fit", onSelected: "showPerson", onAddFavorite: "addFavorite" },
                     { name: "addContactBtn", kind: Button, style: "position: absolute; right: 0.5rem; bottom: 0.5rem;", ontap: "showAdd", components: [
                         {kind: Icon, src: "assets/btn_add_contact.png"}
                     ]}
@@ -58,7 +68,7 @@ module.exports = kind({
                                 },
                                 {
                                     style: "display: block; margin: 10px auto; text-align: center;",
-                                    content: "Please select a contact on the left to see more information."
+                                    content: $L("Please select a contact on the left to see more information.")
                                 }
                             ]
                         },
@@ -68,7 +78,9 @@ module.exports = kind({
 							fit: true,
 							onPersonChanged: "savePerson",
 							onEdit: "showEdit",
-							onAlterSearch: 'alterSearch'
+							onLinkProfiles: "linkProfiles",
+							onAlterSearch: 'alterSearch',
+							onAddToContacts: "addGalContact"
 						}
                     ]
                 }
@@ -77,12 +89,31 @@ module.exports = kind({
         {
         	kind: EditContact,
         	onCancel: "hideEdit",
-        	onSave: "saveContact"
+        	onSaved: "editSaved",
+        	onDeleted: "editDeleted"
         },
+        {name: "preferences", kind: Preferences, onDone: "closePreferences"},
+        {name: "firstLaunch", kind: FirstLaunch, onDone: "closeFirstLaunch"}
+        ]},
+        // The app menu opens from the app's name in the status bar, under it:
+        // the top left corner. onyx's floating Menu places itself against
+        // the control that opened it, and stays invisible without one.
+        {name: "appMenuAnchor", style: "position: absolute; top: 0; left: 0; width: 0; height: 0;"},
+        {name: "appMenu", kind: Menu, floating: true, components: [
+            {name: "prefsMenuItem", kind: MenuItem, content: $L("Preferences & Accounts"), ontap: "openPreferences"}
+        ]},
+        {name: "addPrompt", kind: AddToContactsPrompt, onAddNew: "promptAddNew", onAddToExisting: "promptAddToExisting"},
+        {name: "personPicker", kind: PersonPicker, onPicked: "personPicked"},
+        {name: "confirm", kind: ConfirmDialog},
         {
             kind: Signals,
 			onbackgesture: "goBack",
-            onwebOSRelaunch: "processLaunchParam"
+            onwebOSRelaunch: "relaunch",
+            onactivate: "windowActivated",
+            // A tap on the app's name in the status bar relaunches the app
+            // with palm-command "open-app-menu", which webos-lib passes on
+            // as menubutton.
+            onmenubutton: "toggleAppMenu"
         }
     ],
     create: function () {
@@ -90,7 +121,16 @@ module.exports = kind({
         this.handleResize();
         
         if (window.PalmSystem) {
-        	this.processLaunchParam(null, webOS.window.launchParams());
+        	var params = webOS.window.launchParams();
+        	this.handleLaunch(params);
+        	// First use greets a plain launch; another app's request goes first.
+        	if (!launch.parse(params)) {
+        		firstLaunch.check(this.bindSafely(function (inShow) {
+        			if (inShow && this.$.cards.get("index") === 0) {
+        				this.openFirstLaunch();
+        			}
+        		}));
+        	}
         }
 
         this.log("==========> Telling global list to fetch contacts...");
@@ -102,6 +142,7 @@ module.exports = kind({
         	console.log("views fetch complete - now " + collection.length + " items");
         	views.$.contactsBar.refilter();
 
+        	views.selectPendingPerson();
         	var selectedPersonId = views.$.contactDetails.person && views.$.contactDetails.person.get("_id");
         	console.log("selectedPersonId", selectedPersonId);
         	if (selectedPersonId) {
@@ -138,166 +179,56 @@ module.exports = kind({
     },
     /** several fields, like favorite, reminder & ringtone, are only in person records */
     savePerson: function (inSender, inEvent) {
-    	var contactsBar = this.$.contactsBar;
     	inEvent.person.commit({success: function (rec, opts, res) {
     		// The fetch above handles updating the UI.
     	}});
     },
     
     showAdd: function (inSender, inEvent) {
-    	this.$.editContact.set("title", $L("New Contact"));
-    	this.$.editContact.set("doneLabel", $L("Create"));
-    	var oldPerson = new PersonModel();
-//    	oldPerson = new PersonModel({
-//    		addresses: [{
-//    			type: "type_work",
-//    			streetAddress: "1 Main St.",
-//    			locality: "Orlando",
-//    			region: "FL",
-//    			country: "USA",
-//    			postalCode: "32830"
-//    		}],
-//            birthday: "1928-11-18",
-//            emails: [{type: "type_work", value: "da_mouse@disney.com"}],
-//            favorite: true, 
-//            ims: [{type: "type_sametime", value: "the_mouse" }],
-//            name: {familyName: "Mouse", givenName: "Mickey"},
-//    		nickname: "Steamboat Willie",
-//            notes: ["Universal's Colony Theater\nLend a Paw\nUb Iwerks"],
-//    		organization: {title: "Greeter", department: "Hospitality",  name: "Disney World"},
-//    		phoneNumbers: [{type: "type_mobile", value: "407-555-1212"}],
-//            ringtone: [],
-//            relations: [],
-//            ringtone: {},
-//            urls: [{value: "http://mickey.disney.com/"}]
-//     	});
-    	this.$.editContact.set("oldPerson", oldPerson);
-    	this.setIndex(1);   // show Edit/Create
+    	this.$.editContact.newPerson(null);
+    	this.$.cards.setIndex(1);   // show Edit/Create
 	},
     showEdit: function (inSender, inEvent) {
-    	this.$.editContact.set("title", $L("Edit Contact"));
-    	this.$.editContact.set("doneLabel", $L("Save"));
-    	this.$.editContact.set("oldPerson", this.$.contactDetails.person);
-    	this.setIndex(1);   // show Edit/Create
+    	this.$.editContact.editPerson(this.$.contactDetails.person);
+    	this.$.cards.setIndex(1);   // show Edit/Create
     },
     hideEdit: function (inSender, inEvent) {
-    	this.setIndex(0);   // hide Edit/Create
+    	this.$.cards.setIndex(0);   // hide Edit/Create
     },
-    /** the contactlinker will create or update person records */
-    saveContact: function (inSender, inEvent) {
-//    	this.log("newPerson:", inEvent.newPerson.attributes, inEvent.accountId, inEvent.dbkind);
-    	var views = this;
-    	var contactIds = inEvent.newPerson.get("contactIds");
-    	var contactCollection;
-    	
-    	if (contactIds.length === 0) {
-        	var contact = new ContactModel(inEvent.newPerson.toContactData(inEvent.accountId, inEvent.dbkind));
-        	this.log("new contact:", contact);
-        	contact.commit();
+    /** EditContact saved through the linker; show the person it saved */
+    editSaved: function (inSender, inEvent) {
+    	this.$.cards.setIndex(0);
+    	this.selectPersonId = inEvent.personId;
+    	this.selectPendingPerson();
+    	return true;
+    },
+    /** EditContact deleted the person, or only its writable contacts */
+    editDeleted: function (inSender, inEvent) {
+    	this.$.cards.setIndex(0);
+    	if (inEvent.gone) {
+    		// The list's watch empties the details once the person is gone;
+    		// a narrow screen goes back to the list, not to empty details.
+    		this.selectPersonId = null;
+    		if (Panels.isScreenNarrow()) {
+    			this.$.main.setIndex(0);
+    		}
     	} else {
-    		contactCollection = new ContactCollection();
-    		contactCollection.fetch({ids: contactIds, success: function (collection, opts, contacts) {
-    			views.log("fetched contacts:", contacts, "   collection.length:", collection.length);
-    			views.comparePersons(inEvent.oldPerson, inEvent.newPerson, collection, contacts);
-    		}});
+    		this.selectPersonId = inEvent.personId;
+    		this.selectPendingPerson();
     	}
-    	
-    	this.setIndex(0);   // hides edit/create pane
-	},
-	comparePersons: function (oldPerson, newPerson, collection, contacts) {
-		this.log(arguments);
-		var changed = false;
-		
-		// TODO: photos
-		
-		compareMulti("name", ["honorificPrefix", "givenName", "middleName", "familyName", "honorificSuffix"]);
-		
-		if (newPerson.get("nickname") !== oldPerson.get("nickname")) {
-			copyAttr("nickname");
-		}
-		
-		compareMulti("organization", ["title", "department", "name"]);
-
-		compareMultiArry("phoneNumbers", ["value", "type"]);
-		
-		compareMultiArry("emails", ["value", "type"]);
-
-		compareMultiArry("ims", ["value", "type"]);
-		
-		compareMultiArry("addresses", ["streetAddress", "locality", "region", "country", "postalCode", "type"]);
-
-		compareMultiArry("urls", ["value"]);
-		
-		var newNotes = newPerson.get("notes").join("\n"),
-			oldNotes = oldPerson.get("notes").join("\n");
-		if (newNotes !== oldNotes) {
-			contacts.forEach(function (contact) {
-				console.log("updating", contact.get("displayName"), "with", newNotes);
-				contact.set("note", newNotes);
-			});
-			oldPerson.set("notes", utils.clone(newPerson.get("notes")));
-			changed = true;
-		}
-
-		if (newPerson.get("birthday") !== oldPerson.get("birthday")) {
-			copyAttr("birthday");
-		}
-
-		compareMultiArry("relations", ["value", "type"]);
-		
-		// TODO: ringtone
-		
-		// not in UI: anniversary, gender
-
-		if (changed) {
-			// TODO: commit collection (& implement that in db8Source.js)
-			contacts.forEach(function (contact) {
-				console.log("committing", contact.get("displayName"));
-				contact.commit();
-			});
-		} else {
-			this.log("no differences between old and new person");
-		}
-		
-		function compareMulti(attrName, subattrNames) {
-			var newAttr = newPerson.get(attrName);
-			var oldAttr = oldPerson.get(attrName);
-			for (var j=0; j<subattrNames.length; ++j) {
-				if (newAttr[subattrNames[j]] !== oldAttr[subattrNames[j]]) {
-					copyAttr(attrName); 
-					return;
-				}
-			}
-		}
-		
-		function compareMultiArry(attrName, subattrNames) {
-			var newItems = newPerson.get(attrName);
-			var oldItems = oldPerson.get(attrName);
-			var i;
-			if (newItems.length !== oldItems.length) {
-				copyAttr(attrName); 
-				return;
-			}
-			for (i=0; i<newItems.length; ++i) {
-				for (var j=0; j<subattrNames.length; ++j) {
-    				if (newItems[i][subattrNames[j]] !== oldItems[i][subattrNames[j]]) {
-    					copyAttr(attrName); 
-    					return;
-    				}
-				}
-			}
-		}
-
-		function copyAttr(attrName) {
-			var attr = newPerson.get(attrName);
-			contacts.forEach(function (contact) {
-				console.log("updating", contact.get("displayName"), "with", attrName, attr);
-				contact.set(attrName, attr);
-			});
-			oldPerson.set(attrName, attr);
-			changed = true;
-		}
-	},
+    	return true;
+    },
+    /** shows the person of selectPersonId once the list has it */
+    selectPendingPerson: function () {
+    	var id = this.selectPersonId;
+    	var person = id && this.globalPersonCollection.find(function (model) {
+    		return model.get("_id") === id;
+    	});
+    	if (person) {
+    		this.selectPersonId = null;
+    		this.showPerson(this, {person: person});
+    	}
+    },
 
 	alterSearch: function (inSender, inEvent) {
 		this.$.contactsBar.alterSearch(inEvent.searchText);
@@ -306,9 +237,59 @@ module.exports = kind({
 		}
 	},
     
+    // enyo-webos and webos-lib both pass the menubutton event on, so
+    // each tap arrives twice: the same event is one tap.
+    toggleAppMenu: function (inSender, inEvent) {
+    	if (inEvent && inEvent === this.lastMenuEvent) {
+    		return true;
+    	}
+    	this.lastMenuEvent = inEvent;
+    	if (this.$.cards.getActive() === this.$.firstLaunch) {
+    		return true;
+    	}
+    	if (this.$.appMenu.showing) {
+    		this.$.appMenu.hide();
+    	} else {
+    		this.$.appMenu.requestMenuShow(this, {activator: this.$.appMenuAnchor});
+    	}
+    	return true;
+    },
+    openPreferences: function () {
+    	this.$.appMenu.hide();
+    	this.$.preferences.open();
+    	this.$.cards.setIndex(2);
+    	return true;
+    },
+    closePreferences: function () {
+    	this.$.cards.setIndex(0);
+    	return true;
+    },
+    openFirstLaunch: function () {
+    	this.$.firstLaunch.open();
+    	this.$.cards.setIndex(this.$.cards.getPanels().indexOf(this.$.firstLaunch));
+    },
+    // Done (or back) leaves First use for good, as the legacy app's
+    // firstLaunchHasBeenShown once the app had started.
+    closeFirstLaunch: function () {
+    	firstLaunch.markShown();
+    	this.$.cards.setIndex(0);
+    	return true;
+    },
+    // Back from the Accounts app: an account may have been added.
+    windowActivated: function () {
+    	var active = this.$.cards.getActive();
+    	if (active === this.$.preferences || active === this.$.firstLaunch) {
+    		accounts.refresh();
+    	}
+    },
+
     goBack: function () {
-    	if (this.get("index") > 0) {
-    		this.set("index", 0);   // hide Edit/Create
+    	if (this.$.appMenu.showing) {
+    		this.$.appMenu.hide();
+    	} else if (this.$.cards.getActive() === this.$.firstLaunch) {
+    		this.closeFirstLaunch();
+    	} else if (this.$.cards.get("index") > 0) {
+    		this.$.cards.set("index", 0);   // hide Edit/Create
     	} else if (Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
             this.$.main.setIndex(0);
         } else {
@@ -322,16 +303,168 @@ module.exports = kind({
         }
     },
     
-    processLaunchParam: function (inSender, evt) {
-        if (!evt || !evt.detail) return;
-        var launchParam = evt.detail;
-    	this.log(typeof launchParam, launchParam);
-    	if (launchParam.launchType === "newContact") {
-        	this.$.editContact.set("title", $L("New Contact"));
-        	this.$.editContact.set("doneLabel", $L("Create"));
-        	var oldPerson = new PersonModel(launchParam.contact);
-        	this.$.editContact.set("oldPerson", oldPerson);
-        	this.setIndex(1);
+    /**
+		A launch while running: the event's detail holds the launch
+		parameters. WAM sends the event and also calls Mojo.relaunch(), which
+		webos-lib turns into a second event: the same parameters again
+		within a second are the same relaunch.
+    */
+    relaunch: function (inSender, inEvent) {
+    	var params = inEvent && inEvent.detail, key, now = Date.now();
+    	try {
+    		key = JSON.stringify(params);
+    	} catch (e) {
+    		return;
     	}
+    	if (key === this.lastRelaunch && now - this.lastRelaunchTime < 1000) {
+    		return;
+    	}
+    	this.lastRelaunch = key;
+    	this.lastRelaunchTime = now;
+    	this.handleLaunch(params);
+    },
+    /** what another app (or the launcher) asks for; see src/util/launch.js */
+    handleLaunch: function (inParams) {
+    	var what = launch.parse(inParams);
+    	if (!what) {
+    		return;
+    	}
+    	this.log(what.action);
+    	this.$.addPrompt.hide();
+    	this.$.personPicker.hide();
+    	this.$.confirm.hide();
+    	switch (what.action) {
+    	case "show":
+    		persons.find(what.id, this.bindSafely(function (inPerson) {
+    			if (inPerson) {
+    				this.$.cards.setIndex(0);
+    				this.selectPersonId = inPerson._id;
+    				this.selectPendingPerson();
+    			}
+    		}));
+    		break;
+    	case "edit":
+    		persons.find(what.id, this.bindSafely(function (inPerson) {
+    			if (!inPerson) {
+    				services.banner($L("This contact no longer exists"));
+    				return;
+    			}
+    			this.selectPersonId = inPerson._id;
+    			this.selectPendingPerson();
+    			this.$.editContact.editPerson(inPerson);
+    			this.$.cards.setIndex(1);
+    		}));
+    		break;
+    	case "new":
+    		this.promptAddNew(this, {contact: what.contact});
+    		break;
+    	case "prompt":
+    		this.$.addPrompt.ask(what.contact);
+    		break;
+    	case "addToExisting":
+    		this.promptAddToExisting(this, {contact: what.contact});
+    		break;
+    	case "vcard":
+    		this.importVCard(what.target);
+    		break;
+    	}
+    },
+    // A global address list entry: add it as a new contact, or to one.
+    addGalContact: function (inSender, inEvent) {
+    	this.$.addPrompt.ask(launch.template(inEvent.contact));
+    	return true;
+    },
+    promptAddNew: function (inSender, inEvent) {
+    	this.$.editContact.newPerson(inEvent.contact);
+    	this.$.cards.setIndex(1);
+    	return true;
+    },
+    // The person picker serves three purposes; pickFor says which one is
+    // under way: {link: personId} | {addTo: contact template} | {favorite: true}.
+    // "Link More Profiles": pick another person, whose contacts join this one.
+    linkProfiles: function () {
+    	var person = this.$.contactDetails.person;
+    	if (!person) {
+    		return true;
+    	}
+    	this.pickFor = {link: person.get("_id")};
+    	this.$.personPicker.pick($L("Link which contact to {name}?").replace("{name}", person.get("displayName")),
+    		this.globalPersonCollection, person.get("_id"));
+    	return true;
+    },
+    promptAddToExisting: function (inSender, inEvent) {
+    	this.pickFor = {addTo: inEvent.contact};
+    	this.$.cards.setIndex(0);
+    	this.$.personPicker.pick($L("Add to which contact?"), this.globalPersonCollection, "");
+    	return true;
+    },
+    // The Favourites tab's Add Favorite, as the legacy AddFavoriteList: only
+    // persons that are not favourites yet are offered.
+    addFavorite: function () {
+    	this.pickFor = {favorite: true};
+    	this.$.personPicker.pick($L("Add a favorite"), this.globalPersonCollection, "", true);
+    	return true;
+    },
+    personPicked: function (inSender, inEvent) {
+    	var pickFor = this.pickFor || {}, personId = inEvent.person.get("_id");
+    	this.pickFor = null;
+    	if (pickFor.link) {
+    		if (personId !== pickFor.link) {
+    			links.link(pickFor.link, personId, this.bindSafely(function (inError) {
+    				if (inError) {
+    					services.banner($L("Could not link the contacts") +
+    						(inError.errorCode !== undefined ? " (" + inError.errorCode + ")" : ""));
+    				}
+    			}));
+    		}
+    	} else if (pickFor.favorite) {
+    		services.call(services.CONTACTS, "favoritePerson", {personId: personId});
+    	} else if (pickFor.addTo) {
+    		saveEdit.addToPerson(inEvent.person.raw(), pickFor.addTo, this.bindSafely(function (inPersonId, inError) {
+    			if (inError) {
+    				services.banner($L("Could not save the contact") +
+    					(inError.errorCode !== undefined ? " (" + inError.errorCode + ")" : ""));
+    				return;
+    			}
+    			this.selectPersonId = inPersonId;
+    			this.selectPendingPerson();
+    		}));
+    	}
+    	return true;
+    },
+    /**
+		A vCard file, as the legacy VCardHelper did: one contact opens as a
+		new contact (asking first), several are imported after a question.
+    */
+    importVCard: function (inTarget) {
+    	var fail = this.bindSafely(function () {
+    		this.$.confirm.ask($L("There was a problem reading this vCard."), null, $L("OK"), $L("Import vCard"));
+    	});
+    	services.call(services.CONTACTS, "countVCardContacts", {filePath: inTarget}, this.bindSafely(function (inResponse) {
+    		var count = inResponse.count;
+    		if (typeof count !== "number" || count < 1) {
+    			fail();
+    		} else if (count === 1) {
+    			services.call(services.CONTACTS, "readVCard", {filePath: inTarget}, this.bindSafely(function (inRead) {
+    				var contact = inRead.contacts && inRead.contacts[0];
+    				if (contact) {
+    					this.$.addPrompt.ask(launch.template(contact));
+    				} else {
+    					fail();
+    				}
+    			}), fail);
+    		} else {
+    			var question = $L("Would you like to import {count} contacts? This could take a few minutes.").replace("{count}", count);
+    			this.$.confirm.ask(question, this.bindSafely(function () {
+    				services.banner($L("Importing vCard..."));
+    				services.call(services.CONTACTS, "importVCard", {filePath: inTarget}, function () {
+    					services.banner($L("{count} contacts imported").replace("{count}", count));
+    				}, function (inError) {
+    					// Logged only: the legacy app saw this fail after contacts were imported.
+    					console.error("importVCard failed:", inError.errorCode, inError.errorText);
+    				});
+    			}), $L("Import"), $L("Import vCard"));
+    		}
+    	}), fail);
     }
 });

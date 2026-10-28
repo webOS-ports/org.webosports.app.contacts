@@ -1,0 +1,454 @@
+{
+ "_comment": [
+  "Mock contacts for desktop runs and tests (mock/luna-bus.js).",
+  "Accounts come from mock/com.palm.service.accounts/listAccounts.json; persons are rebuilt from their contacts by the mock linker, so only favorite and contactIds are given here.",
+  "c-hostile carries markup in every kind of field: nothing of it may render as HTML."
+ ],
+ "contacts": [
+  {
+   "_id": "c-anna-palm",
+   "_kind": "com.palm.contact.palmprofile:1",
+   "accountId": "++HoXVTTqIccE0m1",
+   "name": {
+    "givenName": "Anna",
+    "familyName": "van der Berg",
+    "middleName": "",
+    "honorificPrefix": "",
+    "honorificSuffix": ""
+   },
+   "phoneNumbers": [
+    {
+     "value": "+31 20 555 0101",
+     "type": "type_mobile"
+    }
+   ],
+   "emails": [
+    {
+     "value": "anna@example.com",
+     "type": "type_home"
+    }
+   ],
+   "birthday": "1980-03-14",
+   "note": "Met at FOSDEM.\nLikes tea.",
+   "relations": [
+    {
+     "value": "Pieter van der Berg",
+     "type": "type_spouse"
+    }
+   ],
+   "photos": [
+    {
+     "localPath": "assets/kris_kringle.jpg",
+     "type": "type_big"
+    }
+   ]
+  },
+  {
+   "_id": "c-anna-goog",
+   "_kind": "com.palm.contact.google:1",
+   "accountId": "++HqVF6BEhSPSfq0",
+   "name": {
+    "givenName": "Anna",
+    "familyName": "van der Berg",
+    "middleName": "",
+    "honorificPrefix": "",
+    "honorificSuffix": ""
+   },
+   "phoneNumbers": [
+    {
+     "value": "+31 20 555 0199",
+     "type": "type_work"
+    }
+   ],
+   "emails": [
+    {
+     "value": "anna.berg@acme.example",
+     "type": "type_work"
+    }
+   ],
+   "organizations": [
+    {
+     "title": "Engineer",
+     "name": "Acme",
+     "department": "R&D"
+    }
+   ]
+  },
+  {
+   "_id": "c-anna-skype",
+   "_kind": "com.palm.contact.skypem:1",
+   "accountId": "++HnY2Qbp2pHNVFT",
+   "name": {
+    "givenName": "Anna",
+    "familyName": "van der Berg",
+    "middleName": "",
+    "honorificPrefix": "",
+    "honorificSuffix": ""
+   },
+   "ims": [
+    {
+     "value": "anna.vdberg",
+     "type": "type_skype"
+    }
+   ]
+  },
+  {
+   "_id": "c-mary",
+   "_kind": "com.palm.contact.palmprofile:1",
+   "accountId": "++HoXVTTqIccE0m1",
+   "name": {
+    "givenName": "Mary",
+    "familyName": "Smith-Jones",
+    "middleName": "Ann",
+    "honorificPrefix": "Dr.",
+    "honorificSuffix": "PhD"
+   },
+   "nickname": "Annie",
+   "phoneNumbers": [
+    {
+     "value": "(555) 123-4567",
+     "type": "type_main"
+    },
+    {
+     "value": "555 123 4568",
+     "type": "type_work_fax"
+    }
+   ],
+   "addresses": [
+    {
+     "streetAddress": "1 Main St.",
+     "locality": "Springfield",
+     "region": "IL",
+     "postalCode": "62701",
+     "country": "USA",
+     "type": "type_home"
+    }
+   ],
+   "urls": [
+    {
+     "value": "www.example.org",
+     "type": "type_other"
+    }
+   ],
+   "anniversary": "2005-06-20"
+  },
+  {
+   "_id": "c-bob",
+   "_kind": "com.palm.contact.skypem:1",
+   "accountId": "++HnY2Qbp2pHNVFT",
+   "name": {
+    "givenName": "Bob",
+    "familyName": "Cowboy",
+    "middleName": "",
+    "honorificPrefix": "",
+    "honorificSuffix": ""
+   },
+   "ims": [
+    {
+     "value": "Cowboy_Bob",
+     "type": "type_skype"
+    }
+   ]
+  },
+  {
+   "_id": "c-sim",
+   "_kind": "com.palm.contact.sim:1",
+   "accountId": "++HoXVohVCoSQNS7",
+   "name": {
+    "givenName": "Voicemail",
+    "familyName": "",
+    "middleName": "",
+    "honorificPrefix": "",
+    "honorificSuffix": ""
+   },
+   "phoneNumbers": [
+    {
+     "value": "+31 6 1234",
+     "type": "type_sim"
+    }
+   ],
+   "simEntryType": "sdn"
+  },
+  {
+   "_id": "c-globex",
+   "_kind": "com.palm.contact.palmprofile:1",
+   "accountId": "++HoXVTTqIccE0m1",
+   "organizations": [
+    {
+     "name": "Globex Corporation",
+     "title": ""
+    }
+   ],
+   "phoneNumbers": [
+    {
+     "value": "555-0100",
+     "type": "type_work"
+    }
+   ]
+  },
+  {
+   "_id": "c-hostile",
+   "_kind": "com.palm.contact.palmprofile:1",
+   "accountId": "++HoXVTTqIccE0m1",
+   "name": {
+    "givenName": "<img src=x onerror=window.__xss=1>",
+    "familyName": "Hacker",
+    "middleName": "",
+    "honorificPrefix": "",
+    "honorificSuffix": ""
+   },
+   "note": "<script>window.__xss=2</script>\nsecond line",
+   "addresses": [
+    {
+     "streetAddress": "<b>bold</b> street",
+     "locality": "<i>town</i>",
+     "type": "type_work"
+    }
+   ],
+   "emails": [
+    {
+     "value": "a&b@example.com",
+     "type": "type_home"
+    }
+   ],
+   "urls": [
+    {
+     "value": "javascript:window.__xss=3",
+     "type": "type_other"
+    }
+   ],
+   "relations": [
+    {
+     "value": "<u>kid</u>",
+     "type": "type_child"
+    }
+   ]
+  },
+  {
+   "_id": "c-emile",
+   "_kind": "com.palm.contact.google:1",
+   "accountId": "++HqVF6BEhSPSfq0",
+   "name": {
+    "givenName": "Émile",
+    "familyName": "Zola",
+    "middleName": "",
+    "honorificPrefix": "",
+    "honorificSuffix": ""
+   },
+   "emails": [
+    {
+     "value": "emile@example.fr",
+     "type": "type_work"
+    }
+   ]
+  },
+  {
+   "_id": "c-zoe",
+   "_kind": "com.palm.contact.palmprofile:1",
+   "accountId": "++HoXVTTqIccE0m1",
+   "name": {
+    "givenName": "Zoë",
+    "familyName": "Ångström",
+    "middleName": "",
+    "honorificPrefix": "",
+    "honorificSuffix": ""
+   },
+   "phoneNumbers": [
+    {
+     "value": "+46 8 555 000",
+     "type": "type_mobile"
+    }
+   ]
+  },
+  {
+   "_id": "c-nobody",
+   "_kind": "com.palm.contact.palmprofile:1",
+   "accountId": "++HoXVTTqIccE0m1",
+   "emails": [
+    {
+     "value": "nobody@example.net",
+     "type": "type_other"
+    }
+   ]
+  },
+  {
+   "_id": "c-li",
+   "_kind": "com.palm.contact.palmprofile:1",
+   "accountId": "++HoXVTTqIccE0m1",
+   "name": {
+    "givenName": "小龙",
+    "familyName": "李",
+    "middleName": "",
+    "honorificPrefix": "",
+    "honorificSuffix": ""
+   },
+   "phoneNumbers": [
+    {
+     "value": "+86 10 5555 0000",
+     "type": "type_mobile"
+    }
+   ]
+  },
+  {
+   "_id": "c-gina",
+   "_kind": "com.palm.contact.google:1",
+   "accountId": "++HqVF6BEhSPSfq0",
+   "name": {
+    "givenName": "Gina",
+    "familyName": "Talk",
+    "middleName": "",
+    "honorificPrefix": "",
+    "honorificSuffix": ""
+   },
+   "ims": [
+    {
+     "value": "gina@gmail.com",
+     "type": "type_gtalk"
+    },
+    {
+     "value": "ginaaim",
+     "type": "type_aim"
+    }
+   ]
+  },
+  {
+   "_id": "c-oscar",
+   "_kind": "com.palm.contact.palmprofile:1",
+   "accountId": "++HoXVTTqIccE0m1",
+   "name": {
+    "givenName": "Oscar",
+    "familyName": "Other",
+    "middleName": "",
+    "honorificPrefix": "",
+    "honorificSuffix": ""
+   },
+   "addresses": [
+    {
+     "locality": "Utrecht",
+     "type": "type_other"
+    },
+    {
+     "postalCode": "3511",
+     "type": "type_home"
+    }
+   ]
+  },
+  {
+   "_id": "c-anna2",
+   "_kind": "com.palm.contact.google:1",
+   "accountId": "++HqVF6BEhSPSfq0",
+   "name": {
+    "givenName": "Anna",
+    "familyName": "Berg",
+    "middleName": "",
+    "honorificPrefix": "",
+    "honorificSuffix": ""
+   },
+   "emails": [
+    {
+     "value": "aberg@other.example",
+     "type": "type_home"
+    }
+   ]
+  }
+ ],
+ "persons": [
+  {
+   "_id": "p-anna",
+   "favorite": true,
+   "contactIds": [
+    "c-anna-palm",
+    "c-anna-goog",
+    "c-anna-skype"
+   ]
+  },
+  {
+   "_id": "p-mary",
+   "favorite": false,
+   "contactIds": [
+    "c-mary"
+   ]
+  },
+  {
+   "_id": "p-bob",
+   "favorite": false,
+   "contactIds": [
+    "c-bob"
+   ]
+  },
+  {
+   "_id": "p-sim",
+   "favorite": false,
+   "contactIds": [
+    "c-sim"
+   ]
+  },
+  {
+   "_id": "p-globex",
+   "favorite": false,
+   "contactIds": [
+    "c-globex"
+   ]
+  },
+  {
+   "_id": "p-hostile",
+   "favorite": false,
+   "contactIds": [
+    "c-hostile"
+   ]
+  },
+  {
+   "_id": "p-emile",
+   "favorite": true,
+   "contactIds": [
+    "c-emile"
+   ]
+  },
+  {
+   "_id": "p-zoe",
+   "favorite": false,
+   "contactIds": [
+    "c-zoe"
+   ]
+  },
+  {
+   "_id": "p-nobody",
+   "favorite": false,
+   "contactIds": [
+    "c-nobody"
+   ]
+  },
+  {
+   "_id": "p-li",
+   "favorite": false,
+   "contactIds": [
+    "c-li"
+   ]
+  },
+  {
+   "_id": "p-gina",
+   "favorite": false,
+   "contactIds": [
+    "c-gina"
+   ]
+  },
+  {
+   "_id": "p-oscar",
+   "favorite": false,
+   "contactIds": [
+    "c-oscar"
+   ]
+  },
+  {
+   "_id": "p-anna2",
+   "favorite": false,
+   "contactIds": [
+    "c-anna2"
+   ]
+  }
+ ],
+ "prefs": {
+  "listSortOrder": "LAST_FIRST",
+  "defaultAccountId": ""
+ }
+}

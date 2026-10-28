@@ -1,0 +1,25 @@
+{
+	"root": true,
+	"parserOptions": {"ecmaVersion": 5, "sourceType": "script"},
+	"env": {"browser": true, "commonjs": true},
+	"globals": {"webOS": "readonly", "PalmSystem": "readonly"},
+	"rules": {
+		"no-undef": "error",
+		"no-unused-vars": ["error", {"vars": "all", "args": "none"}],
+		"no-redeclare": "error",
+		"no-dupe-keys": "error",
+		"no-unreachable": "error",
+		"no-self-assign": "error",
+		"no-func-assign": "error",
+		"use-isnan": "error",
+		"valid-typeof": "error",
+		"eqeqeq": ["error", "smart"],
+		"no-eval": "error",
+		"no-implied-eval": "error",
+		"no-new-func": "error",
+		"no-script-url": "error",
+		"curly": "error",
+		"no-loop-func": "error",
+		"no-shadow-restricted-names": "error"
+	}
+}

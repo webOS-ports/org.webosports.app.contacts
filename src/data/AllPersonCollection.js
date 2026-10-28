@@ -4,7 +4,10 @@
 var
     kind = require('enyo/kind'),
     Collection = require('enyo/Collection'),
-    PersonModel = require('./PersonModel');
+    PersonModel = require('./PersonModel'),
+    prefs = require('./prefs'),
+    names = require('../util/names'),
+    search = require('../util/search');
 
 
 /* For Enyo 2.4, we use the strategy of loading all records into
@@ -20,12 +23,12 @@ module.exports = kind({
     published: {
         globalPersonCollection: null,
         favorites: false,
-        searchText: ""
+        searchText: "",
+        excludeId: "",   // a person left out (the one a picker links to)
+        nonFavorites: false   // only persons that are not favourites (Add Favorite)
     },
-    create: function () {
-        this.log(arguments);
-        this.inherited(arguments);
-    },
+    dividers: null,
+
     favoritesChanged: function () {
         this.refilter.apply(this, arguments);
     },
@@ -33,27 +36,35 @@ module.exports = kind({
         this.refilter.apply(this, arguments);
     },
     refilter: function () {
-        var favorites = this.favorites;
-        var searchText = this.searchText.trim().toLowerCase();
-        var searchLength = searchText.length;
+        var favorites = this.favorites, nonFavorites = this.nonFavorites, excludeId = this.excludeId,
+            searchText = this.searchText || "";
         this.empty();
-        this.add(this.globalPersonCollection.filter(function (item) {
-            var i, allSearchTerms, name;
-            try {
-                if (favorites && ! item.get("favorite")) {
-                    return false;
-                }
-                allSearchTerms = item.get("allSearchTerms") || [""];
-                for (i = 0; i < allSearchTerms.length; ++i) {
-                    if (allSearchTerms[i].slice(0, searchLength) === searchText) {
-                        return true;
-                    }
-                }
-            } catch (err) {
-                console.error(err);
+        if (!this.globalPersonCollection) {
+            return;
+        }
+        var found = this.globalPersonCollection.filter(function (item) {
+            if (favorites && !item.get("favorite")) {
+                return false;
             }
-            return false;
-        }));
-        this.log(this.get("length"), "records match", '"' + searchText + '" ' + favorites);
+            if (nonFavorites && item.get("favorite")) {
+                return false;
+            }
+            if (excludeId && item.get("_id") === excludeId) {
+                return false;
+            }
+            return search.matches(item.get("allSearchTerms"), item.get("searchDigits"), searchText);
+        });
+        // Which rows start a divider (the legacy list's letter dividers): by
+        // the model's euid, as models are shared with the other lists.
+        var dividers = {}, last = null, order = prefs.get("listSortOrder");
+        found.forEach(function (item) {
+            var text = names.dividerText(item.attributes, order);
+            if (text !== last) {
+                dividers[item.euid] = text;
+                last = text;
+            }
+        });
+        this.dividers = dividers;
+        this.add(found);
     }
 });

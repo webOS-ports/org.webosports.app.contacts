@@ -68,10 +68,6 @@ ContactsUI CSS
     font-size:16px;
 }
 .contacts-list .contacts-item {
-    display: table;
-    table-layout: fixed;
-    width: 100%;
-    min-height: 68px;
     border-width:1px 0;
     border-style:solid none solid none;
     border-top-color:rgba(255,255,255,0.5);
@@ -87,9 +83,30 @@ ContactsUI CSS
     background-color:#d1e5f5;
     border-color:#B3d9f2
 }
-.contacts-list .contacts-item > div {
+.contacts-list .contacts-item-row {
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+    min-height: 68px;
+    height: 68px;
+    position: relative;
+}
+.contacts-list .contacts-item-row > div {
     display: table-cell;
     vertical-align:middle;
+}
+.contacts-list .list-divider {
+    padding: 2px 14px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #1879cd;
+    background: rgba(0,0,0,0.05);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+.contacts-list-message {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: #888;
 }
 .contacts-list .contacts-item .icon {
     width: 78px;   /* 50+2*14 */
@@ -239,13 +256,6 @@ ContactsUI CSS
     margin:0 0 10px;
 }
 
-.im-status {
-    height: 28px;
-    background: url(../../assets/status-away.png) no-repeat 0 0;
-    position: absolute;
-    left: 0px;
-    top: 0px;
-}
 .edit-contact.button {
     background:none;
     border-image:none;
@@ -424,6 +434,124 @@ img {
     box-sizing: border-box;
 }
 
+.edit-main .edit-top {
+    -webkit-align-items: flex-start;
+    align-items: flex-start;
+}
+.edit-main .edit-name-row .onyx-button {
+    margin-left: 0.25rem;
+    padding: 0 0.5rem;
+    min-width: 2.2rem;
+}
+/* The star is the legacy sprite, not a glyph: Prelude has no U+2605/2606. */
+.edit-main .edit-name-row .edit-favorite {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+    background: url(../../assets/bg_edit_favorite.png) no-repeat 0 0;
+}
+.edit-main .edit-name-row .edit-favorite.active {
+    background-position: 0 -32px;
+}
+.edit-main .edit-note {
+    margin: 0.5rem 0;
+    color: #666;
+    font-size: 0.9em;
+}
+.edit-row {
+    padding: 2px 0;
+}
+.edit-row > * + * {
+    margin-left: 0.25rem;
+}
+.edit-row .edit-row-inputs > .onyx-input-decorator {
+    display: block;
+}
+.edit-row .edit-address-part + .edit-address-part {
+    margin-top: 2px;
+}
+.edit-row.read-only input,
+.edit-row.read-only textarea,
+.edit-row.read-only select {
+    color: #888;
+}
+.edit-row-account {
+    width: 24px;
+    height: 24px;
+}
+.edit-row-type,
+.edit-row-target {
+    max-width: 10rem;
+}
+.edit-row-remove.onyx-button {
+    padding: 0 0.6rem;
+}
+.edit-label {
+    min-width: 7rem;
+    color: #666;
+}
+.edit-account {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+}
+.edit-account-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 0.25rem;
+}
+.edit-account-select {
+    max-width: 14rem;
+}
+.edit-toolbar-button {
+    min-width: 8rem;
+}
+.edit-name-popup {
+    width: 20rem;
+    max-width: 90%;
+}
+.edit-name-popup .onyx-input-decorator {
+    display: block;
+}
+.edit-name-popup input {
+    width: 100%;
+    box-sizing: border-box;
+}
+.edit-popup-title {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+.edit-popup-buttons > * + * {
+    margin-left: 0.5rem;
+}
+
+@media all and (max-width: 599px) {
+    .edit-main .edit-top {
+        -webkit-flex-wrap: wrap;
+        flex-wrap: wrap;
+    }
+    .edit-main .edit-top .avatar {
+        width: 96px;
+        height: 96px;
+    }
+    .edit-main .edit-photo-col {
+        width: 96px;
+    }
+    .edit-main .edit-remove-photo {
+        padding: 0 4px;
+        font-size: 0.8em;
+        white-space: normal;
+    }
+    .edit-row-type,
+    .edit-row-target {
+        max-width: 6.5rem;
+    }
+}
+
 .flex-row {
     display: -webkit-flex;
     display: flex;
@@ -431,6 +559,11 @@ img {
     flex-flow: row; 
     -webkit-align-items: center;
     align-items: center;
+}
+/* Onyx makes a decorator in a group box a block, which would win over .flex-row. */
+.onyx-groupbox .onyx-input-decorator.flex-row {
+    display: -webkit-flex;
+    display: flex;
 }
 .flex-auto {
     -webkit-flex: auto;
@@ -750,6 +883,9 @@ border-top-color:rgba(255,255,255,0.5);
     overflow: hidden;
     margin: 0 0 0.2rem;
     text-overflow: ellipsis;
+    /* addresses and notes are text with line breaks */
+    white-space: pre-line;
+    word-wrap: break-word;
 }
 
 .details .button-arrow {
@@ -798,3 +934,307 @@ border-top-color:rgba(255,255,255,0.5);
     background: #F9f9f9 url(../../assets/defaultview-panel-tile.png) bottom left repeat-x;
 }
 
+
+/* Dialogs */
+
+.dialog {
+    width: 24rem;
+    max-width: 90%;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+.dialog-title {
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+}
+.dialog-message {
+    margin-bottom: 1rem;
+    word-wrap: break-word;
+}
+.dialog-buttons {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-justify-content: flex-end;
+    justify-content: flex-end;
+}
+.dialog-buttons > * + * {
+    margin-left: 0.5rem;
+}
+.dialog-buttons-stacked {
+    -webkit-flex-direction: column;
+    flex-direction: column;
+}
+.dialog-buttons-stacked > * + * {
+    margin-left: 0;
+    margin-top: 0.5rem;
+}
+.person-picker {
+    height: 80%;
+    max-height: 40rem;
+}
+.person-picker-rows {
+    padding: 1rem;
+}
+.person-picker-search {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+.person-picker-search input {
+    width: 100%;
+    box-sizing: border-box;
+}
+.person-picker .dialog-buttons {
+    margin-top: 0.5rem;
+}
+.person-picker .contacts-list {
+    color: #222;
+}
+.im-popup {
+    padding: 0.5rem;
+}
+.im-popup .onyx-button {
+    display: block;
+    width: 10rem;
+}
+.im-popup .onyx-button + .onyx-button {
+    margin-top: 0.5rem;
+}
+
+/* Preferences & Accounts */
+
+.prefs {
+    background-color: #e5e5e5;
+}
+.prefs-header-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 0.5rem;
+}
+.prefs-main {
+    max-width: 36rem;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0.5rem 1rem 1rem;
+}
+.prefs-main .onyx-groupbox {
+    margin-top: 0.75rem;
+}
+.prefs-row {
+    padding: 0.5rem;
+    background-color: #fff;
+}
+.prefs-select {
+    width: 100%;
+}
+.prefs-footnote {
+    margin: 0.25rem 0.5rem 0;
+    color: #666;
+    font-size: 0.85em;
+}
+.prefs-account {
+    -webkit-align-items: center;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #fff;
+}
+.prefs-account + .prefs-account {
+    border-top: 1px solid #ddd;
+}
+.prefs-account:active {
+    background-color: #c8dff3;
+}
+.prefs-account-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 0.5rem;
+}
+.prefs-account-text {
+    min-width: 0;
+}
+.prefs-account-name,
+.prefs-account-username {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.prefs-account-username,
+.prefs-account-count {
+    color: #666;
+    font-size: 0.85em;
+}
+.prefs-account-count {
+    margin-left: 0.5rem;
+}
+.prefs-buttons {
+    margin-top: 1rem;
+}
+.prefs-buttons > * + * {
+    margin-left: 0.75rem;
+}
+/* First use (FirstLaunch.js) */
+
+.first-launch-main {
+    text-align: center;
+}
+.first-launch-main .onyx-groupbox {
+    text-align: left;
+}
+.first-launch-image {
+    display: block;
+    width: 176px;
+    max-width: 40%;
+    margin: 1rem auto 0.5rem;
+}
+.first-launch-text {
+    margin: 1rem 0.5rem 0;
+    font-size: 1.1em;
+}
+.first-launch-add {
+    display: block;
+    width: 16rem;
+    max-width: 100%;
+    margin: 0.75rem auto 0;
+}
+.edit-main .edit-delete {
+    display: block;
+    width: 16rem;
+    max-width: 100%;
+    margin: 1rem auto 0;
+}
+
+/* Linked profiles */
+
+.header .profiles .profile-row {
+    -webkit-align-items: center;
+    align-items: center;
+    padding: 0.4rem 0.5rem;
+    border-top: 1px solid #ddd;
+}
+.header .profiles .profile-row:active {
+    background-color: #c8dff3;
+}
+.profile-account-icon {
+    width: 32px;
+    height: 32px;
+    margin-right: 0.5rem;
+}
+.profile-text {
+    min-width: 0;
+}
+.profile-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.profile-account {
+    color: #666;
+    font-size: 0.85em;
+}
+.profile-link-more {
+    padding: 0 0.5rem;
+    line-height: 3rem;
+    border-top: 1px solid #ddd;
+}
+.profile-popup {
+    width: 20rem;
+    max-width: 90%;
+}
+.edit-main .edit-photo-col {
+    width: 222px;
+    max-width: 35%;
+    margin: 0 8px 0 0;
+}
+.edit-main .edit-photo-col .avatar {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+}
+.edit-main .edit-remove-photo {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
+}
+.contacts-add-favorite.onyx-button {
+    display: block;
+    margin: 0.5rem auto;
+    min-width: 12rem;
+}
+
+/* IM presence (src/util/presence.js classes), the legacy 16px icons */
+
+.im-status::before {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    background: no-repeat 50% 50%;
+}
+.im-status.status-available::before {
+    background-image: url(../../assets/status-available.png);
+}
+.im-status.status-busy::before {
+    background-image: url(../../assets/status-away.png);
+}
+.im-status.status-offline::before {
+    background-image: url(../../assets/status-offline.png);
+}
+.contacts-list .contacts-item-row > .im-status {
+    width: 22px;
+    text-align: center;
+}
+.details .contacts-item .im-status {
+    float: left;
+    margin: 0.1em 0.5em 0 0;
+}
+
+/* Global address lookup (ContactsBar's galBox) */
+
+.gal-box {
+    border-top: 1px solid #bbb;
+    background-color: #e5e5e5;
+    /* clear of the list's floating add button */
+    padding-bottom: 4rem;
+}
+.gal-divider {
+    padding: 2px 14px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #1879cd;
+    background: rgba(0,0,0,0.05);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+.gal-search-row {
+    padding: 0.5rem;
+}
+.gal-search-row .onyx-button {
+    min-width: 12rem;
+    vertical-align: middle;
+}
+.gal-spinner {
+    vertical-align: middle;
+    margin-left: 0.5rem;
+}
+.gal-results {
+    max-height: 40vh;
+}
+.gal-item {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #d0d0d0;
+    background-color: #fff;
+    text-align: left;
+    font-size: 20px;
+}
+.gal-item.selected,
+.gal-item:active {
+    background-color: #c8dff3;
+}
+.gal-message {
+    padding: 0.75rem 1rem;
+    color: #888;
+}
+.details-add-gal.onyx-button {
+    position: absolute;
+    right: 0.5rem;
+    bottom: 0.5rem;
+}

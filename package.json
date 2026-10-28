@@ -1,19 +1,23 @@
 {
   "name": "org.webosports.app.contacts",
-  "main": "index.js",
   "assets": [
     "assets/*.png",
     "assets/icon.ico",
     "appinfo.json",
-    "icon.png"
+    "icon.png",
+    "resources/*/strings.json",
+    "resources/*/appinfo.json"
+  ],
+  "devAssets": [
+    "assets/kris_kringle.jpg",
+    "mock/luna-bus.js",
+    "mock/db8-data.json",
+    "mock/com.palm.service.accounts/*.json",
+    "mock/com.palm.service.accounts/*.png"
   ],
   "styles": [
     "src/style/main.less"
   ],
-  "devAssets": [
-    "assets/kris_kringle.jpg",
-    "mock/com.palm.service.accounts/*.json",
-    "mock/com.palm.service.accounts/*.png"
-  ],
+  "main": "index.js",
   "moduleDir": "src"
 }

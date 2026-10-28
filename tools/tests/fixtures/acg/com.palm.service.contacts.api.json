@@ -1,0 +1,20 @@
+{
+	"contactsservice.operation": [
+		"com.palm.service.contacts/preBackup",
+		"com.palm.service.contacts/countVCardContacts",
+		"com.palm.service.contacts/readVCard",
+		"com.palm.service.contacts/importVCard",
+		"com.palm.service.contacts/vCardExportAll",
+		"com.palm.service.contacts/vCardExportOne",
+		"com.palm.service.contacts/favoritePerson",
+		"com.palm.service.contacts/setFavoriteDefault",
+		"com.palm.service.contacts/setCroppedContactPhoto",
+		"com.palm.service.contacts/unfavoritePerson",
+		"com.palm.service.contacts/findPersonByPhone",
+		"com.palm.service.contacts/sortOrderChanged",
+		"com.palm.service.contacts/deleteContactImage",
+		"com.palm.service.contacts/SetUpWatch",
+		"com.palm.service.contacts/refetchPhoto",
+		"com.palm.service.contacts/updatePersonLocaleAll"
+	]
+}

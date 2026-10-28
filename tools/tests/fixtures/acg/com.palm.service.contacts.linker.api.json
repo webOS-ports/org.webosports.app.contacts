@@ -1,0 +1,17 @@
+{
+	"contactslinkerservice.operation": [
+		"com.palm.service.contacts.linker/manualLink",
+		"com.palm.service.contacts.linker/manualUnlink",
+		"com.palm.service.contacts.linker/setupWatch",
+		"com.palm.service.contacts.linker/forceAutolink",
+		"com.palm.service.contacts.linker/dbUpdatedRelinkChanges",
+		"com.palm.service.contacts.linker/yieldAutolink",
+		"com.palm.service.contacts.linker/saveNewPersonAndContacts",
+		"com.palm.service.contacts.linker/performedManualLink",
+		"com.palm.service.contacts.linker/performedUnlink",
+		"com.palm.service.contacts.linker/getManualLinks",
+		"com.palm.service.contacts.linker/getUnlinkLinks",
+		"com.palm.service.contacts.linker/resetCLBDB",
+		"com.palm.service.contacts.linker/deleteOrphanedPerson"
+	]
+}

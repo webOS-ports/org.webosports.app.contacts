@@ -1,609 +1,603 @@
-// EditContact.js - Edit or add a contact - org.webosports.app.contact
+// EditContact.js - Edit or add a contact - org.webosports.app.contacts
 // Copyright © 2015-2016 P. Douglas Reeder <reeder.29@gmail.com> under the MIT License
-/*jsl:import ../data/PersonModel.js */
+//
+// Edits the contacts behind a person, never the person's merged values:
+// src/util/contactEdit.js decides which contact each change goes to, and
+// src/data/saveEdit.js writes it.
 
 var
 	kind = require('enyo/kind'),
-	Collection = require('enyo/Collection'),
-	DataRepeater = require('enyo/DataRepeater'),
-	InputDecorator = require('onyx/InputDecorator'),
-	Input = require('onyx/Input'),
-	TextArea = require('onyx/TextArea'),
-	PickerDecorator = require('onyx/PickerDecorator'),
-	Picker = require('onyx/Picker'),
-	PersonModel = require('../data/PersonModel'),
+	Control = require('enyo/Control'),
+	Select = require('enyo/Select'),
+	Option = require('enyo/Option'),
+	Image = require('enyo/Image'),
+	Scroller = require('enyo/Scroller'),
 	FittableRows = require('layout/FittableRows'),
 	FittableHeaderLayout = require('layout/FittableHeaderLayout'),
 	Toolbar = require('onyx/Toolbar'),
-	Scroller = require('enyo/Scroller'),
-	FittableColumns = require('layout/FittableColumns'),
-	Image = require('enyo/Image'),
+	InputDecorator = require('onyx/InputDecorator'),
+	Input = require('onyx/Input'),
+	TextArea = require('onyx/TextArea'),
 	Groupbox = require('onyx/Groupbox'),
-	Binding = require('enyo/Binding'),
 	Button = require('onyx/Button'),
+	Popup = require('onyx/Popup'),
+	names = require('../util/names'),
+	labels = require('../util/labels'),
+	accountRules = require('../util/accountRules'),
+	contactEdit = require('../util/contactEdit'),
 	accounts = require('../data/accounts'),
-	$L = require('enyo/i18n').$L;   // no-op placeholder
+	prefs = require('../data/prefs'),
+	services = require('../data/services'),
+	saveEdit = require('../data/saveEdit'),
+	persons = require('../data/persons'),
+	choose = require('./choose'),
+	ConfirmDialog = require('./ConfirmDialog'),
+	$L = require('enyo/i18n').$L;
+
+var ADDRESS_PARTS = [
+	{key: "streetAddress", hint: $L("Street")},
+	{key: "locality", hint: $L("City")},
+	{key: "region", hint: $L("State / region")},
+	{key: "postalCode", hint: $L("Postal code")},
+	{key: "country", hint: $L("Country")}
+];
 
 
-/** utility kind for several types of details
- * We ought to be able to adjust the menu items, but create methods fail with inexplicable errors here. */
-var TextTypeRepeater = kind({
-	name: "TextTypeRepeater",
-	kind: DataRepeater,
+var FIELD_INFO = {
+	phoneNumbers: {hint: $L("New phone number"), inputType: "tel"},
+	emails: {hint: $L("New email address"), inputType: "email"},
+	ims: {hint: $L("New IM address"), inputType: "text"},
+	addresses: {hint: $L("New address")},
+	urls: {hint: $L("New web address"), inputType: "url"},
+	relations: {hint: $L("New relation"), inputType: "text"},
+	notes: {hint: $L("New note")}
+};
+
+/** One entry of a list field: its inputs, its type, and where it is stored. */
+var EditRow = kind({
+	name: "EditRow",
+	kind: Control,
+	classes: "edit-row flex-row",
 	published: {
-		inputType: "",
-		placeholder: ""
+		field: "",
+		row: null,              // {contactId, readOnly, entry, original, icon, accountName}
+		isNew: false,           // the empty row at the end of a group
+		contactChoices: null,   // [{_id, label}] the contacts a new entry can go to
+		showAccount: false
 	},
-    components: [{
-        classes: "flex-row", components: [
-	    	{kind: InputDecorator, classes: "flex-auto", components: [
-	 	        {name: "detailInput", kind: Input, type: "text", onchange: "textTypeChange"}
-	 	    ]},
- 	        {kind: PickerDecorator, classes: "flex-none", components: [
-	            {name: "detailType", style: "min-width: 6rem; text-transform: capitalize"},
-	            {name: "detailPicker", kind: Picker, scrolling: false, components: [
-      	             {name: "type_mobile_item", content: $L("Mobile"), value: "type_mobile"},
-	                 {name: "type_home_item", content: $L("Home"), value: "type_home"},
-	                 {name: "type_work_item", content: $L("Work"), value: "type_work"},
-	                 {name: "type_other_item", content: $L("Other"), value: "type_other"}
-	            ]}
-	        ]}
- 	    ],
-        bindings: [
-       		{ from: "container.inputType", to: "$.detailInput.type" },   // TODO: Is there a better way to do this?
-      		{ from: "container.placeholder", to: "$.detailInput.placeholder" },
-            { from: "model.value", to: "$.detailInput.value", oneWay: false },
-            { from: "model.type", to: "$.detailPicker.selected", oneWay: false, transform: function (type, dir) {
-            	if (dir & Binding.DIRTY_FROM) {
-            		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
-            	} else {
-            		return type.value;
-            	}
-            }}
-        ],
-        textTypeChange: function (inSender, inEvent) {
-        	console.log("textTypeChange", inEvent.child.parent.owner);
-        	var collection = inEvent.child.parent.owner.collection;
-        	// Is there a better way to get the collection?
-        	// this.owner.$.addressRepeater.collection also works
-        	if (inEvent.originator.value && inEvent.index === collection.length - 1) {
-        		collection.add({value: "", type: "type_home", favoriteData: {}, normalizedValue: ""});
-        	} else if (! inEvent.originator.value && inEvent.index !== collection.length - 1) {
-        		collection.remove(collection.at(inEvent.index));
-        	}
-        }
-	}]
+	events: {
+		onRowStarted: "",
+		onRowRemove: ""
+	},
+	create: function () {
+		this.inherited(arguments);
+		var field = this.field, row = this.row, entry = row.entry || {}, info = FIELD_INFO[field];
+		var disabled = !!row.readOnly;
+		this.addRemoveClass("read-only", disabled);
+		if (this.showAccount && !this.isNew) {
+			this.createComponent({name: "accountIcon", kind: Image, classes: "edit-row-account flex-none",
+				src: row.icon || "assets/contacts-by-webos.png", attributes: {title: row.accountName || ""}});
+		}
+		var inputs = this.createComponent({classes: "flex-auto edit-row-inputs"});
+		if (field === "addresses") {
+			ADDRESS_PARTS.forEach(function (inPart) {
+				inputs.createComponent({kind: InputDecorator, classes: "edit-address-part", components: [
+					{name: inPart.key, kind: Input, value: entry[inPart.key] || "", disabled: disabled,
+						placeholder: this.isNew && inPart.key === "streetAddress" ? info.hint : inPart.hint,
+						oninput: "inputChanged"}
+				]}, {owner: this});
+			}, this);
+		} else if (field === "notes") {
+			inputs.createComponent({kind: InputDecorator, components: [
+				{name: "value", kind: TextArea, value: entry.value || "", disabled: disabled, placeholder: info.hint,
+					oninput: "inputChanged"}
+			]}, {owner: this});
+		} else {
+			inputs.createComponent({kind: InputDecorator, components: [
+				{name: "value", kind: Input, type: info.inputType, value: entry.value || "", disabled: disabled,
+					placeholder: info.hint, oninput: "inputChanged"}
+			]}, {owner: this});
+		}
+		if (field !== "notes") {
+			var type = entry.type || labels.defaultType(field);
+			var types = this.createComponent({name: "type", kind: Select, classes: "edit-row-type flex-none", disabled: disabled});
+			labels.choicesFor(field, type).forEach(function (inChoice) {
+				types.createComponent({kind: Option, content: $L(inChoice.label), value: inChoice.value});
+			});
+			choose(types, type);
+		}
+		if (this.isNew && this.contactChoices && this.contactChoices.length > 1) {
+			// Which of the person's contacts a new entry is stored in.
+			var target = this.createComponent({name: "target", kind: Select, classes: "edit-row-target flex-none",
+				attributes: {title: $L("Save in")}});
+			this.contactChoices.forEach(function (inChoice) {
+				target.createComponent({kind: Option, content: inChoice.label, value: inChoice._id});
+			});
+			choose(target, row.contactId || this.contactChoices[0]._id);
+		}
+		if (!disabled && !this.isNew) {
+			this.addRemoveButton();
+		}
+	},
+	addRemoveButton: function () {
+		return this.createComponent({name: "remove", kind: Button, classes: "edit-row-remove flex-none", content: "×",
+			attributes: {title: $L("Remove"), "aria-label": $L("Remove")}, ontap: "removeTap"});
+	},
+	inputChanged: function () {
+		if (this.isNew) {
+			this.isNew = false;
+			this.addRemoveButton().render();
+			this.doRowStarted();
+		}
+		return true;
+	},
+	removeTap: function () {
+		this.doRowRemove();
+		return true;
+	},
+	//* The row as edited, in contactEdit's terms.
+	getRow: function () {
+		var entry = {}, field = this.field;
+		if (field === "addresses") {
+			ADDRESS_PARTS.forEach(function (inPart) {
+				entry[inPart.key] = this.$[inPart.key].get("value");
+			}, this);
+		} else {
+			entry.value = this.$.value.get("value");
+		}
+		if (this.$.type) {
+			entry.type = this.$.type.get("value");
+		}
+		var contactId = this.$.target ? this.$.target.get("value") : this.row.contactId;
+		return {contactId: contactId || null, readOnly: !!this.row.readOnly, entry: entry, original: this.row.original || null};
+	}
 });
 
+/** A list field: its rows, then an empty row for a new entry. */
+var EditGroup = kind({
+	name: "EditGroup",
+	kind: Groupbox,
+	classes: "edit-group",
+	published: {
+		field: ""
+	},
+	handlers: {
+		onRowStarted: "rowStarted",
+		onRowRemove: "rowRemove"
+	},
+	//* inRows from contactEdit.build(); inContext {showAccount, contactChoices, targetId}
+	setRows: function (inRows, inContext) {
+		this.context = inContext;
+		this.destroyClientControls();
+		inRows.forEach(function (inRow) {
+			this.addRow(inRow, false);
+		}, this);
+		this.addEmptyRow();
+		this.render();
+	},
+	addRow: function (inRow, inIsNew) {
+		return this.createComponent({kind: EditRow, field: this.field, row: inRow, isNew: inIsNew,
+			showAccount: this.context.showAccount, contactChoices: inIsNew ? this.context.contactChoices : null});
+	},
+	addEmptyRow: function () {
+		return this.addRow({contactId: this.context.targetId, readOnly: false, entry: {}, original: null}, true);
+	},
+	rowStarted: function () {
+		// Typing in the empty row made it an entry; a new empty row follows.
+		this.addEmptyRow().render();
+		return true;
+	},
+	rowRemove: function (inSender, inEvent) {
+		inEvent.originator.destroy();
+		return true;
+	},
+	getRows: function () {
+		return this.getClientControls().filter(function (inRow) {
+			return !!inRow.getRow;
+		}).map(function (inRow) {
+			return inRow.getRow();
+		});
+	}
+});
 
 /** the pane that's used for both adding & editing a contact */
 module.exports = kind({
 	name: "EditContact",
-    kind: FittableRows,
-    events: {
-        onCancel: "",
-        onSave: ""
-    },
-    published: {
-        title: "",
-        doneLabel: "",
-        oldPerson: new PersonModel(),
-        newPerson: null
-    },
-    bindings: [
-        {from: "title", to: "$.titleText.content"},
-        {from: "doneLabel", to: "$.doneBtn.content"},
-        {from: "oldPerson", to: "newPerson", transform: function (person) {
-        	return new PersonModel(person.raw());
-        }},
-        {from: "newPerson.name", to: "$.nameInput.value", transform: function (name) {
-        	var fullName = "";
-            if (name.honorificPrefix) {
-                fullName += name.honorificPrefix + " ";
-            }
-            if (name.givenName) {
-                fullName += name.givenName + " ";
-            }
-            if (name.middleName) {
-                fullName += name.middleName + " ";
-            }
-            if (name.familyName) {
-                fullName += name.familyName;
-            }
-            if (name.honorificSuffix) {
-                if (name.honorificSuffix.charAt(1) === " ") { //handle ", PhD" case.
-                    fullName += name.honorificSuffix;
-                } else {
-                    fullName += ", " + name.honorificSuffix;
-                }
-            }
-            return fullName.trim();
-        }},
-        {from: "newPerson.nickname", to: "$.nicknameInput.value", oneWay: false},
-        {from: "newPerson.organization", to: "$.jobTitleInput.value", transform: function (organization) {
-        	return organization.title;
-        }},
-        {from: "newPerson.organization", to: "$.departmentInput.value", transform: function (organization) {
-        	return organization.department;
-        }},
-        {from: "newPerson.organization", to: "$.organizationInput.value", transform: function (organization) {
-        	return organization.name;
-        }},
-        {from: "newPerson.phoneNumbers", to: "$.phoneRepeater.collection", transform: function (phoneNumbers) {
-            console.log("phoneNumbers", phoneNumbers); 
-            var c = new Collection(phoneNumbers);
-            c.add({value: "", type: "type_mobile", favoriteData: {}, normalizedValue: ""});
-//            console.log("phone collection", c);
-            return c;
-        }},
-        {from: "newPerson.emails", to: "$.emailRepeater.collection", transform: function (emails) {
-            console.log("emails", emails); 
-            var c = new Collection(emails);
-            c.add({value: "", type: "type_home", favoriteData: {}, normalizedValue: ""});
-//            console.log("email collection", c);
-            return c;
-        }},
-        {from: "newPerson.ims", to: "$.imRepeater.collection", transform: function (ims) {
-            console.log("ims", ims); 
-            var c = new Collection(ims);
-            c.add({value: "", favoriteData: {}, normalizedValue: "", type: 'type_other'});
-//            console.log("IM collection", c);
-            return c;
-        }},
-        {from: "newPerson.addresses", to: "$.addressRepeater.collection", transform: function (addresses) {
-            console.log("addresses", addresses); 
-            var c = new Collection(addresses);
-            c.add({streetAddress: "", locality: "", region: "", country: "", postalCode: "", type: "type_home"});
-//            console.log("email collection", c);
-            return c;
-        }},
-        {from: "newPerson.urls", to: "$.urlRepeater.collection", transform: function (urls) {
-            console.log("urls", urls); 
-            var c = new Collection(urls);
-            c.add({value: ""});
-//            console.log("url collection", c);
-            return c;
-        }},
-        {from: "newPerson.notes", to: "$.noteRepeater.collection", transform: function (notes) {
-            console.log("notes", notes); 
-        	// person.notes is an array of strings; Collections accepts only objects & arrays of objects
-            var c = new Collection();
-            for (var i=0; i<notes.length; ++i) {
-                c.add({value: notes[i]});
-            }
-            c.add({value: ""});
-//            console.log("note collection", c);
-            return c;
-        }},
-        {from: "newPerson.birthday", to: "$.birthdayInput.value", oneWay: false},
-        {from: "newPerson.relations", to: "$.relationRepeater.collection", transform: function (relations) {
-            console.log("relations", relations);
-            var c = new Collection(relations);
-            c.add({value: "", type: "type_spouse"});
-//            console.log("IM collection", c);
-            return c;
-        }}
-    ],
+	kind: FittableRows,
+	classes: "edit-contact",
+	published: {
+		title: ""
+	},
+	events: {
+		onCancel: "",
+		onSaved: "",    // {personId, isNew}
+		onDeleted: ""   // {personId, gone}: gone when the person went with its contacts
+	},
 	components: [
-        {
-            name: "topToolbar",
-            kind: Toolbar,
-            layoutKind: FittableHeaderLayout,
-            components: [
-                 // TODO: center title text in window
-                {name: "titleText", fit: true, content: "", style: "text-align:center"},
-                {name: "accountPkrDcrtr", kind: PickerDecorator, style: "max-width: 55%;", components: [
-		 		    {},   // PickerButton
-		 		    {name: "accountPicker", kind: Picker, components: [
-		 		    ]}
-		 		]}
-            ]
-        },
-        {
-        	fit: true,
-        	kind: Scroller, 
-        	touch: true,
-        	components: [
-        	    { classes: "edit-main", components: [
-        	    {
-        	    	kind: FittableColumns,   // TODO: reposition avatar on phone-size screens using flexbox wrap
-        	    	components: [
-    	                {
-    	                    classes: "avatar",
-    	                    components: [
-    	                        { kind: Image, name: "photo", sizing: "cover", classes: "img", src: "'assets/bg_icon_favorite_img.png'" },
-    	                        { classes: "mask"}
-    	                    ]
-    	                },
-    	                {fit: true, kind: Groupbox, classes: "edit-top-groupbox", components: [
-    	                    {kind: InputDecorator, components: [
-                           	    {name: "nameInput", kind: Input, placeholder: $L("Name"), attributes: {inputmode: "latin-name"}}
-                          	]},
-    	                    {kind: InputDecorator, components: [
-                           	    {name: "nicknameInput", kind: Input, placeholder: $L("Nickname"), attributes: {inputmode: "latin-name"}}
-                           	]},
-    	                    {kind: InputDecorator, components: [
-    	                        {name: "jobTitleInput", kind: Input, placeholder: $L("Job title"), attributes: {inputmode: "latin-name"}}
-    	                    ]},
-    	                    {kind: InputDecorator, components: [
-                           	    {name: "departmentInput", kind: Input, placeholder: $L("Department"), attributes: {inputmode: "latin-name"}}
-                           	]},
-    	                    {kind: InputDecorator, components: [
-    	                        {name: "organizationInput", kind: Input, placeholder: $L("Organization"), attributes: {inputmode: "latin-name"}}
-    	                    ]}
-    	                ]}
-        	    	]
-        	    },
-				{kind: Groupbox, components: [
-					{name: "phoneRepeater", kind: TextTypeRepeater, inputType: "tel", placeholder: $L("New phone number")}
+		{name: "topToolbar", kind: Toolbar, layoutKind: FittableHeaderLayout, components: [
+			{name: "titleText", fit: true, classes: "edit-title", content: ""},
+			{name: "accountBox", classes: "edit-account", showing: false, components: [
+				{name: "accountIcon", kind: Image, classes: "edit-account-icon", src: "assets/contacts-by-webos.png"},
+				{name: "accountSelect", kind: Select, classes: "edit-account-select", onchange: "accountChanged",
+					attributes: {title: $L("Save in")}}
+			]}
+		]},
+		{name: "scroller", kind: Scroller, fit: true, touch: true, horizontal: "hidden", components: [
+			{classes: "edit-main", components: [
+				{classes: "edit-top flex-row", components: [
+					{classes: "flex-none edit-photo-col", components: [
+						{classes: "avatar", components: [
+							{name: "photo", kind: Image, sizing: "cover", classes: "img", src: "assets/bg_icon_favorite_img.png"},
+							{classes: "mask"}
+						]},
+						// Takes effect on Save, like every other change here.
+						{name: "removePhotoBtn", kind: Button, classes: "edit-remove-photo", content: $L("Remove Photo"),
+							ontap: "removePhotoTap", showing: false}
+					]},
+					{kind: Groupbox, classes: "edit-top-groupbox flex-auto", components: [
+						{kind: InputDecorator, classes: "flex-row edit-name-row", components: [
+							{name: "nameInput", kind: Input, classes: "flex-auto", placeholder: $L("Name"),
+								attributes: {inputmode: "latin-name"}},
+							{name: "favoriteBtn", kind: Button, classes: "edit-favorite flex-none",
+								ontap: "toggleFavorite", attributes: {title: $L("Favorite"), "aria-pressed": "false"}},
+							{name: "nameDetailsBtn", kind: Button, classes: "edit-name-details flex-none", content: "…",
+								ontap: "openNameDetails", attributes: {title: $L("Name details")}}
+						]},
+						{kind: InputDecorator, components: [
+							{name: "nicknameInput", kind: Input, placeholder: $L("Nickname"), attributes: {inputmode: "latin-name"}}
+						]},
+						{kind: InputDecorator, components: [
+							{name: "jobTitleInput", kind: Input, placeholder: $L("Job title")}
+						]},
+						{kind: InputDecorator, components: [
+							{name: "departmentInput", kind: Input, placeholder: $L("Department")}
+						]},
+						{kind: InputDecorator, components: [
+							{name: "organizationInput", kind: Input, placeholder: $L("Company")}
+						]}
+					]}
 				]},
+				{name: "readOnlyNote", classes: "edit-note", showing: false},
+				{name: "phoneNumbersGroup", kind: EditGroup, field: "phoneNumbers"},
+				{name: "emailsGroup", kind: EditGroup, field: "emails"},
+				{name: "imsGroup", kind: EditGroup, field: "ims"},
+				{name: "addressesGroup", kind: EditGroup, field: "addresses"},
+				{name: "urlsGroup", kind: EditGroup, field: "urls"},
+				{name: "notesGroup", kind: EditGroup, field: "notes"},
+				{kind: Groupbox, classes: "edit-dates", components: [
+					{kind: InputDecorator, classes: "flex-row", components: [
+						{content: $L("Birthday"), classes: "edit-label flex-none"},
+						{name: "birthdayInput", kind: Input, type: "date", classes: "flex-auto", placeholder: "YYYY-MM-DD"}
+					]},
+					{kind: InputDecorator, classes: "flex-row", components: [
+						{content: $L("Anniversary"), classes: "edit-label flex-none"},
+						{name: "anniversaryInput", kind: Input, type: "date", classes: "flex-auto", placeholder: "YYYY-MM-DD"}
+					]}
+				]},
+				{name: "relationsGroup", kind: EditGroup, field: "relations"},
+				{name: "deleteBtn", kind: Button, classes: "onyx-negative edit-delete", content: $L("Delete Contact"),
+					ontap: "deleteTap", showing: false},
+				{style: "height: 1rem;"}   // the scroller cuts off the last item otherwise
+			]}
+		]},
+		{name: "bottomToolbar", kind: Toolbar, layoutKind: FittableHeaderLayout, components: [
+			{name: "cancelBtn", kind: Button, content: $L("Cancel"), classes: "onyx-light edit-toolbar-button", ontap: "cancelTap"},
+			{fit: true},
+			{name: "doneBtn", kind: Button, content: $L("Save"), classes: "onyx-affirmative edit-toolbar-button", ontap: "doneTap"}
+		]},
+		{name: "deleteConfirm", kind: ConfirmDialog},
+		{name: "nameDetails", kind: Popup, classes: "edit-name-popup", centered: true, modal: true, floating: true,
+			scrim: true, autoDismiss: false, components: [
+				{content: $L("Name details"), classes: "edit-popup-title"},
 				{kind: Groupbox, components: [
-		            {name: "emailRepeater", kind: TextTypeRepeater, inputType: "email", placeholder: $L("New email address")}
-		        ]},
-        	    {kind: Groupbox, components: [
-           	        {name: "imRepeater", kind: DataRepeater, components: [
-           	            {   classes: "flex-row",
-                            components: [
-          	                    {kind: InputDecorator, classes: "flex-auto", components: [
-                        	        {name: "imInput", kind: Input, type: "text", placeholder: $L("New IM address"), onchange: "imChange"}
-                        	    ]},
-                    	        {kind: PickerDecorator, classes: "flex-none", components: [
-	                	            {name: "imType", style: "min-width: 12rem; text-transform: capitalize;"},
-	                	            {name: "imPicker", kind: Picker, floating: true, maxHeight: Math.max((window.innerHeight-72)/2, 200), components: [
-	                	                 // TODO: figure out what these need to be, so we can tap on an entry to send a message
-	                	                 {name: "type_aim_item", content: $L("AIM"), value: "type_aim"},
-	                	                 // There's no such thing as a Bonjour messaging account; it works without accounts.
-	                	                 {name: "type_gadugadu_item", content: $L("Gadu-Gadu"), value: "type_gadugadu"},
-	                	                 {name: "type_icq_item", content: $L("ICQ"), value: "type_icq"},
-	                	                 {name: "type_jabber_item", content: $L("Jingle / Jabber / XMPP"), value: "type_jabber"},   // Google Talk, LJ Talk, Gizmo5, ...)
-	                	                 {name: "type_sametime_item", content: $L("Lotus Sametime"), value: "type_sametime"},
-	                	                 {name: "type_groupwise_item", content: $L("Novell GroupWise"), value: "type_groupwise"},
-                                        {name: "type_qq_item", content: $L("QQ"), value: "type_qq"},
-                                        {name: "type_whatsapp_item", content: $L("WhatsApp"), value: "type_whatsapp"},
-	                	                 {name: "type_yahoo_item", content: $L("Yahoo"), value: "type_yahoo"},
-	                	                 {classes: "onyx-menu-divider"},   // after this are protocols we don't yet or can't support
-	                	              	 // dead networks like .Mac, MobileMe, Windows Messenger Serv., TOC2 should map to "other"
-	                	                 {name: "type_other_item", content: $L("Other"), value: "type_other"},
-                                        {name: "type_bbm_item", content: $L("BlackBerry Messenger"), value: "type_bbm"},
-                                        {name: "type_facebook_item", content: $L("Facebook"), value: "type_facebook"},
-                                        {name: "type_imessage_item", content: $L("iMessage"), value: "type_imessage"},
-                                        {name: "type_imo_item", content: $L("imo"), value: "type_imo"},
-                                        {name: "type_irc_item", content: $L("IRC"), value: "type_irc"},
-                                        {name: "type_kakaotalk_item", content: $L("Kakaotalk"), value: "type_kakaotalk"},
-                                        {name: "type_line_item", content: $L("LINE"), value: "type_line"},
-	                	                 {name: "type_linkedin_item", content: $L("LinkedIn"), value: "type_linkedin"},
-                                        {name: "type_signal_item", content: $L("Signal"), value: "type_signal"},   // uses phone # as ID
-                                        {name: "type_silc_item", content: $L("SILC"), value: "type_silc"},
-                                        {name: "type_silentphone_item", content: $L("Silent Phone"), value: "type_silentphone"},
-                                        {name: "type_simple_item", content: $L("Simple / LCS"), value: "type_simple"},   // includes MS "Live Communication Server"
-	                	                 {name: "type_skype_item", content: $L("Skype"), value: "type_skype"},   // we'd need more than the skype4pidgin plugin
-                                        {name: "type_snapchat_item", content: $L("Snapchat"), value: "type_snapchat"},
-	                	                 {name: "type_telegram_item", content: $L("Telegram"), value: "type_telegram"},
-	                	                 {name: "type_threema_item", content: $L("Threema"), value: "type_threema"},
-	                	                 {name: "type_twitter_item", content: $L("Twitter"), value: "type_twitter"},
-                                        {name: "type_viber_item", content: $L("Viber"), value: "type_viber"},
-                                        {name: "type_wechat_item", content: $L("WeChat"), value: "type_wechat"},
-                                        {name: "type_zalo_item", content: $L("Zalo"), value: "type_zalo"},
-                                        {name: "type_zephyr_item", content: $L("Zephyr"), value: "type_zephyr"}
-	                	            ]}
-	                	        ]}                        	    
-                           ],
-                           bindings: [
-                               {from: "model.value", to: "$.imInput.value", oneWay: false},
-                               {from: "model.type", to: "$.imPicker.selected", oneWay: false, transform: function (type, dir) {
-                            	   if (dir & Binding.DIRTY_FROM) {
-										return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
-                            	   } else {
-                            		   return type.value;
-                            	   }
-                               }}
-                           ],
-                           imChange: function (inSender, inEvent) {
-                           	   var collection = inEvent.child.parent.owner.collection;
-                           	   // Is there a better way to get the collection?
-                           	   // this.owner.$.addressRepeater.collection also works
-		          	        	if (inEvent.originator.value && inEvent.index === collection.length - 1) {
-		          	        		collection.add({value: "", favoriteData: {}, normalizedValue: "", type: 'type_other'});
-		          	        	} else if (! inEvent.originator.value && inEvent.index !== collection.length - 1) {
-		          	        		collection.remove(collection.at(inEvent.index));
-		          	        	}
-		          	       }
-                        }
-                    ]}
-   	            ]},
-        	    {kind: Groupbox, components: [
-          	        {name: "addressRepeater", kind: DataRepeater, components: [
-          	            {   
-//          	            	style: "width: 100%; box-sizing: border-box;",
-          	            	components: [
-              	                { classes: "flex-row", components: [
-               	                    {kind: InputDecorator, classes: "flex-auto", components: [
-    	                       	        {name: "addressInput", kind: Input, placeholder: $L("New street address"), onchange: "addressChange"}
-    	                       	    ]},
-                           	        {kind: PickerDecorator, classes: "flex-none", components: [
-                           	            {name: "addressType", style: "min-width: 5rem; text-transform: capitalize;"},
-                           	            {name: "addressPicker", kind: Picker, floating: true, maxHeight: Math.max((window.innerHeight-72)/2, 200), components: [
-                          	                {name: "type_home_item", content: $L("Home"), value: "type_home"},
-                          	                {name: "type_work_item", content: $L("Work"), value: "type_work"},
-                          	                {name: "type_other_item", content: $L("Other"), value: "type_other"}
-                           	            ]}
-                           	        ]}
-              	                ]},
-              	                // TODO: remove this row, and parse addressInput (using locale) into these fields 
-              	                { classes: "flex-row", components: [
-              	                    {kind: InputDecorator, classes: "flex-auto", components: [
-     	                       	        {name: "localityInput", kind: Input, placeholder: $L("City"), onchange: "addressChange"}
-     	                       	    ]},
-           	                    	{kind: InputDecorator, classes: "flex-auto", components: [
-      	                       	        {name: "regionInput", kind: Input, placeholder: $L("State"), onchange: "addressChange"}
-      	                       	    ]},
-        	                    	{kind: InputDecorator, classes: "flex-auto", components: [
-      	                       	        {name: "countryInput", kind: Input, placeholder: $L("Country"), onchange: "addressChange"}
-      	                       	    ]},
-        	                    	{kind: InputDecorator, classes: "flex-auto", components: [
-      	                       	        {name: "postalCodeInput", kind: Input, placeholder: $L("ZIP code"), onchange: "addressChange"}
-      	                       	    ]}
-              	                ]}
-          	                ],
-                            bindings: [
-                                {from: "model.streetAddress", to: "$.addressInput.value", oneWay: false},
-                                {from: "model.locality", to: "$.localityInput.value", oneWay: false},
-                                {from: "model.region", to: "$.regionInput.value", oneWay: false},
-                                {from: "model.country", to: "$.countryInput.value", oneWay: false},
-                                {from: "model.postalCode", to: "$.postalCodeInput.value", oneWay: false},
-                                { from: "model.type", to: "$.addressPicker.selected", oneWay: false, transform: function (type, dir) {
-                                	if (dir & Binding.DIRTY_FROM) {
-                              			return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
-                                	} else {
-                                		return type.value;
-                                	}
-                                }}
-                            ],
-                            addressChange: function (inSender, inEvent) {
-                            	var collection = inEvent.child.parent.owner.collection;
-                            	// Is there a better way to get the collection?
-                            	// this.owner.$.addressRepeater.collection also works
-		          	        	if (inEvent.index === collection.length - 1 && inEvent.originator.value ) {
-		          	        		collection.add({streetAddress: "", locality: "", region: "", country: "", postalCode: "", type: "type_home"});
-		          	        	} else {
-		          	        		if (inEvent.index !== collection.length - 1 && ! this.$.addressInput.value && 
-		          	        				! this.$.localityInput.value && ! this.$.regionInput.value && 
-		          	        				! this.$.countryInput.value && ! this.$.postalCodeInput.value) {
-					          	        		collection.remove(collection.at(inEvent.index));
-		          	        		}
-		          	        	}
-		          	        }
-                        }
-                    ]}
-  	            ]},
-        	    {kind: Groupbox, components: [
-          	        {name: "urlRepeater", kind: DataRepeater, components: [{
-          	        	components: [
-         	                {kind: InputDecorator, style: "box-sizing: border-box; width:100%", components: [
-                       	        {name: "urlInput", kind: Input, type: "url", placeholder: $L("New URL"), onchange: "urlChange"}
-                       	    ]}
-                        ],
-                        bindings: [
-                            {from: "model.value", to: "$.urlInput.value", oneWay: false}
-                        ],
-                        urlChange: function (inSender, inEvent) {
-                           	var collection = inEvent.child.parent.owner.collection;
-                          	// Is there a better way to get the collection?
-                          	// this.owner.$.addressRepeater.collection also works
-              	        	if (inEvent.originator.value && inEvent.index === collection.length - 1) {
-              	        		collection.add({value: ""});
-              	        	} else if (! inEvent.originator.value && inEvent.index !== collection.length - 1) {
-              	        		collection.remove(collection.at(inEvent.index));
-              	        	}
-	          	        }
-                    }]}
-  	            ]},
-        	    {kind: Groupbox, components: [
-          	        {name: "noteRepeater", kind: DataRepeater, components: [{
-          	        	components: [
-         	                {kind: InputDecorator, style: "box-sizing: border-box; width:100%", components: [
-                       	        {name: "noteInput", kind: TextArea, placeholder: $L("New note"), onchange: "noteChange"}
-                       	    ]}    
-                        ],
-                        bindings: [
-                            {from: "model.value", to: "$.noteInput.value", oneWay: false}
-                        ],
-                        noteChange: function (inSender, inEvent) {
-                           	var collection = inEvent.child.parent.owner.collection;
-                          	// Is there a better way to get the collection?
-                          	// this.owner.$.addressRepeater.collection also works
-              	        	if (inEvent.originator.value && inEvent.index === collection.length - 1) {
-              	        		collection.add({value: ""});
-              	        	} else if (! inEvent.originator.value && inEvent.index !== collection.length - 1) {
-              	        		collection.remove(collection.at(inEvent.index));
-              	        	}
-	          	        }
-                    }]}
-  	            ]},
-                {kind: Groupbox, components: [
-                    {kind: InputDecorator, style: "position: relative;", components: [
-                        // consider changing type to "date", when the browser properly supports it
-                 	    {name: "birthdayInput", kind: Input, type: "text"},
-                        {content: $L("Birthday"), style: "position: absolute; right: 0.5rem; top: 0.5rem; color: gray;"}
-                	]}
-                    
-                    // TODO: ringtone - can wait until we can receive phone calls
-                ]},
-        	    {kind: Groupbox, components: [
-        	        {name: "relationRepeater", kind: DataRepeater, components: [
-        	            {   classes: "flex-row",
-                         components: [
-       	                    {kind: InputDecorator, classes: "flex-auto", components: [
-                     	        {name: "relationInput", kind: Input, type: "text", placeholder: $L("New relation"), onchange: "relationChange"}
-                     	    ]},
-                 	        {kind: PickerDecorator, classes: "flex-none", components: [
-                	            {name: "relationType", style: "min-width: 10.3rem; text-transform: capitalize;"},
-                	            {name: "relationPicker", kind: Picker, floating: true, maxHeight: Math.max((window.innerHeight-72)/2, 200), components: [
-                	                 {name: "type_assistant_item", content: $L("Assistant"), value: "type_assistant"},
-                	                 {name: "type_brother_item", content: $L("Brother"), value: "type_brother"},
-                	                 {name: "type_child_item", content: $L("Child"), value: "type_child"},
-                	                 {name: "type_domestic_partner_item", content: $L("Domestic Partner"), value: "type_domestic_partner"},
-                	                 {name: "type_father_item", content: $L("Father"), value: "type_father"},
-                	                 {name: "type_friend_item", content: $L("Friend"), value: "type_friend"},
-                	                 {name: "type_manager_item", content: $L("Manager"), value: "type_manager"},
-                	                 {name: "type_mother_item", content: $L("Mother"), value: "type_mother"},
-                	                 {name: "type_parent_item", content: $L("Parent"), value: "type_parent"},
-                	                 {name: "type_partner_item", content: $L("Partner"), value: "type_partner"},
-                	                 {name: "type_referred_by_item", content: $L("Referred by"), value: "type_referred_by"},
-                	                 {name: "type_relative_item", content: $L("Relative"), value: "type_relative"},
-                	                 {name: "type_sister_item", content: $L("Sister"), value: "type_sister"},
-                	                 {name: "type_spouse_item", content: $L("Spouse"), value: "type_spouse"},
-                	                 {name: "type_other_item", content: $L("Other"), value: "type_other"}
-                	            ]}
-                	        ]}                        	    
-                        ],
-                        bindings: [
-                            {from: "model.value", to: "$.relationInput.value", oneWay: false},
-                            {from: "model.type", to: "$.relationPicker.selected", oneWay: false, transform: function (type, dir) {
-                            	if (dir & Binding.DIRTY_FROM) {
-                            		return this.$[type && type.length > 5 ? type + "_item" : "type_other_item"];
-                            	} else {
-                            		return type.value;
-                            	}
-                            }}
-                        ],
-                        relationChange: function (inSender, inEvent) {
-                        	   var collection = inEvent.child.parent.owner.collection;
-                        	   // Is there a better way to get the collection?
-                        	   // this.owner.$.addressRepeater.collection also works
-	          	        	if (inEvent.originator.value && inEvent.index === collection.length - 1) {
-	          	        		collection.add({value: "", type: "type_spouse"});
-	          	        	} else if (! inEvent.originator.value && inEvent.index !== collection.length - 1) {
-	          	        		collection.remove(collection.at(inEvent.index));
-	          	        	}
-	          	       }
-                     }
-                 ]}
-	            ]},
-  	            {style: "height: 1rem;"}   // hack because scroller cuts off last item
-            ]}]
-        },
-        {
-            name: "bottomToolbar",
-            kind: Toolbar,
-            layoutKind: FittableHeaderLayout,
-            components: [
-                {kind: Button, content: $L("Cancel"), classes: "onyx-light", style: "width: 10rem;", ontap: "cancelTap"},
-                {fit: true},
-                {name: "doneBtn", kind: Button, content: "", classes: "onyx-affirmative", style: "width: 10rem;", ontap: "doneTap"}
-            ]
-        }
-    ],
-    
-    showingChanged: function (inOld) {
-    	this.inherited (arguments);
-    	if (inOld === false && this.get("showing") === true) {
-    		this.$.scroller.scrollToTop();
-    		if (this.$.accountPicker.getComponents().length === 1) {   // only has scroller
-    			this.$.accountPicker.createComponents(accounts.array);
-    		}
-    	}
-		this.$.accountPkrDcrtr.set("showing", this.newPerson.get("contactIds").length === 0);
-    },
-    
-    cancelTap: function (inSender, inEvent) {
-    	this.set("oldPerson", new PersonModel());
-    	this.doCancel();
-    },
+					{kind: InputDecorator, components: [{name: "prefixInput", kind: Input, placeholder: $L("Prefix")}]},
+					{kind: InputDecorator, components: [{name: "givenInput", kind: Input, placeholder: $L("First name")}]},
+					{kind: InputDecorator, components: [{name: "middleInput", kind: Input, placeholder: $L("Middle name")}]},
+					{kind: InputDecorator, components: [{name: "familyInput", kind: Input, placeholder: $L("Last name")}]},
+					{kind: InputDecorator, components: [{name: "suffixInput", kind: Input, placeholder: $L("Suffix")}]}
+				]},
+				{classes: "flex-row edit-popup-buttons", components: [
+					{name: "nameDetailsCancel", kind: Button, content: $L("Cancel"), classes: "flex-auto", ontap: "closeNameDetails"},
+					{name: "nameDetailsDone", kind: Button, content: $L("Done"), classes: "flex-auto onyx-affirmative", ontap: "saveNameDetails"}
+				]}
+			]}
+	],
 
-    doneTap: function (inSender, inEvent) {
-    	// set attributes directly to avoid uselessly trigering the bindings
-    	// TODO: call set once, with all the displayName-affecting properties
-    	
-    	// TODO: when we implement individual name fields, parsing the full name field will happen in onchange
-    	// TODO: if field not edited, don't set "name" in model
-    	this.parseName();
-    	
-    	// nickname is 2-way
+	/** Edits an existing person (a PersonModel or a person record). */
+	editPerson: function (inPerson) {
+		var person = inPerson && inPerson.raw ? inPerson.raw() : inPerson;
+		this.state = null;
+		this.set("title", $L("Edit Contact"));
+		this.$.doneBtn.set("content", $L("Save"));
+		persons.contactsOf(person, this.bindSafely(function (inContacts) {
+			this.whenReady(this.bindSafely(function () {
+				this.start(person, inContacts, null);
+			}));
+		}), this.bindSafely(function (inError) {
+			console.error("EditContact: cannot load the contacts:", inError.errorCode, inError.errorText);
+			services.banner($L("Cannot load this contact"));
+			this.doCancel();
+		}));
+	},
 
-    	this.newPerson.set("organization", {
-			title: this.$.jobTitleInput.get("value").trim(),
-			department: this.$.departmentInput.get("value").trim(),
-			name: this.$.organizationInput.get("value").trim()
+	/** Creates a new person, optionally starting from a contact record. */
+	newPerson: function (inTemplate) {
+		this.state = null;
+		this.set("title", $L("New Contact"));
+		this.$.doneBtn.set("content", $L("Create"));
+		this.whenReady(this.bindSafely(function () {
+			this.start(null, [], inTemplate || null);
+		}));
+	},
+
+	whenReady: function (inFn) {
+		accounts.whenReady(function () {
+			prefs.whenReady(inFn);
 		});
-		// We use set, so displayName is updated
-		
-    	this.newPerson.attributes.phoneNumbers = this.$.phoneRepeater.collection.raw().filter(function (phone) {
-    		return phone.value && /[0-9#*A-PR-Ya-pr-y]/.test(phone.value);
-    	});
-    	
-    	this.newPerson.set("emails", this.$.emailRepeater.collection.raw().filter(function (email) {
-    		return email.value && /\S/.test(email.value);
-    	}));
-		// We use set, so displayName is updated
-		
-		this.newPerson.set("ims", this.$.imRepeater.collection.raw().filter(function (im) {
-    		return im.value && /\S/.test(im.value);
-    	}));
-		// We use set, so displayName is updated
+	},
 
-		this.newPerson.attributes.addresses = this.$.addressRepeater.collection.raw().filter(function (address) {
-    		return address.streetAddress && /\S/.test(address.streetAddress) ||
-    			address.locality && /\S/.test(address.locality) ||
-    			address.region && /\S/.test(address.region) ||
-    			address.country && /\S/.test(address.country) ||
-    			address.postalCode && /[0-9A-Za-z]/.test(address.postalCode);
-    	});
+	titleChanged: function () {
+		this.$.titleText.set("content", this.title);
+	},
 
-		this.newPerson.attributes.urls = this.$.urlRepeater.collection.raw().filter(function (url) {
-    		return url.value && /\S/.test(url.value);
-    	});
-		
-		this.newPerson.attributes.notes = this.$.noteRepeater.collection.map(function (currentValue, index) {
-			return currentValue.get("value");
-		}).filter(function (note) {
-    		return /\S/.test(note);
-    	});
-		
-		// birthday is 2-way
+	start: function (inPerson, inContacts, inTemplate) {
+		var photos = (inPerson && inPerson.photos) || {};
+		this.$.photo.set("src", photos.bigPhotoPath || photos.squarePhotoPath || "assets/bg_icon_favorite_img.png");
+		this.contacts = inContacts;
+		this.photoRemoved = false;
+		this.state = contactEdit.build(inPerson, inContacts, accounts.list, prefs.get("defaultAccountId"), inTemplate);
+		this.saving = false;
+		this.$.deleteBtn.set("showing", !this.state.isNew);
+		this.$.removePhotoBtn.set("showing", contactEdit.canRemovePhoto(this.state, inContacts));
+		this.renderState();
+		this.$.scroller.scrollToTop();
+	},
 
-		this.newPerson.attributes.relations = this.$.relationRepeater.collection.raw().filter(function (relation) {
-    		return relation.value && /\S/.test(relation.value);
-    	});
+	renderState: function () {
+		var state = this.state, single = state.single;
+		this.editName = JSON.parse(JSON.stringify(single.name));
+		this.shownName = names.format(this.editName);
+		this.$.nameInput.set("value", this.shownName);
+		this.$.nicknameInput.set("value", single.nickname);
+		this.$.jobTitleInput.set("value", single.organization.title);
+		this.$.departmentInput.set("value", single.organization.department);
+		this.$.organizationInput.set("value", single.organization.name);
+		this.setDate(this.$.birthdayInput, single.birthday);
+		this.setDate(this.$.anniversaryInput, single.anniversary);
+		this.favorite = state.favorite;
+		this.favoriteChanged();
+		this.renderAccountPicker();
 
-		// account fields for contact records
-    	var accountCtrl = this.$.accountPicker.get("selected") || {};
-    	
-		this.doSave({oldPerson: this.oldPerson, newPerson: this.newPerson, accountId: accountCtrl.accountId, dbkind: accountCtrl.dbkind});
-    },
-    
-    parseName: function () {
-    	var honorificPrefix, givenName, middleName, familyName, honorificSuffix;
-    	var fullName = this.$.nameInput.value.trim();
-		honorificPrefix = givenName = middleName = familyName = honorificSuffix = "";
-		
-		this.prefixPatt.lastIndex = 0;
-		var prefixMatch = this.prefixPatt.exec(fullName);
-		if (prefixMatch) {
-			honorificPrefix = prefixMatch[0].trim();
-			fullName = fullName.slice(this.prefixPatt.lastIndex);
+		var editable = state.contacts.filter(function (inC) { return !inC.readOnly; });
+		var context = {
+			showAccount: state.contacts.length > 1,
+			targetId: state.targetId,
+			contactChoices: editable.map(function (inC) {
+				return {_id: inC._id, label: inC.accountName || $L("Contact")};
+			})
+		};
+		var contactsById = {};
+		state.contacts.forEach(function (inC) { contactsById[inC._id] = inC; });
+		contactEdit.LIST_FIELDS.forEach(function (inField) {
+			var rows = state.lists[inField].map(function (inRow) {
+				var c = contactsById[inRow.contactId] || {};
+				return {contactId: inRow.contactId, readOnly: inRow.readOnly, entry: inRow.entry, original: inRow.original,
+					icon: c.icon, accountName: c.accountName};
+			});
+			this.$[inField + "Group"].setRows(rows, context);
+		}, this);
+
+		var note = "";
+		if (!state.isNew && !state.targetId) {
+			note = $L("This contact's accounts cannot be changed here. Your changes are saved in a new linked profile.");
+		} else if (state.contacts.some(function (inC) { return inC.readOnly; })) {
+			note = $L("Grayed entries come from accounts that cannot be changed here.");
 		}
-		
-		this.suffixPatt.lastIndex = 0;
-		var suffixMatch = this.suffixPatt.exec(fullName);
-		if (suffixMatch) {
-			honorificSuffix = suffixMatch[0];
-			fullName = fullName.slice(0, suffixMatch.index);
+		this.$.readOnlyNote.set("content", note);
+		this.$.readOnlyNote.set("showing", !!note);
+	},
+
+	// A stored date that is not a full ISO date (a vCard's "--03-14") is
+	// shown as text, so it is kept, not blanked by the date input.
+	setDate: function (inInput, inValue) {
+		inInput.set("type", !inValue || contactEdit.isValidDate(inValue) ? "date" : "text");
+		inInput.set("value", inValue || "");
+	},
+
+	renderAccountPicker: function () {
+		var state = this.state, select = this.$.accountSelect;
+		var writable = state.isNew ? accountRules.writableAccounts(accounts.list) : [];
+		this.writable = writable;
+		this.$.accountBox.set("showing", writable.length > 0);
+		if (!writable.length) {
+			return;
 		}
-		
-		var names = fullName.split(/\s+/);
-		if (names.length >= 2) {
-			givenName = names.slice(0, names.length-1).join(" ");
-			familyName = names[names.length-1];
-		} else {
-			familyName = fullName;
+		select.destroyClientControls();
+		writable.forEach(function (inAccount) {
+			select.createComponent({kind: Option, content: inAccount.label, value: inAccount.accountId});
+		});
+		select.render();
+		if (state.newAccount) {
+			choose(select, state.newAccount.accountId);
+			this.$.accountIcon.set("src", state.newAccount.icon || "assets/contacts-by-webos.png");
 		}
-		this.newPerson.set("name", {honorificPrefix: honorificPrefix, givenName: givenName, middleName: middleName, familyName: familyName, honorificSuffix: honorificSuffix});
-		// We use set, so displayName is updated
-    },
-    
-    // Add common honorifics for all languages and cultures to this pattern.
-    // Don't bother with noble honorifics.
-	prefixPatt: /^((Mr\.|Master|Ms\.|Mrs\.|Miss|Dr\.|(The\s+)?Reverend|Father|(The\s+)Hon(\.|orable)|Herr|Frau|Fräulein|Doktor|Professor)\s*)+/ig,
-	suffixPatt: /(,\s*(Ph\. ?D\.?|Junior|Jr\.|II|III|jünger))+$/i
+	},
+	accountChanged: function () {
+		var id = this.$.accountSelect.get("value");
+		var account = this.writable.filter(function (inA) { return inA.accountId === id; })[0];
+		if (account) {
+			this.state.newAccount = account;
+			this.$.accountIcon.set("src", account.icon || "assets/contacts-by-webos.png");
+		}
+		return true;
+	},
+
+	toggleFavorite: function () {
+		this.favorite = !this.favorite;
+		this.favoriteChanged();
+		return true;
+	},
+	favoriteChanged: function () {
+		this.$.favoriteBtn.addRemoveClass("active", !!this.favorite);
+		this.$.favoriteBtn.setAttribute("aria-pressed", this.favorite ? "true" : "false");
+	},
+
+	// The name as structured parts: those loaded (or set in the details
+	// popup) while the one-line name still shows them, else what it parses to.
+	// So an untouched name keeps a middle name the line cannot tell apart.
+	currentName: function () {
+		var text = this.$.nameInput.get("value") || "";
+		if (text.trim() === this.shownName.trim()) {
+			return this.editName;
+		}
+		return names.parse(text);
+	},
+	openNameDetails: function () {
+		var n = this.currentName();
+		this.$.prefixInput.set("value", n.honorificPrefix || "");
+		this.$.givenInput.set("value", n.givenName || "");
+		this.$.middleInput.set("value", n.middleName || "");
+		this.$.familyInput.set("value", n.familyName || "");
+		this.$.suffixInput.set("value", n.honorificSuffix || "");
+		this.$.nameDetails.show();
+		return true;
+	},
+	closeNameDetails: function () {
+		this.$.nameDetails.hide();
+		return true;
+	},
+	saveNameDetails: function () {
+		this.editName = {
+			honorificPrefix: this.$.prefixInput.get("value").trim(),
+			givenName: this.$.givenInput.get("value").trim(),
+			middleName: this.$.middleInput.get("value").trim(),
+			familyName: this.$.familyInput.get("value").trim(),
+			honorificSuffix: this.$.suffixInput.get("value").trim()
+		};
+		this.shownName = names.format(this.editName);
+		this.$.nameInput.set("value", this.shownName);
+		this.$.nameDetails.hide();
+		return true;
+	},
+
+	removePhotoTap: function () {
+		this.photoRemoved = true;
+		this.$.photo.set("src", "assets/bg_icon_favorite_img.png");
+		this.$.removePhotoBtn.hide();
+		return true;
+	},
+
+	// As the legacy Delete: contacts of read-only accounts stay, the
+	// dialog says so, and offers to delete the others.
+	deleteTap: function () {
+		if (!this.state || this.state.isNew || this.saving) {
+			return true;
+		}
+		var state = this.state, plan = accountRules.deletePlan(this.contacts, accounts.list);
+		var readOnlyName = plan.readOnlyName || $L("Read-only");
+		var go = this.bindSafely(function () {
+			this.saving = true;
+			saveEdit.deletePerson(state.personId, plan, this.bindSafely(function (inError) {
+				this.saving = false;
+				if (inError) {
+					services.banner($L("Could not delete the contact") +
+						(inError.errorCode !== undefined ? " (" + inError.errorCode + ")" : ""));
+					return;
+				}
+				this.state = null;
+				this.doDeleted({personId: state.personId, gone: plan.action !== "others"});
+			}));
+		});
+		switch (plan.action) {
+		case "none":
+			this.$.deleteConfirm.ask($L("{type} profiles cannot be deleted.").replace("{type}", readOnlyName));
+			break;
+		case "others":
+			this.$.deleteConfirm.ask($L("{type} profiles cannot be deleted. Delete all other profiles?").replace("{type}", readOnlyName),
+				go, $L("Delete other profiles"), null, true);
+			break;
+		default:
+			this.$.deleteConfirm.ask($L("Delete {name}?").replace("{name}", names.format(state.single.name) || $L("this contact")),
+				go, plan.action === "all" && this.contacts.length > 1 ? $L("Delete All Profiles") : $L("Delete"), null, true);
+		}
+		return true;
+	},
+
+	cancelTap: function () {
+		this.$.deleteConfirm.hide();
+		this.$.nameDetails.hide();
+		this.state = null;
+		this.doCancel();
+		return true;
+	},
+
+	// What the user has in front of them, in contactEdit's terms.
+	edited: function () {
+		var lists = {};
+		contactEdit.LIST_FIELDS.forEach(function (inField) {
+			lists[inField] = this.$[inField + "Group"].getRows();
+		}, this);
+		return {
+			favorite: !!this.favorite,
+			single: {
+				name: this.currentName(),
+				nickname: this.$.nicknameInput.get("value") || "",
+				organization: {
+					title: this.$.jobTitleInput.get("value") || "",
+					department: this.$.departmentInput.get("value") || "",
+					name: this.$.organizationInput.get("value") || ""
+				},
+				birthday: this.$.birthdayInput.get("value") || "",
+				anniversary: this.$.anniversaryInput.get("value") || ""
+			},
+			lists: lists,
+			removePhoto: !!this.photoRemoved
+		};
+	},
+
+	doneTap: function () {
+		if (!this.state || this.saving) {
+			return true;
+		}
+		var state = this.state, edited = this.edited();
+		var badDate = ["birthday", "anniversary"].some(function (inKey) {
+			var value = edited.single[inKey].trim();
+			return value !== state.single[inKey].trim() && !contactEdit.isValidDate(value);
+		});
+		if (badDate) {
+			services.banner($L("Write dates as YYYY-MM-DD"));
+			return true;
+		}
+		var plan = contactEdit.plan(state, this.contacts, edited);
+		if (state.isNew && isEmptyContact(plan.create)) {
+			services.banner($L("Type a name or a number first"));
+			return true;
+		}
+		this.saving = true;
+		this.$.nameDetails.hide();
+		saveEdit.run(state, plan, this.bindSafely(function (inPersonId, inError) {
+			this.saving = false;
+			if (inError) {
+				services.banner($L("Could not save the contact") +
+					(inError.errorCode !== undefined ? " (" + inError.errorCode + ")" : ""));
+				return;
+			}
+			this.state = null;
+			this.doSaved({personId: inPersonId, isNew: state.isNew});
+		}));
+		return true;
+	}
 });
+
+//* True when a new contact holds nothing worth saving.
+function isEmptyContact(inContact) {
+	if (!inContact) {
+		return true;
+	}
+	return !names.format(inContact.name) && !inContact.nickname &&
+		!(inContact.organizations && inContact.organizations.length) &&
+		contactEdit.LIST_FIELDS.every(function (inF) {
+			var v = inContact[inF === "notes" ? "note" : inF];
+			return !v || !v.length;
+		});
+}
