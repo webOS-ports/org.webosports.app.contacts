@@ -300,6 +300,13 @@ t.test("l10n: each language's appinfo.json overrides only keys appinfo.json has,
 		});
 	});
 });
+t.test("appinfo: the app is trusted, so WAM lets it load the account icons", function() {
+	// Accounts' icons are under /usr/palm/public/accounts/; WAM blocks file
+	// URLs outside an app's own folder unless its trustLevel is "trusted".
+	var root = JSON.parse(fs.readFileSync(path.join(ROOT, "appinfo.json"), "utf8"));
+	assert.strictEqual(root.trustLevel, "trusted");
+});
+
 t.test("details: dates in another language's format", function() {
 	var de = function(inY, inM, inD) { return inD + "." + inM + "." + (inY === null ? "" : inY); };
 	assert.strictEqual(details.dateText("1980-03-14", de), "14.3.1980");
