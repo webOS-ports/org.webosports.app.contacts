@@ -4,7 +4,7 @@ var
     kind = require('enyo/kind'),
     Popup = require('onyx/Popup'),
     Button = require('onyx/Button'),
-    $L = require('enyo/i18n').$L;   // no-op placeholder
+    $L = require('enyo/i18n').$L;
 
 /**
 	ask(message, onOk, okLabel, title, destructive) shows the message (as

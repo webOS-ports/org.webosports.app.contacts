@@ -16,13 +16,14 @@ var
     LunaService = require('enyo-webos/LunaService'),
     Popup = require('onyx/Popup'),
     details = require('../util/details'),
+    i18n = require('../i18n'),
     presence = require('../data/presence'),
     profiles = require('../util/profiles'),
     accounts = require('../data/accounts'),
     persons = require('../data/persons'),
     links = require('../data/links'),
     services = require('../data/services'),
-    $L = require('enyo/i18n').$L;   // no-op placeholder
+    $L = require('enyo/i18n').$L;
 
 
 var Detail = kind({
@@ -207,7 +208,7 @@ module.exports = kind({
             return;
         }
         var personId = newPerson.get("_id");
-        this.$.detailsCollection.add(details.rows(newPerson.raw()).map(function (inRow) {
+        this.$.detailsCollection.add(details.rows(newPerson.raw(), i18n.formatDate).map(function (inRow) {
             return {
                 key: inRow.key,
                 type: inRow.type,
@@ -371,7 +372,7 @@ module.exports = kind({
         } else {
             errMsg = $L("Is there a typo?");
             if (inEvent.errorCode) {
-                errMsg += " error code " + inEvent.errorCode;
+                errMsg += " " + $L("(error {code})").replace("{code}", inEvent.errorCode);
             }
         }
         services.banner(errMsg);

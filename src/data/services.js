@@ -2,7 +2,7 @@
 
 var
     ServiceRequest = require('enyo-webos/ServiceRequest'),
-    $L = require('enyo/i18n').$L;   // no-op placeholder
+    $L = require('enyo/i18n').$L;
 
 /**
 	Calls a luna method once. inSuccess(response) runs when returnValue is

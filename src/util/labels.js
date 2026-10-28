@@ -95,4 +95,17 @@ function defaultType(inField) {
 	return DEFAULTS[inField] || "type_other";
 }
 
-module.exports = {label: label, choicesFor: choicesFor, defaultType: defaultType, FIELDS: Object.keys(LABELS)};
+//* Every label, once each: the strings $L needs for them.
+function texts() {
+	var out = [];
+	Object.keys(LABELS).forEach(function(inField) {
+		Object.keys(LABELS[inField]).forEach(function(inType) {
+			if (out.indexOf(LABELS[inField][inType]) < 0) {
+				out.push(LABELS[inField][inType]);
+			}
+		});
+	});
+	return out;
+}
+
+module.exports = {label: label, choicesFor: choicesFor, defaultType: defaultType, texts: texts, FIELDS: Object.keys(LABELS)};

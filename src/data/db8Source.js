@@ -8,7 +8,7 @@ var
     utils = require('enyo/utils'),
     Model = require('enyo/Model'),
     Collection = require('enyo/Collection'),
-    $L = require('enyo/i18n').$L;   // no-op placeholder
+    $L = require('enyo/i18n').$L;
 
 
 module.exports = kind({

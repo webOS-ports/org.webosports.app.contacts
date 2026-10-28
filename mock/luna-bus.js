@@ -38,6 +38,7 @@
 	                   mock/com.palm.service.accounts/listAccounts.json, loaded
 	                   synchronously
 	  launchParams: {...}
+	  locale: "de_de"  PalmSystem.locale (default "en_us")
 	  firstLaunch: true   the app has never run: First use shows (unless
 	                   data.firstLaunch says otherwise)
 	  vcards: {"/path.vcf": {contacts: [...]}}
@@ -769,7 +770,7 @@
 		launchParams: JSON.stringify(config.launchParams || {}),
 		deviceInfo: JSON.stringify({modelName: "Mock", platformVersion: "LuneOS mock",
 			screenWidth: window.innerWidth, screenHeight: window.innerHeight, keyboardType: "QWERTY"}),
-		locale: "en_us",
+		locale: config.locale || "en_us",
 		localeRegion: "us",
 		phoneRegion: "us",
 		timeFormat: "HH24",

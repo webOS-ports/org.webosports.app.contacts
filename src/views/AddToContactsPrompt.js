@@ -6,7 +6,7 @@ var
     Popup = require('onyx/Popup'),
     Button = require('onyx/Button'),
     names = require('../util/names'),
-    $L = require('enyo/i18n').$L;   // no-op placeholder
+    $L = require('enyo/i18n').$L;
 
 module.exports = kind({
     name: "AddToContactsPrompt",

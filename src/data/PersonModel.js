@@ -6,7 +6,7 @@ var
     ComputedSupport = require('enyo/ComputedSupport'),
     names = require('../util/names'),
     search = require('../util/search'),
-    $L = require('enyo/i18n').$L;   // no-op placeholder
+    $L = require('enyo/i18n').$L;
 
 module.exports = kind({
     name: "PersonModel",

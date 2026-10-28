@@ -27,7 +27,7 @@ var
 	saveEdit = require('../data/saveEdit'),
 	links = require('../data/links'),
 	services = require('../data/services'),
-	$L = require('enyo/i18n').$L;   // no-op placeholder
+	$L = require('enyo/i18n').$L;
 require('enyo-luneos');
 
 // The cards (list and details, or the edit view) are a Panels of their

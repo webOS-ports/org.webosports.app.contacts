@@ -23,13 +23,13 @@ var
 	services = require('../data/services'),
 	choose = require('./choose'),
 	AccountRow = require('./AccountRow'),
-	$L = require('enyo/i18n').$L;   // no-op placeholder
+	$L = require('enyo/i18n').$L;
 
 var SORT_ORDERS = [
-	{value: "FIRST_LAST", content: "First name"},
-	{value: "LAST_FIRST", content: "Last name"},
-	{value: "COMPANY_FIRST_LAST", content: "Company & first name"},
-	{value: "COMPANY_LAST_FIRST", content: "Company & last name"}
+	{value: "FIRST_LAST", content: $L("First name")},
+	{value: "LAST_FIRST", content: $L("Last name")},
+	{value: "COMPANY_FIRST_LAST", content: $L("Company & first name")},
+	{value: "COMPANY_LAST_FIRST", content: $L("Company & last name")}
 ];
 
 module.exports = kind({
@@ -51,7 +51,7 @@ module.exports = kind({
 					{classes: "prefs-row", components: [
 						{name: "sortOrder", kind: Select, classes: "prefs-select", onchange: "sortOrderChanged",
 							components: SORT_ORDERS.map(function (inOrder) {
-								return {value: inOrder.value, content: $L(inOrder.content)};
+								return {value: inOrder.value, content: inOrder.content};
 							})}
 					]}
 				]},

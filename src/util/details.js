@@ -20,6 +20,9 @@ function str(inValue) {
 // Types a text message cannot go to.
 var NO_SMS = ["type_work_fax", "type_personal_fax", "type_fax", "type_pager"];
 
+// The labels of the rows that are no contact point (for $L).
+var TEXTS = {notes: "Note", birthday: "Birthday", anniversary: "Anniversary"};
+
 var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
 	"November", "December"];
 
@@ -39,20 +42,25 @@ function addressText(inAddress) {
 	return lines.join("\n");
 }
 
+function english(inYear, inMonth, inDay) {
+	return MONTHS[inMonth - 1] + " " + inDay + (inYear === null ? "" : ", " + inYear);
+}
+
 /**
 	A stored date for display: "1980-03-14" -> "March 14, 1980", a date
 	without a year ("--07-04", as vCards have) -> "July 4". Anything else
-	is shown as it is.
+	is shown as it is. inFormat(year, month, day) writes it another way
+	(year null when there is none; month 1-12).
 */
-function dateText(inValue, inMonths) {
-	var v = str(inValue).trim(), months = inMonths || MONTHS, m;
+function dateText(inValue, inFormat) {
+	var v = str(inValue).trim(), format = inFormat || english, m;
 	m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v);
 	if (m && +m[2] >= 1 && +m[2] <= 12) {
-		return months[+m[2] - 1] + " " + (+m[3]) + ", " + m[1];
+		return format(+m[1], +m[2], +m[3]);
 	}
 	m = /^--(\d{2})-?(\d{2})$/.exec(v);
 	if (m && +m[1] >= 1 && +m[1] <= 12) {
-		return months[+m[1] - 1] + " " + (+m[2]);
+		return format(null, +m[1], +m[2]);
 	}
 	return v;
 }
@@ -189,8 +197,9 @@ function imTarget(inValue, inType, inPersonId) {
 	emails, IMs, addresses, web addresses, notes, birthday, anniversary,
 	relations. Each row is {key, type, label, value, sms, entry}: label and
 	value are plain text (labels in English, for $L), entry the stored one.
+	inFormatDate writes the dates (see dateText).
 */
-function rows(inPerson) {
+function rows(inPerson, inFormatDate) {
 	var p = inPerson || {}, out = [];
 	function list(inKey) {
 		(Array.isArray(p[inKey]) ? p[inKey] : []).forEach(function(inE) {
@@ -212,12 +221,12 @@ function rows(inPerson) {
 	list("urls");
 	(Array.isArray(p.notes) ? p.notes : [p.notes]).forEach(function(inNote) {
 		if (str(inNote).trim()) {
-			out.push({key: "notes", type: "", label: "Note", value: str(inNote).replace(/\s+$/, ""), sms: false, entry: null});
+			out.push({key: "notes", type: "", label: TEXTS.notes, value: str(inNote).replace(/\s+$/, ""), sms: false, entry: null});
 		}
 	});
-	[["birthday", "Birthday"], ["anniversary", "Anniversary"]].forEach(function(inPair) {
-		if (str(p[inPair[0]]).trim()) {
-			out.push({key: inPair[0], type: "", label: inPair[1], value: dateText(p[inPair[0]]), date: str(p[inPair[0]]).trim(),
+	["birthday", "anniversary"].forEach(function(inKey) {
+		if (str(p[inKey]).trim()) {
+			out.push({key: inKey, type: "", label: TEXTS[inKey], value: dateText(p[inKey], inFormatDate), date: str(p[inKey]).trim(),
 				sms: false, entry: null});
 		}
 	});
@@ -226,4 +235,4 @@ function rows(inPerson) {
 }
 
 module.exports = {rows: rows, target: target, smsTarget: smsTarget, imActions: imActions, imTarget: imTarget, addressText: addressText, dateText: dateText,
-	nextOccurrence: nextOccurrence, webUrl: webUrl, dialString: dialString, MONTHS: MONTHS};
+	nextOccurrence: nextOccurrence, webUrl: webUrl, dialString: dialString, MONTHS: MONTHS, TEXTS: TEXTS};

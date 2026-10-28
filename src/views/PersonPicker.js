@@ -9,7 +9,7 @@ var
     FittableRows = require('layout/FittableRows'),
     AllPersonCollection = require('../data/AllPersonCollection'),
     ContactsList = require('./ContactsList'),
-    $L = require('enyo/i18n').$L;   // no-op placeholder
+    $L = require('enyo/i18n').$L;
 
 /**
 	pick(title, globalPersonCollection, excludeId, nonFavorites) opens the

@@ -10,7 +10,7 @@ var
     persons = require('../data/persons'),
     accounts = require('../data/accounts'),
     profiles = require('../util/profiles'),
-    $L = require('enyo/i18n').$L;   // no-op placeholder
+    $L = require('enyo/i18n').$L;
 
 
 module.exports = kind({

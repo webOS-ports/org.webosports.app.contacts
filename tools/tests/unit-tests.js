@@ -19,6 +19,7 @@ var details = require(path.join(SRC, "details.js"));
 var search = require(path.join(SRC, "search.js"));
 var profiles = require(path.join(SRC, "profiles.js"));
 var presence = require(path.join(SRC, "presence.js"));
+var l10n = require(path.join(SRC, "l10n.js"));
 
 var ROOT = path.resolve(__dirname, "..", "..");
 var DATA = JSON.parse(fs.readFileSync(path.join(ROOT, "mock", "db8-data.json"), "utf8"));
@@ -186,6 +187,63 @@ t.test("accountRules: deleting a person deletes its writable contacts only", fun
 	assert.deepStrictEqual(accountRules.deletePlan([null, {}], ACCOUNTS), {action: "orphan", ids: []});
 	assert.deepStrictEqual(accountRules.deletePlan([{_id: "x", accountId: "gone"}], ACCOUNTS),
 		{action: "none", ids: [], readOnlyName: ""});
+});
+
+// --- localisation ------------------------------------------------------
+
+t.test("l10n: the language and Intl tag of a locale in either form", function() {
+	[["de_de", "de", "de-DE"], ["de-DE", "de", "de-DE"], ["fr", "fr", "fr"], ["es-419", "es", "es"],
+		["zh-Hant-TW", "zh", "zh-TW"], [" IT_it ", "it", "it-IT"], ["", "", ""], [null, "", ""], ["1234", "", ""]].forEach(function(inCase) {
+		assert.strictEqual(l10n.language(inCase[0]), inCase[1], JSON.stringify(inCase[0]));
+		assert.strictEqual(l10n.tag(inCase[0]), inCase[2], JSON.stringify(inCase[0]));
+	});
+});
+t.test("l10n: a table translates what it has, and leaves the rest", function() {
+	var tr = l10n.translator({"Done": "Fertig", "Empty": "", "constructor": 5});
+	assert.strictEqual(tr("Done"), "Fertig");
+	assert.strictEqual(tr("Cancel"), "Cancel");
+	assert.strictEqual(tr("Empty"), "Empty", "an empty translation is no translation");
+	assert.strictEqual(tr("constructor"), "constructor");
+	assert.strictEqual(tr("toString"), "toString", "not the prototype's");
+	assert.strictEqual(l10n.translator(null)("Done"), "Done");
+	assert.deepStrictEqual(l10n.placeholders("{type} and {count} {count}"), ["{count}", "{count}", "{type}"]);
+});
+t.test("l10n: every language has every string the app translates, placeholders kept", function() {
+	var r = require(path.join(ROOT, "tools", "i18n", "keys.js")).keys(ROOT);
+	assert.deepStrictEqual(r.problems, [], "$L takes string literals");
+	assert.ok(r.keys.length > 150, "found " + r.keys.length);
+	assert.ok(r.keys.indexOf("Mobile") >= 0 && r.keys.indexOf("Birthday") >= 0 && r.keys.indexOf("City") >= 0,
+		"type labels, detail labels and hints are in");
+	["de", "es", "fr", "it"].forEach(function(inLang) {
+		var table = JSON.parse(fs.readFileSync(path.join(ROOT, "resources", inLang, "strings.json"), "utf8"));
+		assert.deepStrictEqual(r.keys.filter(function(inK) { return !table.hasOwnProperty(inK); }), [], inLang + ": missing");
+		assert.deepStrictEqual(Object.keys(table).filter(function(inK) { return r.keys.indexOf(inK) < 0; }), [], inLang + ": stale");
+		r.keys.forEach(function(inK) {
+			assert.ok(typeof table[inK] === "string" && table[inK].trim() === table[inK] && table[inK], inLang + ": " + inK);
+			assert.deepStrictEqual(l10n.placeholders(table[inK]), l10n.placeholders(inK), inLang + ": " + inK);
+		});
+	});
+});
+t.test("l10n: each language's appinfo.json overrides only keys appinfo.json has, with the same type", function() {
+	// SAM applies resources/<language>/appinfo.json over appinfo.json, and
+	// skips a key the root lacks or has with another type.
+	var root = JSON.parse(fs.readFileSync(path.join(ROOT, "appinfo.json"), "utf8"));
+	["de", "es", "fr", "it"].forEach(function(inLang) {
+		var local = JSON.parse(fs.readFileSync(path.join(ROOT, "resources", inLang, "appinfo.json"), "utf8"));
+		assert.ok(typeof local.title === "string" && local.title, inLang);
+		Object.keys(local).forEach(function(inKey) {
+			assert.ok(root.hasOwnProperty(inKey) && typeof root[inKey] === typeof local[inKey], inLang + ": " + inKey);
+		});
+	});
+});
+t.test("details: dates in another language's format", function() {
+	var de = function(inY, inM, inD) { return inD + "." + inM + "." + (inY === null ? "" : inY); };
+	assert.strictEqual(details.dateText("1980-03-14", de), "14.3.1980");
+	assert.strictEqual(details.dateText("--07-04", de), "4.7.");
+	assert.strictEqual(details.dateText("1980-03-14"), "March 14, 1980");
+	assert.strictEqual(details.dateText("someday", de), "someday");
+	var rows = details.rows({birthday: "1980-03-14", anniversary: "--07-04"}, de);
+	assert.deepStrictEqual(rows.map(function(inR) { return [inR.label, inR.value]; }), [["Birthday", "14.3.1980"], ["Anniversary", "4.7."]]);
 });
 
 // --- presence ----------------------------------------------------------

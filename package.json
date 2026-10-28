@@ -4,7 +4,9 @@
     "assets/*.png",
     "assets/icon.ico",
     "appinfo.json",
-    "icon.png"
+    "icon.png",
+    "resources/*/strings.json",
+    "resources/*/appinfo.json"
   ],
   "devAssets": [
     "assets/kris_kringle.jpg",

@@ -32,25 +32,25 @@ var
 	persons = require('../data/persons'),
 	choose = require('./choose'),
 	ConfirmDialog = require('./ConfirmDialog'),
-	$L = require('enyo/i18n').$L;   // no-op placeholder
+	$L = require('enyo/i18n').$L;
 
 var ADDRESS_PARTS = [
-	{key: "streetAddress", hint: "Street"},
-	{key: "locality", hint: "City"},
-	{key: "region", hint: "State / region"},
-	{key: "postalCode", hint: "Postal code"},
-	{key: "country", hint: "Country"}
+	{key: "streetAddress", hint: $L("Street")},
+	{key: "locality", hint: $L("City")},
+	{key: "region", hint: $L("State / region")},
+	{key: "postalCode", hint: $L("Postal code")},
+	{key: "country", hint: $L("Country")}
 ];
 
 
 var FIELD_INFO = {
-	phoneNumbers: {hint: "New phone number", inputType: "tel"},
-	emails: {hint: "New email address", inputType: "email"},
-	ims: {hint: "New IM address", inputType: "text"},
-	addresses: {hint: "New address"},
-	urls: {hint: "New web address", inputType: "url"},
-	relations: {hint: "New relation", inputType: "text"},
-	notes: {hint: "New note"}
+	phoneNumbers: {hint: $L("New phone number"), inputType: "tel"},
+	emails: {hint: $L("New email address"), inputType: "email"},
+	ims: {hint: $L("New IM address"), inputType: "text"},
+	addresses: {hint: $L("New address")},
+	urls: {hint: $L("New web address"), inputType: "url"},
+	relations: {hint: $L("New relation"), inputType: "text"},
+	notes: {hint: $L("New note")}
 };
 
 /** One entry of a list field: its inputs, its type, and where it is stored. */
@@ -83,19 +83,19 @@ var EditRow = kind({
 			ADDRESS_PARTS.forEach(function (inPart) {
 				inputs.createComponent({kind: InputDecorator, classes: "edit-address-part", components: [
 					{name: inPart.key, kind: Input, value: entry[inPart.key] || "", disabled: disabled,
-						placeholder: this.isNew && inPart.key === "streetAddress" ? $L(info.hint) : $L(inPart.hint),
+						placeholder: this.isNew && inPart.key === "streetAddress" ? info.hint : inPart.hint,
 						oninput: "inputChanged"}
 				]}, {owner: this});
 			}, this);
 		} else if (field === "notes") {
 			inputs.createComponent({kind: InputDecorator, components: [
-				{name: "value", kind: TextArea, value: entry.value || "", disabled: disabled, placeholder: $L(info.hint),
+				{name: "value", kind: TextArea, value: entry.value || "", disabled: disabled, placeholder: info.hint,
 					oninput: "inputChanged"}
 			]}, {owner: this});
 		} else {
 			inputs.createComponent({kind: InputDecorator, components: [
 				{name: "value", kind: Input, type: info.inputType, value: entry.value || "", disabled: disabled,
-					placeholder: $L(info.hint), oninput: "inputChanged"}
+					placeholder: info.hint, oninput: "inputChanged"}
 			]}, {owner: this});
 		}
 		if (field !== "notes") {

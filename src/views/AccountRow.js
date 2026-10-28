@@ -6,7 +6,7 @@
 var
 	kind = require('enyo/kind'),
 	Image = require('enyo/Image'),
-	$L = require('enyo/i18n').$L;   // no-op placeholder
+	$L = require('enyo/i18n').$L;
 
 var AccountRow = module.exports = kind({
 	name: "AccountRow",

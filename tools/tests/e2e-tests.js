@@ -50,7 +50,7 @@ var server, browser, page;
 
 /**
 	Opens the app on a fresh mock bus.
-	inOptions: {data, launchParams, width, height, luna, vcards, acg, delay, firstLaunch}
+	inOptions: {data, launchParams, width, height, luna, vcards, acg, delay, firstLaunch, locale}
 */
 async function open(inOptions) {
 	var o = inOptions || {};
@@ -64,7 +64,8 @@ async function open(inOptions) {
 		vcards: o.vcards || {},
 		acg: o.acg || ACG,
 		delay: o.delay || 0,
-		firstLaunch: !!o.firstLaunch
+		firstLaunch: !!o.firstLaunch,
+		locale: o.locale || ""
 	};
 	page = await browser.newPage({width: o.width || 1024, height: o.height || 768,
 		initScripts: ["window.__MOCK_CONFIG__ = " + JSON.stringify(config) + ";", BUS]});
@@ -428,8 +429,10 @@ t.test("startup: every service call is one the hub allows", async function() {
 
 async function openEdit(inName) {
 	await tapPerson(inName);
-	// The details slide in first (on a narrow screen, the whole card).
-	await page.waitFor("!contactsApp.view.$.main.transitionPoints.length && " +
+	// The details slide in first (on a narrow screen, the whole card), and
+	// a card just left (after a save) has to have slid away.
+	await page.waitFor("contactsApp.view.$.cards.get('index') === 0 && !contactsApp.view.$.cards.transitionPoints.length && " +
+		"!contactsApp.view.$.main.transitionPoints.length && " +
 		"!contactsApp.view.$.detailsPanel.transitionPoints.length && (function(){" +
 		"var r=document.querySelector('[id$=_editContactBtn]').getBoundingClientRect();" +
 		"return r.width>0 && r.left>=0 && r.right<=window.innerWidth;})()");
@@ -1296,6 +1299,43 @@ t.test("first use: back leaves it for good; not over another app's launch, nor o
 	assert.strictEqual((await lunaCalls("com.palm.db/find")).filter(function(c) {
 		return c.params.query.from === "com.palm.firstlaunch:1";
 	}).length, 1, "checked once");
+});
+
+// --- localisation ------------------------------------------------------
+
+function resourceFetches() {
+	return page.eval("performance.getEntriesByType('resource').map(function(e){return e.name;})" +
+		".filter(function(n){return /\\/resources\\//.test(n);}).map(function(n){return n.replace(/^.*\\/resources\\//, '');})");
+}
+
+t.test("localisation: German strings, labels and dates, from resources/de", async function() {
+	await open({locale: "de_de"});
+	assert.deepStrictEqual(await resourceFetches(), ["de/strings.json"]);
+	assert.deepStrictEqual(await page.eval("Array.prototype.map.call(document.querySelectorAll('[id$=_tabs] .onyx-radiobutton')," +
+		"function(e){return e.textContent;})"), ["Alle", "Favoriten"]);
+	assert.strictEqual(await page.eval("document.querySelector('[id$=_inputSearchStretch_input]').placeholder"), "Suchen");
+	await tapPerson("Anna van der Berg");
+	var rows = await detailRows();
+	assert.ok(rows.some(function(r) { return r[0] === "Geburtstag" && r[1] === "14. März 1980"; }), JSON.stringify(rows));
+	assert.ok(rows.some(function(r) { return r[0] === "Handy"; }), JSON.stringify(rows));
+	await shot("details-de");
+	await openEdit("Anna van der Berg");
+	assert.strictEqual(await text("[id$=_editContact] [id$=_doneBtn]"), "Speichern");
+	assert.strictEqual(await page.eval("document.querySelector('[id$=_nameInput]').placeholder"), "Name");
+	await shot("edit-de");
+});
+
+t.test("localisation: a language without strings stays English, and fetches nothing", async function() {
+	await open({locale: "nl-NL"});
+	assert.deepStrictEqual(await resourceFetches(), []);
+	assert.deepStrictEqual(await page.eval("Array.prototype.map.call(document.querySelectorAll('[id$=_tabs] .onyx-radiobutton')," +
+		"function(e){return e.textContent;})"), ["All", "Favourites"]);
+	await tapPerson("Anna van der Berg");
+	assert.ok((await detailRows()).some(function(r) { return r[0] === "Birthday" && r[1] === "March 14, 1980"; }));
+	await open({locale: "fr-FR"});
+	await tapPerson("Anna van der Berg");
+	assert.ok((await detailRows()).some(function(r) { return r[0] === "Anniversaire" && r[1] === "14 mars 1980"; }),
+		JSON.stringify(await detailRows()));
 });
 
 // --- run ---------------------------------------------------------------

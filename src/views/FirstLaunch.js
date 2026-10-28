@@ -20,7 +20,7 @@ var
 	accountRules = require('../util/accountRules'),
 	accounts = require('../data/accounts'),
 	AccountRow = require('./AccountRow'),
-	$L = require('enyo/i18n').$L;   // no-op placeholder
+	$L = require('enyo/i18n').$L;
 
 module.exports = kind({
 	name: "FirstLaunch",

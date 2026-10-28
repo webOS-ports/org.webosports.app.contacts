@@ -1,6 +1,9 @@
 // index.js - Contacts app for LuneOS
 // Copyright © 2016 P. Douglas Reeder <reeder.29@gmail.com> under the MIT License
 
+// The translations go first: views translate their strings as they load.
+require('./src/i18n');
+
 var ready = require('enyo/ready'),
 	Source = require('enyo/Source'),
 	db8Source = require('./src/data/db8Source'),

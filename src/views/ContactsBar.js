@@ -10,7 +10,7 @@ var
     AllPersonCollection = require('../data/AllPersonCollection'),
     presence = require('../data/presence'),
     ContactsList = require('./ContactsList'),
-    $L = require('enyo/i18n').$L;   // no-op placeholder
+    $L = require('enyo/i18n').$L;
 
 
 module.exports = kind({
