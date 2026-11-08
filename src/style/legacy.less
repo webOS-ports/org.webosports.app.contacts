@@ -868,3 +868,80 @@ body.onyx .edit-main [id$=_notesGroup] .edit-row-new .edit-row-inputs > .onyx-in
     background: transparent;
     padding-left: 10px;
 }
+
+/* ------------------------------------------------------------------
+   Phones (below 600px, one pane at a time): the same look, sized for
+   a 320-wide screen. The details header shrinks to a 96px picture with
+   the name in 26px beside it (the legacy .portrait size) and "1
+   profile" under the name; edit keeps a margin at the sides, and the
+   account a new contact goes to shares the bar with the title.
+   ------------------------------------------------------------------ */
+@media all and (max-width: 599px) {
+    body.onyx .details .avatar {
+        width: 96px;
+        height: 96px;
+        max-width: none;
+        margin-right: 10px;
+    }
+    body.onyx .details .avatar .img {
+        top: 6px;
+        left: 6px;
+        width: 84px;
+        height: 84px;
+    }
+    body.onyx .details .nameinfo {
+        height: auto;
+        min-height: 96px;
+    }
+    /* FittableColumns writes the row's height inline at its last reflow,
+       before a long name wraps to a second line. */
+    body.onyx .details .headerCard {
+        height: auto !important;
+    }
+    body.onyx .details .nameinfo .name {
+        font-size: 26px;
+        padding: 0 40px 6px 0;
+        -webkit-line-clamp: 2;
+    }
+    body.onyx .details .nameinfo .buttonBar {
+        top: 0;
+    }
+    body.onyx .details .profiles-button {
+        position: relative;
+        right: auto;
+        bottom: auto;
+        -webkit-align-self: flex-start;
+        align-self: flex-start;
+        margin-top: 4px;
+    }
+
+    body.onyx .edit-main {
+        padding: 12px 8px 16px;
+    }
+    body.onyx .edit-header {
+        -webkit-justify-content: space-between;
+        justify-content: space-between;
+        padding: 0 8px;
+    }
+    body.onyx .edit-header .edit-title {
+        -webkit-flex: 1;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left;
+    }
+    body.onyx .edit-header .edit-account {
+        position: static;
+        -webkit-transform: none;
+        transform: none;
+        min-width: 0;
+        max-width: 55%;
+    }
+    body.onyx .edit-header .edit-account-icon {
+        display: none;
+    }
+    body.onyx .edit-header select.edit-account-select {
+        max-width: 100%;
+    }
+}
