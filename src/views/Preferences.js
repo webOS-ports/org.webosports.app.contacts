@@ -8,7 +8,7 @@
 
 var
 	kind = require('enyo/kind'),
-	Select = require('enyo/Select'),
+	Select = require('./LegacySelect'),
 	Image = require('enyo/Image'),
 	Scroller = require('enyo/Scroller'),
 	FittableRows = require('layout/FittableRows'),
@@ -41,7 +41,7 @@ module.exports = kind({
 	},
 	components: [
 		{kind: Toolbar, layoutKind: FittableHeaderLayout, components: [
-			{kind: Image, src: "assets/header-icon-contacts.png", classes: "prefs-header-icon"},
+			{kind: Image, src: "assets/header-icon-contacts.svg", classes: "prefs-header-icon"},
 			{fit: true, classes: "prefs-title", content: $L("Preferences & Accounts")}
 		]},
 		{kind: Scroller, fit: true, touch: true, horizontal: "hidden", components: [

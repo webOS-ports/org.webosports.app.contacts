@@ -158,7 +158,7 @@ t.test("list: a change made elsewhere shows", async function() {
 
 t.test("list: Favourites tab shows only favourites", async function() {
 	await open();
-	await page.tapText("[id$=_contactsBar_tabs] *", "Favourites");
+	await page.tapText("[id$=_contactsBar_tabs] *", "Favorites");
 	await page.waitFor("document.querySelectorAll('[id*=_allContactsList] .contacts-item .name').length === 2");
 	assert.deepStrictEqual((await listNames()).sort(), ["Anna van der Berg", "Émile Zola"]);
 });
@@ -173,7 +173,7 @@ t.test("list: search narrows the list by name, nickname, company and email", asy
 t.test("list: Add Favorite on the Favourites tab offers the others, and makes the pick a favourite", async function() {
 	await open();
 	assert.strictEqual(await visible("[id$=_addFavoriteBtn]"), false, "not on the All tab");
-	await page.tapText("[id$=_contactsBar_tabs] *", "Favourites");
+	await page.tapText("[id$=_contactsBar_tabs] *", "Favorites");
 	await page.waitFor("document.querySelectorAll('[id*=_allContactsList] .contacts-item .name').length === 2");
 	assert.strictEqual(await visible("[id$=_addFavoriteBtn]"), true);
 	await page.tap("[id$=_addFavoriteBtn]");
@@ -270,7 +270,7 @@ t.test("list: messages for no search results, no favourites and no contacts", as
 	var d = data();
 	d.persons.forEach(function(p) { p.favorite = false; });
 	await open({data: d});
-	await page.tapText("[id$=_contactsBar_tabs] *", "Favourites");
+	await page.tapText("[id$=_contactsBar_tabs] *", "Favorites");
 	await waitForMessage();
 	assert.strictEqual(await listMessage(), "No favorites yet");
 
@@ -557,6 +557,29 @@ t.test("edit: a new entry gets the type picked for it", async function() {
 	assert.strictEqual(c.addresses[1].type, "type_home");
 });
 
+t.test("edit: a type opens the legacy menu, not the browser's, and the pick is stored", async function() {
+	await open();
+	await openEdit("Mary Ann Smith-Jones");
+	var select = row("phoneNumbers", 1) + " select.edit-row-type";
+	await page.eval("window.__pressKept=null;window.addEventListener('mousedown',function(e){" +
+		"if(e.target.tagName==='SELECT'){window.__pressKept=e.defaultPrevented;}});");
+	await page.tap(select);
+	await page.waitFor("(function(){var m=document.querySelector('.legacy-menu');return m&&m.getBoundingClientRect().height>0;})()");
+	assert.strictEqual(await page.eval("window.__pressKept"), true, "the press that would open the browser's popup is cancelled");
+	var menu = await page.eval("(function(){var s=document.querySelector(" + JSON.stringify(select) + ");" +
+		"return {items:Array.prototype.map.call(document.querySelectorAll('.legacy-menu .legacy-menu-item'),function(e){return e.textContent;})," +
+		"options:Array.prototype.map.call(s.options,function(o){return o.textContent;})," +
+		"checked:document.querySelector('.legacy-menu .legacy-menu-item.checked').textContent," +
+		"chosen:s.options[s.selectedIndex].textContent};})()");
+	assert.deepStrictEqual(menu.items, menu.options, "the menu lists the select's choices");
+	assert.strictEqual(menu.checked, menu.chosen, "the chosen one has the check mark");
+	await page.tapText(".legacy-menu .legacy-menu-item", "Pager");
+	await page.waitFor("(function(){var m=document.querySelector('.legacy-menu');return !m||!m.getBoundingClientRect().height;})()");
+	assert.strictEqual(await page.eval("document.querySelector(" + JSON.stringify(select) + ").value"), "type_pager");
+	await save();
+	assert.strictEqual((await record("c-mary")).phoneNumbers[0].type, "type_pager");
+});
+
 t.test("edit: the name details popup sets each part", async function() {
 	await open();
 	await openEdit("Gina Talk");
@@ -623,20 +646,87 @@ t.test("edit: cancel writes nothing", async function() {
 	assert.strictEqual((await record("c-gina")).nickname, undefined);
 });
 
-t.test("edit: a bad date is refused, a partial stored one is kept", async function() {
+// The date dialog's parts, as its pickers hold them.
+function datePicked(inField) {
+	return page.eval("(function(){var v=function(p){var e=document.querySelector('[id$=_" + inField + "_'+p+']');return e?e.value:null;};" +
+		"return {month:v('month'),day:v('day'),year:v('year'),days:document.querySelectorAll('[id$=_" + inField + "_day] option').length};})()");
+}
+var DATE_DIALOG_SHOWN = "[].some.call(document.querySelectorAll('.legacy-date-dialog'),function(e){return e.getBoundingClientRect().height>0;})";
+// Taps a date row (scrolled into view) and waits for its dialog.
+async function openDate(inField) {
+	await page.eval("document.querySelector('[id$=_" + inField + "]').scrollIntoView({block:'center'})");
+	await sleep(100);
+	await page.tap("[id$=_" + inField + "]");
+	await page.waitFor(DATE_DIALOG_SHOWN);
+}
+function dateDialogShown() {
+	return page.eval(DATE_DIALOG_SHOWN);
+}
+
+t.test("edit: a partial stored date is kept, shown as a date", async function() {
 	var d = data();
 	d.contacts.filter(function(c) { return c._id === "c-gina"; })[0].birthday = "--07-04";
 	await open({data: d});
 	await openEdit("Gina Talk");
-	assert.strictEqual(await page.eval("document.querySelector('[id$=_birthdayInput]').value"), "--07-04");
+	assert.strictEqual(await page.eval("document.querySelector('[id$=_birthdayInput]').textContent"), "July 4");
 	await page.fill("[id$=_nicknameInput]", "G");
 	await save();
 	assert.strictEqual((await record("c-gina")).birthday, "--07-04");
+});
+
+t.test("edit: a date row opens the legacy date dialog; Done stores the date, Cancel nothing", async function() {
+	var d = data();
+	d.contacts.filter(function(c) { return c._id === "c-gina"; })[0].birthday = "--07-04";
+	await open({data: d});
 	await openEdit("Gina Talk");
-	await page.fill("[id$=_birthdayInput]", "1990-02-30");
+	await openDate("birthdayInput");
+	assert.strictEqual(await page.eval("[].filter.call(document.querySelectorAll('.legacy-date-dialog'),function(e){return e.getBoundingClientRect().height>0;})[0].querySelector('.legacy-dialog-title').textContent"), "Select Birthday");
+	// The stored date, with "no year" as it had none.
+	var first = await datePicked("birthdayInput");
+	assert.deepStrictEqual(first, {month: "7", day: "4", year: "none", days: 31}, JSON.stringify(first));
+	// The day list follows the month and year: February has 29 days
+	// without a year, 28 in 1990; the 30th becomes the 28th.
+	await selectValue("[id$=_birthdayInput_day]", "30");
+	await selectValue("[id$=_birthdayInput_month]", "2");
+	assert.deepStrictEqual(await datePicked("birthdayInput"), {month: "2", day: "29", year: "none", days: 29});
+	await selectValue("[id$=_birthdayInput_year]", "1990");
+	assert.deepStrictEqual(await datePicked("birthdayInput"), {month: "2", day: "28", year: "1990", days: 28});
+	// Picking from the pill's own list works as from the select.
+	await page.tap("[id$=_birthdayInput_day]");
+	await page.tapText(".legacy-menu.picker .legacy-menu-item", "14");
+	assert.strictEqual((await datePicked("birthdayInput")).day, "14");
+	await page.tap("[id$=_birthdayInput_dateDoneBtn]");
+	assert.strictEqual(await dateDialogShown(), false);
+	assert.strictEqual(await page.eval("document.querySelector('[id$=_birthdayInput]').textContent"), "February 14, 1990");
+	// Cancel leaves the anniversary as it was (none).
+	await openDate("anniversaryInput");
+	await page.tap("[id$=_anniversaryInput_dateCancelBtn]");
+	assert.strictEqual(await page.eval("document.querySelector('[id$=_anniversaryInput]').textContent"), "");
 	await save();
-	assert.ok((await banners()).some(function(b) { return /YYYY-MM-DD/.test(b); }), "no banner");
-	assert.strictEqual((await record("c-gina")).birthday, "--07-04");
+	var c = await record("c-gina");
+	assert.strictEqual(c.birthday, "1990-02-14");
+	assert.ok(!c.anniversary, "no anniversary: " + c.anniversary);
+});
+
+t.test("edit: an empty date opens on today, and Remove clears a date", async function() {
+	var d = data();
+	d.contacts.filter(function(c) { return c._id === "c-gina"; })[0].birthday = "1980-03-14";
+	await open({data: d});
+	await openEdit("Gina Talk");
+	await openDate("anniversaryInput");
+	var today = await page.eval("(function(){var n=new Date();return {month:String(n.getMonth()+1),day:String(n.getDate()),year:String(n.getFullYear())};})()");
+	var picked = await datePicked("anniversaryInput");
+	assert.deepStrictEqual({month: picked.month, day: picked.day, year: picked.year}, today);
+	assert.strictEqual(await page.eval("document.querySelectorAll('[id$=_anniversaryInput_year] option[value=none]').length"), 0,
+		"no 'no year' choice for a date that has a year");
+	await page.tap("[id$=_anniversaryInput_dateDoneBtn]");
+	await openDate("birthdayInput");
+	await page.tap("[id$=_birthdayInput_dateRemoveBtn]");
+	await save();
+	var c = await record("c-gina");
+	assert.ok(!c.birthday, "birthday removed: " + c.birthday);
+	var pad = function(n) { return (+n < 10 ? "0" : "") + n; };
+	assert.strictEqual(c.anniversary, today.year + "-" + pad(today.month) + "-" + pad(today.day));
 });
 
 t.test("edit: Remove Photo clears the photo on Save, and Cancel keeps it", async function() {
@@ -1384,7 +1474,7 @@ t.test("gal: searching All offers the global address list; a result shows read-o
 	assert.strictEqual(await galShowing(), false, "not without a search");
 	await search("anne", 0);
 	assert.strictEqual(await galShowing(), true);
-	await page.tapText("[id$=_tabs] .onyx-radiobutton", "Favourites");
+	await page.tapText("[id$=_tabs] .onyx-radiobutton", "Favorites");
 	await sleep(200);
 	assert.strictEqual(await galShowing(), false, "not on Favourites");
 	await page.tapText("[id$=_tabs] .onyx-radiobutton", "All");
@@ -1498,7 +1588,7 @@ t.test("localisation: German strings, labels and dates, from resources/de", asyn
 	assert.ok(rows.some(function(r) { return r[0] === "Handy"; }), JSON.stringify(rows));
 	await shot("details-de");
 	await openEdit("Anna van der Berg");
-	assert.strictEqual(await text("[id$=_editContact] [id$=_doneBtn]"), "Speichern");
+	assert.strictEqual(await text("[id$=_editContact] [id$=_doneBtn]"), "Fertig");
 	assert.strictEqual(await page.eval("document.querySelector('[id$=_nameInput]').placeholder"), "Name");
 	await shot("edit-de");
 });
@@ -1507,7 +1597,7 @@ t.test("localisation: a language without strings stays English, and fetches noth
 	await open({locale: "nl-NL"});
 	assert.deepStrictEqual(await resourceFetches(), []);
 	assert.deepStrictEqual(await page.eval("Array.prototype.map.call(document.querySelectorAll('[id$=_tabs] .onyx-radiobutton')," +
-		"function(e){return e.textContent;})"), ["All", "Favourites"]);
+		"function(e){return e.textContent;})"), ["All", "Favorites"]);
 	await tapPerson("Anna van der Berg");
 	assert.ok((await detailRows()).some(function(r) { return r[0] === "Birthday" && r[1] === "March 14, 1980"; }));
 	await open({locale: "fr-FR"});

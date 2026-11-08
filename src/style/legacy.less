@@ -1,0 +1,1129 @@
+/*
+    The webOS 3.0.5 look (Enyo 1.0, themes/Onyx, and contactsui), over Onyx.
+
+    Enyo 2's Onyx draws dark toolbars, its own buttons and tabs, and boxed
+    inputs; the legacy Contacts app is light chrome on grey. The values below
+    are measured off the legacy app running beside this one on the same mock
+    data (the side-by-side harness): computed styles from its DOM, and
+    colours sampled from its screenshots. Enyo 1 drew most chrome with
+    border images (toolbar-light.png, button-up.png, radiobutton.png,
+    roundedbox.png, group-unlabeled.png, divider.png); here they are CSS
+    gradients and borders sampled from those, as org.webosports.messaging
+    does in its palm-chrome.less, so no Palm bitmaps are needed.
+
+    Every selector starts at body.onyx so it wins over Onyx's own, which are
+    one class deep.
+*/
+
+@legacy-font: Prelude, "Prelude Medium", "Segoe UI", Arial, Helvetica, sans-serif;
+@legacy-font-light: PreludeWGL-Light, "Prelude Light", Prelude, "Prelude Medium", "Segoe UI", Arial, Helvetica, sans-serif;
+@legacy-text: #333333;
+@legacy-pane: #d8d8d8;      /* .enyo-bg */
+@legacy-body: #f1f1f1;      /* the app's body */
+@legacy-blue: #1879cd;      /* contactsui labels */
+@legacy-divider-blue: #4299ea;
+@legacy-selected: #d1e5f5;
+
+/* ------------------------------------------------------------------
+   Base
+   ------------------------------------------------------------------ */
+
+body.onyx {
+    font-family: @legacy-font;
+    font-size: 20px;
+    color: @legacy-text;
+    background: @legacy-body;
+}
+
+/* ------------------------------------------------------------------
+   Toolbars: .enyo-toolbar.enyo-toolbar-light, 54px. toolbar-light.png
+   sampled down its middle: a #f2f2f2 highlight row, then #dfdfdf to
+   #adadad, between a #b0b0b0 line on top and a #878787 one below.
+   ------------------------------------------------------------------ */
+
+body.onyx .onyx-toolbar {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    height: 54px;
+    min-height: 54px;
+    padding: 0 4px;
+    margin: 0;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    white-space: nowrap;
+    overflow: hidden;
+    color: @legacy-text;
+    font-size: 20px;
+    text-shadow: none;
+    background: #c6c6c6;
+    background-image: linear-gradient(to bottom, #f2f2f2 0, #f2f2f2 1px, #dfdfdf 1px, #adadad 100%);
+    border: 0;
+    border-top: 1px solid #b0b0b0;
+    border-bottom: 1px solid #878787;
+    box-shadow: none;
+}
+/* Onyx gives every toolbar child an inline-block margin of 4px 6px. */
+body.onyx .onyx-toolbar > * {
+    margin: 0 3px;
+}
+
+/* ------------------------------------------------------------------
+   Buttons: .enyo-button (button-up.png 4px slices) - 16px text on a 20px
+   line, 4+4 padding inside a 4px image border: 36 tall. Sampled: a
+   #f4f4f4 to #d8d8d8 face with a lighter last row, a #b7b7b7 rim and a
+   one-pixel light inner edge at the sides.
+   ------------------------------------------------------------------ */
+
+body.onyx .onyx-button {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    min-height: 36px;
+    min-width: 36px;
+    padding: 7px 11px;
+    margin: 3px;
+    font-family: @legacy-font;
+    font-size: 16px;
+    line-height: 20px;
+    color: #292929;
+    text-shadow: none;
+    background: #e3e3e3;
+    background-image: linear-gradient(to bottom, #f4f4f4, #d8d8d8 88%, #e5e5e5);
+    border: 1px solid #b7b7b7;
+    border-top-color: #bdbdbd;
+    border-radius: 5px;
+    box-shadow: inset 1px 0 0 #e7e7e7, inset -1px 0 0 #e8e8e8;
+}
+body.onyx .onyx-button:active:hover:not([disabled]),
+body.onyx .onyx-button.active,
+body.onyx .onyx-button.pressed {
+    background-image: linear-gradient(to bottom, #c9c9c9, #dcdcdc);
+    border-color: #9a9a9a;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+body.onyx .onyx-button[disabled] {
+    opacity: 0.4;
+}
+
+/* .enyo-button-dark, as Done: a #9f9f9f to #666666 face, white text. */
+body.onyx .onyx-button.legacy-button-dark,
+body.onyx .onyx-button.onyx-affirmative {
+    color: #ffffff;
+    background: #7f7f7f;
+    background-image: linear-gradient(to bottom, #9f9f9f, #666666 88%, #797979);
+    border-color: #4b4b4b;
+    border-top-color: #585858;
+    box-shadow: inset 1px 0 0 #9b9b9b, inset -1px 0 0 #9b9b9b;
+}
+body.onyx .onyx-button.legacy-button-dark:active:hover:not([disabled]),
+body.onyx .onyx-button.onyx-affirmative:active:hover:not([disabled]) {
+    background-image: linear-gradient(to bottom, #555555, #777777);
+}
+/* .enyo-button-negative */
+body.onyx .onyx-button.onyx-negative {
+    color: #ffffff;
+    background: #c51616;
+    background-image: linear-gradient(to bottom, #e25a5a, #c51616 88%, #d23b3b);
+    border-color: #8a0f0f;
+    box-shadow: none;
+}
+
+/* A tool button: an icon on the bar, no chrome (.enyo-tool-button-client). */
+body.onyx .onyx-button.legacy-tool-button {
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    margin: 0 4px 0 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+}
+body.onyx .onyx-button.legacy-tool-button:active:hover {
+    background: rgba(0, 0, 0, 0.12);
+    border-radius: 5px;
+    box-shadow: none;
+}
+body.onyx .onyx-button.legacy-tool-button .onyx-icon {
+    width: 32px;
+    height: 32px;
+    margin: 2px;
+}
+
+/* ------------------------------------------------------------------
+   Tabs: .enyo-radiogroup of .enyo-radiobutton (radiobutton.png), across
+   the toolbar, 33 tall, 16px. Glossy: the top half lighter than the
+   bottom. Off #ededed-#d4d4d4 over #c9c9c9-#c0c0c0, on #1d4873-#3674aa
+   over #5097cc-#6fa8cf.
+   ------------------------------------------------------------------ */
+
+body.onyx .legacy-radiogroup {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex: 1;
+    flex: 1;
+    margin: 0;
+    white-space: nowrap;
+}
+body.onyx .legacy-radiogroup > .onyx-radiobutton {
+    -webkit-flex: 1;
+    flex: 1;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    height: 33px;
+    margin: 0;
+    padding: 0 6px;
+    font-family: @legacy-font;
+    font-size: 16px;
+    line-height: 31px;
+    color: @legacy-text;
+    text-align: center;
+    text-shadow: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: #d5d5d5;
+    background-image: linear-gradient(to bottom, #ededed, #d4d4d4 49%, #c9c9c9 51%, #c0c0c0 94%, #d4d4d4);
+    border: 1px solid #8b8b8b;
+    border-top-color: #a3a3a3;
+    border-left-width: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+body.onyx .legacy-radiogroup > .onyx-radiobutton:first-child {
+    border-left-width: 1px;
+    border-radius: 5px 0 0 5px;
+}
+body.onyx .legacy-radiogroup > .onyx-radiobutton:last-child {
+    border-radius: 0 5px 5px 0;
+}
+body.onyx .legacy-radiogroup > .onyx-radiobutton.active {
+    color: #ffffff;
+    background: #3e7fb8;
+    background-image: linear-gradient(to bottom, #1d4873, #3674aa 49%, #5097cc 51%, #6fa8cf 94%, #6ca1c5);
+    border-color: #6587a5;
+    border-top-color: #384d68;
+    box-shadow: inset 1px 0 0 #3e759e, inset -1px 0 0 #3e759e;
+}
+
+/* ------------------------------------------------------------------
+   Popups and menus: light, as Enyo 1.0 drew them (palm-chrome.less in
+   org.webosports.messaging). The app menu stays dark.
+   ------------------------------------------------------------------ */
+
+body.onyx .onyx-popup:not(.onyx-menu) {
+    color: #222222;
+    background: #cccccc;
+    background: linear-gradient(to bottom, #e3e3e3, #cccccc 48px);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+
+/* The choices of a select (LegacySelect): Enyo 1's ListSelector menu,
+   menu-background.png and Item.css. 1px dark edge, #dcdcdc, 44px rows
+   (16px/22px text, 10px padding) with a dark and a light line between
+   them, a check mark at the right of the chosen one. */
+body.onyx .legacy-menu {
+    position: fixed;
+    z-index: 130;
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    font-family: inherit;
+    color: #333333;
+    background: #dcdcdc;
+    background: linear-gradient(to bottom, #dddddd, #dcdcdc 80%, #cdcdcd);
+    border: 1px solid #6f6f6f;
+    border-top-color: #8f8f8f;
+    border-radius: 6px;
+    box-shadow: inset 0 1px 0 #ebebeb, 0 2px 7px rgba(0, 0, 0, 0.45);
+}
+body.onyx .legacy-menu-item {
+    padding: 10px;
+    font-size: 16px;
+    line-height: 22px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+    text-transform: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+body.onyx .legacy-menu-item.first {
+    border-top: 0;
+}
+body.onyx .legacy-menu-item.last {
+    border-bottom: 0;
+}
+body.onyx .legacy-menu-item.checked {
+    padding-right: 36px;
+    background: url(../../assets/menu-check.svg) right 2px center / 32px 32px no-repeat;
+}
+body.onyx .legacy-menu-item:active {
+    background-color: rgba(197, 224, 249, 0.6);
+}
+
+/* ------------------------------------------------------------------
+   The list pane: 320 wide (.enyo-contacts-list), #d8d8d8, a 1px #a8a8a8
+   line on its right.
+   ------------------------------------------------------------------ */
+
+body.onyx .main-panels > .list-pane {
+    width: 320px;
+    background: @legacy-pane;
+}
+@media all and (max-width: 599px) {
+    body.onyx .main-panels > * {
+        min-width: 100%;
+        max-width: 100%;
+    }
+}
+body.onyx .list-pane-footer {
+    -webkit-justify-content: center;
+    justify-content: center;
+}
+body.onyx .contacts-tabs-toolbar {
+    padding: 0 4px;
+}
+
+/* The search row (contactsui .contacts-search, bg_search.png): 42 tall,
+   #f3f3f3 to white, a #b3b3b3 line and a 3px shadow onto the list. */
+body.onyx .contacts-search {
+    position: relative;
+    z-index: 1;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    height: 43px;
+    background: #f8f8f8;
+    background-image: linear-gradient(to bottom, #f3f3f3, #ffffff);
+    border-bottom: 1px solid #b3b3b3;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), 0 2px 3px rgba(0, 0, 0, 0.08);
+}
+body.onyx .contacts-search-input {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 100%;
+    height: 42px;
+    margin: 0;
+    padding: 0 34px 0 12px;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font-family: @legacy-font;
+    font-size: 18px;
+    color: #000000;
+    text-align: left;
+}
+body.onyx .contacts-search-input::placeholder {
+    color: #888888;
+}
+body.onyx .contacts-search-icon {
+    position: absolute;
+    top: 11px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    background: url(../../assets/search-input.svg) no-repeat 0 0;
+    background-size: 20px 20px;
+    pointer-events: none;
+}
+
+/* Rows (contactsui person list): 70 tall, 14px in, the picture 50x50 at
+   10px from the top, the IM status where the legacy list has it (x 79)
+   and the name from x 100 in 18px. No lines between rows of one letter
+   group but the item pair: dark over light. */
+body.onyx .contacts-list,
+body.onyx .contacts-list .enyo-list-port,
+body.onyx .contacts-list .enyo-data-list-page {
+    background-color: @legacy-pane;
+}
+body.onyx .contacts-list .contacts-item {
+    border: 0;
+    font-size: 18px;
+    color: @legacy-text;
+}
+body.onyx .contacts-list .contacts-item:not(.group-first) .contacts-item-row {
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+body.onyx .contacts-list .contacts-item.selected {
+    background-color: @legacy-selected;
+}
+body.onyx .contacts-list .contacts-item-row {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    height: 70px;
+    min-height: 70px;
+}
+body.onyx .contacts-list .contacts-item .icon {
+    width: 100px;
+    height: 70px;
+}
+body.onyx .contacts-list .contacts-item .icon .list-img,
+body.onyx .contacts-list .contacts-item .icon .list-mask {
+    top: 10px;
+    left: 14px;
+}
+body.onyx .contacts-list .contacts-item .name {
+    padding-right: 14px;
+    text-shadow: none;
+}
+body.onyx .contacts-list .contacts-item-row > .im-status {
+    position: absolute;
+    left: 79px;
+    top: 27px;
+    width: 16px;
+    height: 16px;
+}
+/* The letter, then a blue line to the right edge (.enyo-divider-alpha):
+   30 tall, the letter 16px bold #4299ea at x 7, the line from x 30 -
+   two pixels, #4987c0 over #5aa6ec, with a light row under them. */
+body.onyx .contacts-list .list-divider {
+    position: relative;
+    height: 30px;
+    padding: 0 0 0 7px;
+    font-size: 16px;
+    line-height: 30px;
+    font-weight: bold;
+    color: @legacy-divider-blue;
+    text-transform: uppercase;
+    text-align: left;
+    background: none;
+    border: 0;
+}
+body.onyx .contacts-list .list-divider::after {
+    content: "";
+    position: absolute;
+    left: 30px;
+    right: 0;
+    top: 14px;
+    height: 2px;
+    background: linear-gradient(to bottom, #4987c0 50%, #5aa6ec 50%);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+body.onyx .contacts-list-message {
+    color: #666666;
+    font-size: 18px;
+}
+body.onyx .gal-box {
+    padding-bottom: 0;
+}
+
+/* ------------------------------------------------------------------
+   The details pane: white, a 1px #a8a8a8 line on its left, and the
+   light details-toolbar under it with the pencil at its right.
+   ------------------------------------------------------------------ */
+
+body.onyx .details {
+    background: @legacy-pane;
+    padding: 0;
+    border-left: 1px solid #a8a8a8;
+}
+body.onyx .details > * {
+    background: transparent;
+}
+body.onyx .contacts-details-panel,
+body.onyx .details .details-scroller {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 54px;
+    background: #ffffff;
+}
+body.onyx .details .container {
+    border: 0;
+    border-image: none;
+    background: #ffffff;
+    min-height: 100%;
+}
+body.onyx .details .content {
+    margin: 0;
+}
+body.onyx .details-toolbar {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    -webkit-justify-content: flex-end;
+    justify-content: flex-end;
+}
+body.onyx .details-toolbar .details-add-gal {
+    position: static;
+    margin-right: auto;
+}
+
+/* The header (contacts.css .details .header): the picture frame at 3,2,
+   the name in 34px light #222 in the middle of the frame's height, the
+   star at the top right, "1 profile" at the bottom right. */
+body.onyx .details .header {
+    padding: 2px 10px 10px 3px;
+    border-bottom: 1px solid @legacy-pane;
+}
+body.onyx .details .headerCard {
+    position: relative;
+}
+body.onyx .details .nameinfo {
+    position: relative;
+    height: 222px;
+    vertical-align: top;
+    display: -webkit-inline-flex;
+    display: inline-flex;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-justify-content: center;
+    justify-content: center;
+}
+body.onyx .details .nameinfo .buttonBar {
+    position: absolute;
+    top: 10px;
+    right: 0;
+    height: 34px;
+}
+body.onyx .details .nameinfo .name {
+    margin: 0;
+    padding: 0 44px 10px 0;
+    font-size: 34px;
+    color: #222222;
+    font-family: @legacy-font-light;
+}
+body.onyx .details .nameinfo .nickname,
+body.onyx .details .nameinfo .position {
+    margin: 0;
+}
+body.onyx .details .favorite {
+    margin: 0;
+}
+/* "1 profile": .enyo-button-light with the arrow at 95% 3px. */
+body.onyx .details .profiles-button {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    min-height: 34px;
+    padding: 6px 30px 6px 10px;
+    background-color: #f0f0f0;
+    background-image: linear-gradient(to bottom, #fafafa, #e6e6e6 55%, #e3e3e3 60%, #efefef);
+    border-color: #b4b4b4;
+    border-top-color: #bfbfbf;
+}
+/* btn_linked_profiles.png: the arrow down, and up while the drawer is open. */
+body.onyx .details .profiles-button .profilesIndicator {
+    position: absolute;
+    right: 8px;
+    top: 6px;
+    margin: 0 !important;
+}
+
+/* Rows: the value 18px #222 over the label, 14px uppercase blue, 12px in,
+   with a #d8d8d8 line under each. */
+body.onyx .details .group .contacts-item {
+    padding: 11px 12px 11px 12px;
+    font-size: 18px;
+    color: #222222;
+    border-top: 0;
+    border-bottom: 1px solid @legacy-pane;
+}
+body.onyx .details .value {
+    margin: 0 0 4px;
+}
+body.onyx .details .label {
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Nothing selected (PseudoDetailsInApp): the pane's grey, the picture and
+   two lines of grey 20px text 250 wide, spaced 2:5 above and below. */
+body.onyx .details-empty {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-align-items: center;
+    align-items: center;
+    background: @legacy-pane;
+    color: #808080;
+    text-align: center;
+}
+body.onyx .details-empty-spacer-top {
+    -webkit-flex: 2;
+    flex: 2;
+}
+body.onyx .details-empty-spacer-bottom {
+    -webkit-flex: 5;
+    flex: 5;
+}
+body.onyx .details-empty-image {
+    display: block;
+}
+body.onyx .details-empty-text {
+    width: 250px;
+    font-size: 20px;
+}
+
+/* ------------------------------------------------------------------
+   Edit: the body's #f1f1f1, the title in the middle of a light bar,
+   groups of 18px rows in a 1px #7e7e7e frame with 8px corners
+   (group-unlabeled.png), labels as the legacy pickers draw them: blue
+   uppercase 14px text, no box. Cancel and Done, 324 wide each, in the
+   middle of the bar under it.
+   ------------------------------------------------------------------ */
+
+body.onyx .edit-contact {
+    background: @legacy-body;
+}
+body.onyx .edit-header {
+    -webkit-justify-content: center;
+    justify-content: center;
+    position: relative;
+}
+body.onyx .edit-header .edit-title {
+    font-size: 20px;
+    color: @legacy-text;
+}
+body.onyx .edit-header .edit-account {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
+    margin: 0;
+}
+body.onyx .edit-footer {
+    -webkit-justify-content: center;
+    justify-content: center;
+}
+body.onyx .edit-footer .edit-toolbar-button,
+body.onyx .prefs .onyx-toolbar .edit-toolbar-button,
+body.onyx .first-launch .onyx-toolbar .edit-toolbar-button {
+    width: 324px;
+    max-width: 45%;
+    min-width: 0;
+    margin: 0 6px;
+}
+
+body.onyx .edit-main {
+    max-width: 694px;
+    padding: 20px 0 16px;
+}
+body.onyx .edit-main .edit-top-groupbox {
+    padding-top: 0;
+    margin-top: 8px;
+}
+@media all and (min-width: 600px) {
+    body.onyx .edit-main .avatar .img {
+        top: 13px;
+        left: 13px;
+        width: 196px;
+        height: 196px;
+    }
+}
+
+body.onyx .edit-main .onyx-groupbox {
+    margin: 8px 0;
+    background: transparent;
+    border: 1px solid #7e7e7e;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: none;
+}
+body.onyx .edit-main .onyx-groupbox > *,
+body.onyx .edit-main .onyx-groupbox > .onyx-input-decorator {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+/* Between rows: a #c0c0c0 line over a #f8f8f8 one (sampled). */
+body.onyx .edit-main .onyx-groupbox > * + *,
+body.onyx .edit-main .onyx-groupbox > .onyx-input-decorator + .onyx-input-decorator {
+    border-top: 1px solid #c0c0c0;
+    box-shadow: inset 0 1px 0 #f8f8f8;
+}
+body.onyx .edit-main .onyx-input-decorator {
+    padding: 0 10px;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+body.onyx .edit-main .onyx-input-decorator.onyx-focused {
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: none;
+}
+body.onyx .edit-main .onyx-input-decorator > input,
+body.onyx .edit-main .onyx-input-decorator > textarea {
+    font-family: @legacy-font;
+    font-size: 18px;
+    line-height: 22px;
+    color: #000000;
+    background: transparent;
+    padding: 12px 0;
+    min-height: 46px;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+body.onyx .edit-main .edit-top-groupbox .onyx-input-decorator > input {
+    padding: 17px 0;
+    min-height: 55px;
+}
+body.onyx .edit-main ::placeholder {
+    color: #888888;
+}
+body.onyx .edit-main .edit-row {
+    padding: 0;
+}
+body.onyx .edit-main .edit-row .edit-row-inputs > .onyx-input-decorator {
+    border: 0;
+}
+body.onyx .edit-main .edit-row .edit-address-part + .edit-address-part {
+    margin-top: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* The label pickers: a select drawn as the legacy ListSelector's caption. */
+body.onyx .edit-main select.edit-row-type,
+body.onyx .edit-main select.edit-row-target {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    margin: 0 10px 0 6px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: @legacy-blue;
+    font-family: @legacy-font;
+    font-size: 14px;
+    text-transform: uppercase;
+    text-align: right;
+    text-align-last: right;
+    cursor: pointer;
+}
+body.onyx .edit-main select.edit-row-type:focus,
+body.onyx .edit-main select.edit-row-target:focus {
+    outline: none;
+}
+body.onyx .edit-main select.edit-row-type option,
+body.onyx .edit-main select.edit-row-target option {
+    color: #222222;
+    text-transform: none;
+}
+body.onyx .edit-main .edit-label {
+    color: @legacy-blue;
+    font-size: 14px;
+    text-transform: uppercase;
+    -webkit-order: 2;
+    order: 2;
+    min-width: 0;
+    margin-left: 6px;
+}
+body.onyx .edit-main .edit-row-remove.onyx-button {
+    min-height: 30px;
+    min-width: 30px;
+    padding: 2px 8px;
+    margin: 0 8px 0 0;
+}
+
+/* The account a new contact goes to: a small light picker button. */
+body.onyx .edit-header select.edit-account-select {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 36px;
+    padding: 0 26px 0 10px;
+    font-family: @legacy-font;
+    font-size: 16px;
+    color: #292929;
+    background: #e3e3e3 url(../../assets/menu-arrow.svg) no-repeat right 8px center;
+    background-image: url(../../assets/menu-arrow.svg), linear-gradient(to bottom, #f4f4f4, #d8d8d8 88%, #e5e5e5);
+    background-position: right 8px center, 0 0;
+    background-repeat: no-repeat;
+    border: 1px solid #b7b7b7;
+    border-radius: 5px;
+}
+
+/* Other onyx selects (Preferences): the same picker button. */
+body.onyx select.prefs-select {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 36px;
+    padding: 0 26px 0 10px;
+    font-family: @legacy-font;
+    font-size: 16px;
+    color: #292929;
+    background-image: url(../../assets/menu-arrow.svg), linear-gradient(to bottom, #f4f4f4, #d8d8d8 88%, #e5e5e5);
+    background-position: right 8px center, 0 0;
+    background-repeat: no-repeat;
+    border: 1px solid #b7b7b7;
+    border-radius: 5px;
+}
+
+/* Preferences and First Launch: light bars too, buttons centred. */
+body.onyx .prefs .onyx-toolbar:last-child,
+body.onyx .first-launch .onyx-toolbar:last-child {
+    -webkit-justify-content: center;
+    justify-content: center;
+}
+
+/* An empty row waiting for a new entry: the "+" (bg_field_new.png) 10px
+   in, its text from 35px, as the legacy .edit .new.input. */
+body.onyx .edit-main .edit-row-new .edit-row-inputs > .onyx-input-decorator:first-child {
+    background: url(../../assets/bg_field_new.png) no-repeat 10px 50%;
+    padding-left: 35px;
+}
+
+/* The name row's buttons: the star and the legacy (i) of name details
+   (bg_edit_prefix.png), 32x32 sprites with no button chrome. */
+body.onyx .edit-main .edit-name-row .onyx-button.edit-name-details {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
+    padding: 0;
+    margin: 0 0 0 -6px;
+    color: transparent;
+    overflow: hidden;
+    background: url(../../assets/bg_edit_prefix.png) no-repeat 0 0;
+    border: 0;
+    box-shadow: none;
+}
+body.onyx .edit-main .edit-name-row .onyx-button.edit-favorite {
+    margin: 0;
+    background: url(../../assets/bg_edit_favorite.png) no-repeat 0 0;
+    border: 0;
+    box-shadow: none;
+}
+body.onyx .edit-main .edit-name-row .onyx-button.edit-favorite.active {
+    background-position: 0 -32px;
+}
+/* The edit picture's frame is its own (contacts.css .edit .avatar .mask). */
+body.onyx .edit-main .avatar .mask {
+    background: url(../../assets/bg_edit_mask.png) no-repeat 0 0;
+    background-size: auto;
+}
+
+/* Search with text: a grey round clear button where the magnifier was
+   (Onyx theme search-input-cancel.png, drawn here until it is remade). */
+body.onyx .contacts-search-clear {
+    position: absolute;
+    top: 11px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+body.onyx .contacts-search-clear::before,
+body.onyx .contacts-search-clear::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 9px;
+    width: 12px;
+    height: 2px;
+    background: #9a9a9a;
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+body.onyx .contacts-search-clear::after {
+    -webkit-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+}
+
+/* Favorites (contacts.css .enyo-contacts-list .favorites): no letters, no
+   stars, 100x100 pictures in their own frame (bg_favorites_icon_mask.png)
+   with 6px corners, rows 120 tall. */
+body.onyx .contacts-list.favorites .list-divider,
+body.onyx .contacts-list.favorites .favorite-cell {
+    display: none !important;
+}
+body.onyx .contacts-list.favorites .contacts-item .contacts-item-row {
+    height: 120px;
+    min-height: 120px;
+    border-top: 0;
+    box-shadow: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+body.onyx .contacts-list.favorites .contacts-item .icon {
+    width: 150px;
+    height: 120px;
+}
+body.onyx .contacts-list.favorites .contacts-item .icon .list-img,
+body.onyx .contacts-list.favorites .contacts-item .icon .list-mask {
+    width: 100px;
+    height: 100px;
+}
+body.onyx .contacts-list.favorites .contacts-item .icon .list-img {
+    border-radius: 6px;
+}
+body.onyx .contacts-list.favorites .contacts-item .icon .list-mask {
+    background: url(../../assets/bg_favorites_icon_mask.png) no-repeat 0 0;
+}
+body.onyx .contacts-list.favorites .contacts-item-row > .im-status {
+    left: 129px;
+    top: 52px;
+}
+
+/* The linked profiles under the header (contacts.css .details .profiles):
+   #f4f4f4, rows 73 tall under a dashed #ccc line, 14px in, 18px #222. */
+body.onyx .details .profiles {
+    background: #f4f4f4;
+}
+body.onyx .header .profiles .profile-row,
+body.onyx .header .profiles .profile-link-more {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    min-height: 73px;
+    padding: 0 14px;
+    border-top: 1px dashed #cccccc;
+    font-size: 18px;
+    color: #222222;
+}
+body.onyx .header .profiles .profile-link-more {
+    line-height: 72px;
+}
+body.onyx .header .profiles .profile-account-icon {
+    -webkit-order: 2;
+    order: 2;
+    margin: 0 0 0 8px;
+}
+
+/* Held upright, the legacy header sets the name in 26px (.portrait). */
+@media all and (orientation: portrait) {
+    body.onyx .details .nameinfo .name {
+        font-size: 26px;
+    }
+}
+
+body.onyx .details .avatar .img.no-photo {
+    background-image: none !important;
+}
+/* The drawer runs the pane's full width: the padding is the top row's. */
+body.onyx .details .header {
+    padding: 0;
+}
+body.onyx .details .header .headerCard {
+    padding: 2px 10px 10px 3px;
+}
+/* Notes has no "+": the legacy notes box is plain. */
+body.onyx .edit-main [id$=_notesGroup] .edit-row-new .edit-row-inputs > .onyx-input-decorator:first-child {
+    background: transparent;
+    padding-left: 10px;
+}
+
+/* ------------------------------------------------------------------
+   Phones (below 600px, one pane at a time): the same look, sized for
+   a 320-wide screen. The details header shrinks to a 96px picture with
+   the name in 26px beside it (the legacy .portrait size) and "1
+   profile" under the name; edit keeps a margin at the sides, and the
+   account a new contact goes to shares the bar with the title.
+   ------------------------------------------------------------------ */
+@media all and (max-width: 599px) {
+    body.onyx .details .avatar {
+        width: 96px;
+        height: 96px;
+        max-width: none;
+        margin-right: 10px;
+    }
+    body.onyx .details .avatar .img {
+        top: 6px;
+        left: 6px;
+        width: 84px;
+        height: 84px;
+    }
+    body.onyx .details .nameinfo {
+        height: auto;
+        min-height: 96px;
+    }
+    /* FittableColumns writes the row's height inline at its last reflow,
+       before a long name wraps to a second line. */
+    body.onyx .details .headerCard {
+        height: auto !important;
+    }
+    body.onyx .details .nameinfo .name {
+        font-size: 26px;
+        padding: 0 40px 6px 0;
+        -webkit-line-clamp: 2;
+    }
+    body.onyx .details .nameinfo .buttonBar {
+        top: 0;
+    }
+    body.onyx .details .profiles-button {
+        position: relative;
+        right: auto;
+        bottom: auto;
+        -webkit-align-self: flex-start;
+        align-self: flex-start;
+        margin-top: 4px;
+    }
+
+    body.onyx .edit-main {
+        padding: 12px 8px 16px;
+    }
+    body.onyx .edit-header {
+        -webkit-justify-content: space-between;
+        justify-content: space-between;
+        padding: 0 8px;
+    }
+    body.onyx .edit-header .edit-title {
+        -webkit-flex: 1;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left;
+    }
+    body.onyx .edit-header .edit-account {
+        position: static;
+        -webkit-transform: none;
+        transform: none;
+        min-width: 0;
+        max-width: 55%;
+    }
+    body.onyx .edit-header .edit-account-icon {
+        display: none;
+    }
+    body.onyx .edit-header select.edit-account-select {
+        max-width: 100%;
+    }
+}
+
+/* ------------------------------------------------------------------
+   Dates (DateField): the row shows the date; a tap opens the legacy
+   "Select Birthday" dialog (BirthdayPicker.js: a ModalDialog with
+   Enyo 1's DatePicker). Sizes and colours from the 3.0.5 app at 1x.
+   ------------------------------------------------------------------ */
+
+body.onyx .edit-main .date-field {
+    min-height: 34px;
+    min-width: 0;
+    cursor: pointer;
+}
+body.onyx .edit-main .date-field-text {
+    font-size: 18px;
+    line-height: 34px;
+    color: #333333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* The dialog: 300 wide, the title, a group with the pills and Remove,
+   then Cancel and Done. */
+body.onyx .onyx-popup.legacy-date-dialog {
+    width: 300px;
+    max-width: calc(100vw - 16px);
+    padding: 0;
+    box-sizing: border-box;
+    color: #333333;
+    background: #d0d0d0;
+    background: linear-gradient(to bottom, #f4f4f4, #d7d7d7 30px, #d0d0d0 50px, #cccccc);
+    border: 1px solid rgba(0, 0, 0, 0.45);
+    border-radius: 10px;
+    box-shadow: inset 0 1px 0 #f8f8f8, 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+body.onyx .legacy-dialog-title {
+    padding: 11px 10px 0;
+    height: 41px;
+    font-size: 20px;
+    line-height: 30px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+body.onyx .legacy-date-group {
+    margin: 0 11px;
+    padding: 21px 16px 14px;
+    background: #eeeeee;
+    border: 1px solid #919191;
+    border-radius: 8px;
+    box-shadow: inset 0 0 0 1px #e4e4e4;
+}
+body.onyx .legacy-date-pickers {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-justify-content: center;
+    justify-content: center;
+}
+body.onyx .onyx-button.legacy-date-remove {
+    display: block;
+    width: 100%;
+    min-height: 35px;
+    margin: 12px 0 0;
+}
+body.onyx .legacy-dialog-buttons {
+    display: -webkit-flex;
+    display: flex;
+    padding: 14px 13px 13px;
+}
+body.onyx .legacy-dialog-buttons .onyx-button {
+    -webkit-flex: 1 1 0;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 35px;
+    margin: 0;
+}
+body.onyx .legacy-dialog-buttons .onyx-button + .onyx-button {
+    margin-left: 7px;
+}
+
+/* .enyo-button-affirmative: green, white text. */
+body.onyx .onyx-button.legacy-button-affirmative {
+    color: #ffffff;
+    background: #3a9a1a;
+    background-image: linear-gradient(to bottom, #9dd18b 0, #69b84e 1px, #5aa83f 45%, #389717 75%, #1f7800);
+    border-color: #1d6a00;
+    box-shadow: none;
+}
+body.onyx .onyx-button.legacy-button-affirmative:active:hover:not([disabled]) {
+    background-image: linear-gradient(to bottom, #1f7800, #389717);
+}
+
+/* A picker pill (picker-pill.png): light, 1px #888 edge, 16px text. */
+body.onyx select.legacy-picker {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    height: 36px;
+    margin: 0 5px;
+    padding: 0 10px;
+    font-family: inherit;
+    font-size: 16px;
+    color: #333333;
+    text-align: center;
+    text-align-last: center;
+    background: #f2f2f2;
+    background-image: linear-gradient(to bottom, #f8f8f8, #eeeeee);
+    border: 1px solid #888888;
+    border-radius: 4px;
+    cursor: pointer;
+}
+body.onyx select.legacy-picker.legacy-date-day {
+    min-width: 46px;
+}
+body.onyx select.legacy-picker:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px #b0b0b0, 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+body.onyx select.legacy-picker:active {
+    background-image: linear-gradient(to bottom, #dcdcdc, #ececec);
+}
+
+/* Its list (the picker popup): as wide as the pill, centred, the chosen
+   row white and bold. */
+body.onyx .legacy-menu.picker .legacy-menu-item {
+    padding-left: 8px;
+    padding-right: 8px;
+    text-align: center;
+}
+body.onyx .legacy-menu.picker .legacy-menu-item.checked {
+    padding-right: 8px;
+    font-weight: bold;
+    background: #ffffff;
+}

@@ -13,6 +13,7 @@ var
     Binding = require('enyo/Binding'),
     Button = require('onyx/Button'),
     Icon = require('onyx/Icon'),
+    Toolbar = require('onyx/Toolbar'),
     LunaService = require('enyo-webos/LunaService'),
     Popup = require('onyx/Popup'),
     details = require('../util/details'),
@@ -122,7 +123,7 @@ module.exports = kind({
             onResponse: 'serviceResponse',
             onError: 'serviceError'
         },
-        { kind: Scroller, touch: true, classes: "enyo-fit", components: [
+        { kind: Scroller, touch: true, classes: "details-scroller", components: [
             {
                 name: "container",
                 classes: "container",
@@ -165,12 +166,15 @@ module.exports = kind({
                 {name: "profileCancelBtn", kind: Button, content: $L("Cancel"), ontap: "profileCancelTap"}
             ]}
         ]},
-        { name: "editContactBtn", kind: Button, style: "position: absolute; right: 0.5rem; bottom: 0.5rem;", ontap: "doEdit", components: [
-            {kind: Icon, src: "assets/btn_edit.png"}
-        ]},
-        { name: "addToContactsBtn", kind: Button, classes: "onyx-affirmative details-add-gal", showing: false,
-            content: $L("Add to Contacts"), ontap: "addToContactsTap" }
-
+        // The legacy details-toolbar: a light bar under the details, the
+        // pencil at its right end.
+        { name: "detailsToolbar", kind: Toolbar, classes: "legacy-toolbar legacy-footer details-toolbar", components: [
+            { name: "addToContactsBtn", kind: Button, classes: "legacy-button details-add-gal", showing: false,
+                content: $L("Add to Contacts"), ontap: "addToContactsTap" },
+            { name: "editContactBtn", kind: Button, classes: "legacy-tool-button edit-contact", ontap: "doEdit", components: [
+                {kind: Icon, src: "assets/btn_edit.png"}
+            ]}
+        ]}
     ],
     bindings: [
         //details stuff:

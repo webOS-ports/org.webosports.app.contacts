@@ -5,10 +5,8 @@ var
 	Panels = require('layout/Panels'),
 	CardArranger = require('layout/CardArranger'),
 	CollapsingArranger = require('layout/CollapsingArranger'),
-	Icon = require('onyx/Icon'),
 	Image = require('enyo/Image'),
 	ContactsBar = require('./ContactsBar'),
-	Button = require('onyx/Button'),
 	ContactDetails = require('./ContactDetails'),
 	Signals = require('enyo/Signals'),
 	PersonCollection = require('../data/PersonCollection'),
@@ -30,6 +28,13 @@ var
 	$L = require('enyo/i18n').$L;
 require('webos-lib');
 
+// One pane at a time below 600px, the phones. Layout's own cut-off is
+// 800px, which took the second pane from a TouchPad held upright; the
+// legacy app shows the list and the details side by side there.
+function isNarrow() {
+	return Panels.isNarrowDevice() || window.innerWidth < 600;
+}
+
 // The cards (list and details, or the edit view) are a Panels of their
 // own: a popup inside a Panels would be one of its panels, and hidden by
 // every transition.
@@ -44,13 +49,14 @@ module.exports = kind({
             kind: Panels,
             arrangerKind: CollapsingArranger,
             draggable: false,
+            narrowFit: false,
+            classes: "main-panels",
             fit: true,
             components: [
-                { style: "width: 38.2%;" /* golden ratio */, components: [
-                	{ name: "contactsBar", kind: ContactsBar, classes: "enyo-fit", onSelected: "showPerson", onAddFavorite: "addFavorite" },
-                    { name: "addContactBtn", kind: Button, style: "position: absolute; right: 0.5rem; bottom: 0.5rem;", ontap: "showAdd", components: [
-                        {kind: Icon, src: "assets/btn_add_contact.png"}
-                    ]}
+                // 320 wide, as the legacy list pane.
+                { classes: "list-pane", components: [
+                	{ name: "contactsBar", kind: ContactsBar, classes: "enyo-fit", onSelected: "showPerson",
+                	    onAddFavorite: "addFavorite", onAddContact: "showAdd" }
                 ]},
                 {
                     kind: Panels,
@@ -58,18 +64,16 @@ module.exports = kind({
                     draggable: false,
                     classes: "details",
                     components: [
+                        // As the legacy PseudoDetailsInApp: the picture and two
+                        // grey lines, a little above the middle (spacers 2:5).
                         {
                             name: "empty",
+                            classes: "details-empty",
                             components: [
-                                {
-                                    kind: Image,
-                                    src: "assets/first-launch-contacts.png",
-                                    style: "display: block; margin: auto; padding-top: 30%;"
-                                },
-                                {
-                                    style: "display: block; margin: 10px auto; text-align: center;",
-                                    content: $L("Please select a contact on the left to see more information.")
-                                }
+                                { classes: "details-empty-spacer-top" },
+                                { kind: Image, src: "assets/first-launch-contacts.png", classes: "details-empty-image" },
+                                { classes: "details-empty-text", content: $L("Select a contact on the left to see more information.") },
+                                { classes: "details-empty-spacer-bottom" }
                             ]
                         },
                         {
@@ -168,7 +172,7 @@ module.exports = kind({
     showPerson: function (inSender, inEvent) {
         if (inEvent.person) {
             this.$.detailsPanel.setIndex(1);   // ContactDetails
-            if (Panels.isScreenNarrow()) {
+            if (isNarrow()) {
                 this.$.main.setIndex(1);
             }
         } else {
@@ -209,7 +213,7 @@ module.exports = kind({
     		// The list's watch empties the details once the person is gone;
     		// a narrow screen goes back to the list, not to empty details.
     		this.selectPersonId = null;
-    		if (Panels.isScreenNarrow()) {
+    		if (isNarrow()) {
     			this.$.main.setIndex(0);
     		}
     	} else {
@@ -232,7 +236,7 @@ module.exports = kind({
 
 	alterSearch: function (inSender, inEvent) {
 		this.$.contactsBar.alterSearch(inEvent.searchText);
-		if (Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
+		if (isNarrow() && this.$.main.get("index") > 0) {
 			this.$.main.setIndex(0);
 		}
 	},
@@ -290,7 +294,7 @@ module.exports = kind({
     		this.closeFirstLaunch();
     	} else if (this.$.cards.get("index") > 0) {
     		this.$.cards.set("index", 0);   // hide Edit/Create
-    	} else if (Panels.isScreenNarrow() && this.$.main.get("index") > 0) {
+    	} else if (isNarrow() && this.$.main.get("index") > 0) {
             this.$.main.setIndex(0);
         } else {
         	switch (this.$.main.get("index")) {

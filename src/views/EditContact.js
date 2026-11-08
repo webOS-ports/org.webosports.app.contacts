@@ -8,12 +8,11 @@
 var
 	kind = require('enyo/kind'),
 	Control = require('enyo/Control'),
-	Select = require('enyo/Select'),
+	Select = require('./LegacySelect'),
 	Option = require('enyo/Option'),
 	Image = require('enyo/Image'),
 	Scroller = require('enyo/Scroller'),
 	FittableRows = require('layout/FittableRows'),
-	FittableHeaderLayout = require('layout/FittableHeaderLayout'),
 	Toolbar = require('onyx/Toolbar'),
 	InputDecorator = require('onyx/InputDecorator'),
 	Input = require('onyx/Input'),
@@ -32,6 +31,7 @@ var
 	persons = require('../data/persons'),
 	choose = require('./choose'),
 	ConfirmDialog = require('./ConfirmDialog'),
+	DateField = require('./DateField'),
 	$L = require('enyo/i18n').$L;
 
 var ADDRESS_PARTS = [
@@ -44,11 +44,11 @@ var ADDRESS_PARTS = [
 
 
 var FIELD_INFO = {
-	phoneNumbers: {hint: $L("New phone number"), inputType: "tel"},
-	emails: {hint: $L("New email address"), inputType: "email"},
-	ims: {hint: $L("New IM address"), inputType: "text"},
-	addresses: {hint: $L("New address")},
-	urls: {hint: $L("New web address"), inputType: "url"},
+	phoneNumbers: {hint: $L("New Phone Number"), inputType: "tel"},
+	emails: {hint: $L("New Email Address"), inputType: "email"},
+	ims: {hint: $L("New IM Address"), inputType: "text"},
+	addresses: {hint: $L("New Address")},
+	urls: {hint: $L("New URL"), inputType: "url"},
 	relations: {hint: $L("New relation"), inputType: "text"},
 	notes: {hint: $L("New note")}
 };
@@ -74,6 +74,7 @@ var EditRow = kind({
 		var field = this.field, row = this.row, entry = row.entry || {}, info = FIELD_INFO[field];
 		var disabled = !!row.readOnly;
 		this.addRemoveClass("read-only", disabled);
+		this.addRemoveClass("edit-row-new", this.isNew);   // the legacy "+" before it
 		if (this.showAccount && !this.isNew) {
 			this.createComponent({name: "accountIcon", kind: Image, classes: "edit-row-account flex-none",
 				src: row.icon || "assets/contacts-by-webos.png", attributes: {title: row.accountName || ""}});
@@ -126,6 +127,7 @@ var EditRow = kind({
 	inputChanged: function () {
 		if (this.isNew) {
 			this.isNew = false;
+			this.removeClass("edit-row-new");
 			this.addRemoveButton().render();
 			this.doRowStarted();
 		}
@@ -214,8 +216,10 @@ module.exports = kind({
 		onDeleted: ""   // {personId, gone}: gone when the person went with its contacts
 	},
 	components: [
-		{name: "topToolbar", kind: Toolbar, layoutKind: FittableHeaderLayout, components: [
-			{name: "titleText", fit: true, classes: "edit-title", content: ""},
+		// The legacy edit-toolbar: light, the title in its middle, the
+		// account a new contact goes to at its right.
+		{name: "topToolbar", kind: Toolbar, classes: "legacy-toolbar edit-header", components: [
+			{name: "titleText", classes: "edit-title", content: ""},
 			{name: "accountBox", classes: "edit-account", showing: false, components: [
 				{name: "accountIcon", kind: Image, classes: "edit-account-icon", src: "assets/contacts-by-webos.png"},
 				{name: "accountSelect", kind: Select, classes: "edit-account-select", onchange: "accountChanged",
@@ -247,7 +251,7 @@ module.exports = kind({
 							{name: "nicknameInput", kind: Input, placeholder: $L("Nickname"), attributes: {inputmode: "latin-name"}}
 						]},
 						{kind: InputDecorator, components: [
-							{name: "jobTitleInput", kind: Input, placeholder: $L("Job title")}
+							{name: "jobTitleInput", kind: Input, placeholder: $L("Job Title")}
 						]},
 						{kind: InputDecorator, components: [
 							{name: "departmentInput", kind: Input, placeholder: $L("Department")}
@@ -267,11 +271,13 @@ module.exports = kind({
 				{kind: Groupbox, classes: "edit-dates", components: [
 					{kind: InputDecorator, classes: "flex-row", components: [
 						{content: $L("Birthday"), classes: "edit-label flex-none"},
-						{name: "birthdayInput", kind: Input, type: "date", classes: "flex-auto", placeholder: "YYYY-MM-DD"}
+						{name: "birthdayInput", kind: DateField, classes: "flex-auto",
+							title: $L("Select Birthday"), removeText: $L("Remove Birthday")}
 					]},
 					{kind: InputDecorator, classes: "flex-row", components: [
 						{content: $L("Anniversary"), classes: "edit-label flex-none"},
-						{name: "anniversaryInput", kind: Input, type: "date", classes: "flex-auto", placeholder: "YYYY-MM-DD"}
+						{name: "anniversaryInput", kind: DateField, classes: "flex-auto",
+							title: $L("Select Anniversary"), removeText: $L("Remove Anniversary")}
 					]}
 				]},
 				{name: "relationsGroup", kind: EditGroup, field: "relations"},
@@ -280,10 +286,11 @@ module.exports = kind({
 				{style: "height: 1rem;"}   // the scroller cuts off the last item otherwise
 			]}
 		]},
-		{name: "bottomToolbar", kind: Toolbar, layoutKind: FittableHeaderLayout, components: [
-			{name: "cancelBtn", kind: Button, content: $L("Cancel"), classes: "onyx-light edit-toolbar-button", ontap: "cancelTap"},
-			{fit: true},
-			{name: "doneBtn", kind: Button, content: $L("Save"), classes: "onyx-affirmative edit-toolbar-button", ontap: "doneTap"}
+		// Cancel (light) and Done (dark), side by side in the middle of a
+		// light bar, as the legacy edit view.
+		{name: "bottomToolbar", kind: Toolbar, classes: "legacy-toolbar legacy-footer edit-footer", components: [
+			{name: "cancelBtn", kind: Button, content: $L("Cancel"), classes: "legacy-button edit-toolbar-button", ontap: "cancelTap"},
+			{name: "doneBtn", kind: Button, content: $L("Done"), classes: "legacy-button legacy-button-dark edit-toolbar-button", ontap: "doneTap"}
 		]},
 		{name: "deleteConfirm", kind: ConfirmDialog},
 		{name: "nameDetails", kind: Popup, classes: "edit-name-popup", centered: true, modal: true, floating: true,
@@ -308,7 +315,6 @@ module.exports = kind({
 		var person = inPerson && inPerson.raw ? inPerson.raw() : inPerson;
 		this.state = null;
 		this.set("title", $L("Edit Contact"));
-		this.$.doneBtn.set("content", $L("Save"));
 		persons.contactsOf(person, this.bindSafely(function (inContacts) {
 			this.whenReady(this.bindSafely(function () {
 				this.start(person, inContacts, null);
@@ -323,8 +329,7 @@ module.exports = kind({
 	/** Creates a new person, optionally starting from a contact record. */
 	newPerson: function (inTemplate) {
 		this.state = null;
-		this.set("title", $L("New Contact"));
-		this.$.doneBtn.set("content", $L("Create"));
+		this.set("title", $L("Create New Contact"));
 		this.whenReady(this.bindSafely(function () {
 			this.start(null, [], inTemplate || null);
 		}));
@@ -362,8 +367,8 @@ module.exports = kind({
 		this.$.jobTitleInput.set("value", single.organization.title);
 		this.$.departmentInput.set("value", single.organization.department);
 		this.$.organizationInput.set("value", single.organization.name);
-		this.setDate(this.$.birthdayInput, single.birthday);
-		this.setDate(this.$.anniversaryInput, single.anniversary);
+		this.$.birthdayInput.set("value", single.birthday || "");
+		this.$.anniversaryInput.set("value", single.anniversary || "");
 		this.favorite = state.favorite;
 		this.favoriteChanged();
 		this.renderAccountPicker();
@@ -397,12 +402,6 @@ module.exports = kind({
 		this.$.readOnlyNote.set("showing", !!note);
 	},
 
-	// A stored date that is not a full ISO date (a vCard's "--03-14") is
-	// shown as text, so it is kept, not blanked by the date input.
-	setDate: function (inInput, inValue) {
-		inInput.set("type", !inValue || contactEdit.isValidDate(inValue) ? "date" : "text");
-		inInput.set("value", inValue || "");
-	},
 
 	renderAccountPicker: function () {
 		var state = this.state, select = this.$.accountSelect;
@@ -526,6 +525,8 @@ module.exports = kind({
 	cancelTap: function () {
 		this.$.deleteConfirm.hide();
 		this.$.nameDetails.hide();
+		this.$.birthdayInput.$.dialog.hide();
+		this.$.anniversaryInput.$.dialog.hide();
 		this.state = null;
 		this.doCancel();
 		return true;

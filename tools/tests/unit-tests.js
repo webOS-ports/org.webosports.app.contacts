@@ -17,6 +17,7 @@ var contactEdit = require(path.join(SRC, "contactEdit.js"));
 var launch = require(path.join(SRC, "launch.js"));
 var details = require(path.join(SRC, "details.js"));
 var search = require(path.join(SRC, "search.js"));
+var dateParts = require(path.join(SRC, "dateParts.js"));
 var profiles = require(path.join(SRC, "profiles.js"));
 var presence = require(path.join(SRC, "presence.js"));
 var l10n = require(path.join(SRC, "l10n.js"));
@@ -583,6 +584,34 @@ t.test("contactEdit: dates", function() {
 	assert.ok(!contactEdit.isValidDate("2023-02-29"));
 	assert.ok(!contactEdit.isValidDate("14-03-1980"));
 	assert.ok(!contactEdit.isValidDate("1980-13-01"));
+	assert.ok(contactEdit.isValidDate("--07-04"), "a date without a year");
+	assert.ok(contactEdit.isValidDate("--02-29"));
+	assert.ok(!contactEdit.isValidDate("--02-30"));
+	assert.ok(!contactEdit.isValidDate("--0704"), "stored as found, but not written so");
+});
+
+t.test("dateParts: stored dates to the date dialog's parts and back", function() {
+	assert.deepStrictEqual(dateParts.parse("1980-03-14"), {year: 1980, month: 3, day: 14});
+	assert.deepStrictEqual(dateParts.parse("1980-03-14T00:00:00Z"), {year: 1980, month: 3, day: 14});
+	assert.deepStrictEqual(dateParts.parse("--07-04"), {year: null, month: 7, day: 4});
+	assert.deepStrictEqual(dateParts.parse("--0704"), {year: null, month: 7, day: 4});
+	["", "1990-02-30", "1980-13-01", "14-03-1980", "July 4", null].forEach(function(inV) {
+		assert.strictEqual(dateParts.parse(inV), null, String(inV));
+	});
+	assert.strictEqual(dateParts.format({year: 1980, month: 3, day: 4}), "1980-03-04");
+	assert.strictEqual(dateParts.format({year: null, month: 12, day: 25}), "--12-25");
+	assert.strictEqual(dateParts.monthLength(2023, 2), 28);
+	assert.strictEqual(dateParts.monthLength(2024, 2), 29);
+	assert.strictEqual(dateParts.monthLength(1900, 2), 28);
+	assert.strictEqual(dateParts.monthLength(2000, 2), 29);
+	assert.strictEqual(dateParts.monthLength(null, 2), 29, "no year: Feb 29 stays possible");
+	assert.strictEqual(dateParts.monthLength(2023, 4), 30);
+	assert.strictEqual(dateParts.monthLength(2023, 12), 31);
+	assert.deepStrictEqual(dateParts.order("en-US"), ["month", "day", "year"]);
+	assert.deepStrictEqual(dateParts.order("de-DE"), ["day", "month", "year"]);
+	assert.deepStrictEqual(dateParts.order("ja-JP"), ["year", "month", "day"]);
+	assert.strictEqual(dateParts.monthNames("en-US")[10], "Nov");
+	assert.strictEqual(dateParts.monthNames("en-US").length, 12);
 });
 
 t.test("contactEdit: add to existing puts new entries in the default account's contact, skips known ones", function() {

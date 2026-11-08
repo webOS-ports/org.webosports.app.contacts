@@ -26,7 +26,7 @@ var AccountRow = module.exports = kind({
 	create: function () {
 		this.inherited(arguments);
 		var a = this.account;
-		this.$.icon.set("src", a.icon || "assets/header-icon-contacts.png");
+		this.$.icon.set("src", a.icon || "assets/header-icon-contacts.svg");
 		this.$.name.set("content", a.name);
 		this.$.username.set("content", a.username);
 		this.$.username.set("showing", !!a.username);

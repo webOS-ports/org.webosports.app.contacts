@@ -2,6 +2,7 @@
   "name": "org.webosports.app.contacts",
   "assets": [
     "assets/*.png",
+    "assets/*.svg",
     "assets/icon.ico",
     "appinfo.json",
     "icon.png",
@@ -16,7 +17,8 @@
     "mock/com.palm.service.accounts/*.png"
   ],
   "styles": [
-    "src/style/main.less"
+    "src/style/main.less",
+    "src/style/legacy.less"
   ],
   "main": "index.js",
   "moduleDir": "src"
