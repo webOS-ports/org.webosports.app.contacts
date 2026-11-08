@@ -646,20 +646,87 @@ t.test("edit: cancel writes nothing", async function() {
 	assert.strictEqual((await record("c-gina")).nickname, undefined);
 });
 
-t.test("edit: a bad date is refused, a partial stored one is kept", async function() {
+// The date dialog's parts, as its pickers hold them.
+function datePicked(inField) {
+	return page.eval("(function(){var v=function(p){var e=document.querySelector('[id$=_" + inField + "_'+p+']');return e?e.value:null;};" +
+		"return {month:v('month'),day:v('day'),year:v('year'),days:document.querySelectorAll('[id$=_" + inField + "_day] option').length};})()");
+}
+var DATE_DIALOG_SHOWN = "[].some.call(document.querySelectorAll('.legacy-date-dialog'),function(e){return e.getBoundingClientRect().height>0;})";
+// Taps a date row (scrolled into view) and waits for its dialog.
+async function openDate(inField) {
+	await page.eval("document.querySelector('[id$=_" + inField + "]').scrollIntoView({block:'center'})");
+	await sleep(100);
+	await page.tap("[id$=_" + inField + "]");
+	await page.waitFor(DATE_DIALOG_SHOWN);
+}
+function dateDialogShown() {
+	return page.eval(DATE_DIALOG_SHOWN);
+}
+
+t.test("edit: a partial stored date is kept, shown as a date", async function() {
 	var d = data();
 	d.contacts.filter(function(c) { return c._id === "c-gina"; })[0].birthday = "--07-04";
 	await open({data: d});
 	await openEdit("Gina Talk");
-	assert.strictEqual(await page.eval("document.querySelector('[id$=_birthdayInput]').value"), "--07-04");
+	assert.strictEqual(await page.eval("document.querySelector('[id$=_birthdayInput]').textContent"), "July 4");
 	await page.fill("[id$=_nicknameInput]", "G");
 	await save();
 	assert.strictEqual((await record("c-gina")).birthday, "--07-04");
+});
+
+t.test("edit: a date row opens the legacy date dialog; Done stores the date, Cancel nothing", async function() {
+	var d = data();
+	d.contacts.filter(function(c) { return c._id === "c-gina"; })[0].birthday = "--07-04";
+	await open({data: d});
 	await openEdit("Gina Talk");
-	await page.fill("[id$=_birthdayInput]", "1990-02-30");
+	await openDate("birthdayInput");
+	assert.strictEqual(await page.eval("[].filter.call(document.querySelectorAll('.legacy-date-dialog'),function(e){return e.getBoundingClientRect().height>0;})[0].querySelector('.legacy-dialog-title').textContent"), "Select Birthday");
+	// The stored date, with "no year" as it had none.
+	var first = await datePicked("birthdayInput");
+	assert.deepStrictEqual(first, {month: "7", day: "4", year: "none", days: 31}, JSON.stringify(first));
+	// The day list follows the month and year: February has 29 days
+	// without a year, 28 in 1990; the 30th becomes the 28th.
+	await selectValue("[id$=_birthdayInput_day]", "30");
+	await selectValue("[id$=_birthdayInput_month]", "2");
+	assert.deepStrictEqual(await datePicked("birthdayInput"), {month: "2", day: "29", year: "none", days: 29});
+	await selectValue("[id$=_birthdayInput_year]", "1990");
+	assert.deepStrictEqual(await datePicked("birthdayInput"), {month: "2", day: "28", year: "1990", days: 28});
+	// Picking from the pill's own list works as from the select.
+	await page.tap("[id$=_birthdayInput_day]");
+	await page.tapText(".legacy-menu.picker .legacy-menu-item", "14");
+	assert.strictEqual((await datePicked("birthdayInput")).day, "14");
+	await page.tap("[id$=_birthdayInput_dateDoneBtn]");
+	assert.strictEqual(await dateDialogShown(), false);
+	assert.strictEqual(await page.eval("document.querySelector('[id$=_birthdayInput]').textContent"), "February 14, 1990");
+	// Cancel leaves the anniversary as it was (none).
+	await openDate("anniversaryInput");
+	await page.tap("[id$=_anniversaryInput_dateCancelBtn]");
+	assert.strictEqual(await page.eval("document.querySelector('[id$=_anniversaryInput]').textContent"), "");
 	await save();
-	assert.ok((await banners()).some(function(b) { return /YYYY-MM-DD/.test(b); }), "no banner");
-	assert.strictEqual((await record("c-gina")).birthday, "--07-04");
+	var c = await record("c-gina");
+	assert.strictEqual(c.birthday, "1990-02-14");
+	assert.ok(!c.anniversary, "no anniversary: " + c.anniversary);
+});
+
+t.test("edit: an empty date opens on today, and Remove clears a date", async function() {
+	var d = data();
+	d.contacts.filter(function(c) { return c._id === "c-gina"; })[0].birthday = "1980-03-14";
+	await open({data: d});
+	await openEdit("Gina Talk");
+	await openDate("anniversaryInput");
+	var today = await page.eval("(function(){var n=new Date();return {month:String(n.getMonth()+1),day:String(n.getDate()),year:String(n.getFullYear())};})()");
+	var picked = await datePicked("anniversaryInput");
+	assert.deepStrictEqual({month: picked.month, day: picked.day, year: picked.year}, today);
+	assert.strictEqual(await page.eval("document.querySelectorAll('[id$=_anniversaryInput_year] option[value=none]').length"), 0,
+		"no 'no year' choice for a date that has a year");
+	await page.tap("[id$=_anniversaryInput_dateDoneBtn]");
+	await openDate("birthdayInput");
+	await page.tap("[id$=_birthdayInput_dateRemoveBtn]");
+	await save();
+	var c = await record("c-gina");
+	assert.ok(!c.birthday, "birthday removed: " + c.birthday);
+	var pad = function(n) { return (+n < 10 ? "0" : "") + n; };
+	assert.strictEqual(c.anniversary, today.year + "-" + pad(today.month) + "-" + pad(today.day));
 });
 
 t.test("edit: Remove Photo clears the photo on Save, and Cancel keeps it", async function() {

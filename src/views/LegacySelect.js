@@ -8,6 +8,10 @@
 // The <select> stays the real control: its value, its options, its change
 // event and its keyboard handling work as before, so everything that reads
 // or sets it does not change. Only the popup is ours.
+//
+// With picker: true it is one of Enyo 1's picker pills (the date dialog's
+// month, day and year): the select is drawn as the pill, and its list
+// opens on it, as wide as it, centred, the chosen row white and bold.
 var
 	kind = require('enyo/kind'),
 	Select = require('enyo/Select'),
@@ -33,7 +37,8 @@ var Menu = kind({
 		{name: "items", classes: "legacy-menu-items", attributes: {role: "listbox"}}
 	],
 	//* Fills the menu with inLabels; inChosen gets the check mark.
-	setChoices: function (inLabels, inChosen) {
+	setChoices: function (inLabels, inChosen, inPicker) {
+		this.addRemoveClass("picker", !!inPicker);
 		this.$.items.destroyClientControls();
 		inLabels.forEach(function (inLabel, inIndex) {
 			this.$.items.createComponent({kind: Control, classes: "legacy-menu-item" +
@@ -55,9 +60,10 @@ var Menu = kind({
 		}
 		return true;
 	},
-	//* Opens next to inRect (the select's box): its right edge on the
-	//* select's, its top on the select's, moved up so it fits the window.
-	openAt: function (inRect) {
+	//* Opens next to inRect (the select's box): its top on the select's,
+	//* its right edge on the select's (a picker: its left edge, and at
+	//* least as wide), moved so it fits the window.
+	openAt: function (inRect, inPicker) {
 		this.applyStyle("visibility", "hidden");
 		this.show();
 		var node = this.hasNode();
@@ -67,8 +73,9 @@ var Menu = kind({
 		var vw = window.innerWidth, vh = window.innerHeight;
 		node.style.maxHeight = (vh - 2 * EDGE) + "px";
 		node.style.maxWidth = (vw - 2 * EDGE) + "px";
+		node.style.minWidth = inPicker ? inRect.width + "px" : "";
 		var w = node.offsetWidth, h = node.offsetHeight;
-		var left = Math.min(Math.max(inRect.right - w, EDGE), vw - EDGE - w);
+		var left = Math.min(Math.max(inPicker ? inRect.left : inRect.right - w, EDGE), vw - EDGE - w);
 		var top = Math.min(Math.max(inRect.top - 4, EDGE), vh - EDGE - h);
 		this.addStyles("left: " + Math.max(left, EDGE) + "px; top: " + Math.max(top, EDGE) + "px; right: auto; bottom: auto;");
 		// The chosen row in view when the list scrolls.
@@ -83,9 +90,17 @@ var Menu = kind({
 module.exports = kind({
 	name: "LegacySelect",
 	kind: Select,
+	//* Drawn and opened as an Enyo 1 picker pill.
+	picker: false,
 	handlers: {
 		ontap: "openMenu"
 	},
+	create: kind.inherit(function (sup) {
+		return function () {
+			sup.apply(this, arguments);
+			this.addRemoveClass("legacy-picker", this.picker);
+		};
+	}),
 	rendered: kind.inherit(function (sup) {
 		return function () {
 			sup.apply(this, arguments);
@@ -125,8 +140,8 @@ module.exports = kind({
 			menu = new Menu();
 		}
 		menu.target = this;
-		menu.setChoices(labels, node.selectedIndex);
-		menu.openAt(node.getBoundingClientRect());
+		menu.setChoices(labels, node.selectedIndex, this.picker);
+		menu.openAt(node.getBoundingClientRect(), this.picker);
 		return true;
 	},
 	menuPick: function (inIndex) {

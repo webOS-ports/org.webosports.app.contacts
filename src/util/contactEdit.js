@@ -24,6 +24,7 @@
 var names = require("./names");
 var accountRules = require("./accountRules");
 var labels = require("./labels");
+var dateParts = require("./dateParts");
 
 var LIST_FIELDS = ["phoneNumbers", "emails", "ims", "addresses", "urls", "relations", "notes"];
 var ADDRESS_PARTS = ["streetAddress", "locality", "region", "postalCode", "country"];
@@ -493,18 +494,13 @@ function updateFor(ioResult, inId) {
 	return u;
 }
 
-//* An ISO date "YYYY-MM-DD", or "" (both are fine to store).
+/**
+	An ISO date "YYYY-MM-DD", one without a year "--MM-DD" (as the date
+	dialog writes it when the stored one had none), or "": all fine to store.
+*/
 function isValidDate(inValue) {
 	var v = str(inValue).trim();
-	if (!v) {
-		return true;
-	}
-	var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
-	if (!m) {
-		return false;
-	}
-	var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
-	return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3];
+	return !v || (/^(\d{4}|-)-\d{2}-\d{2}$/.test(v) && dateParts.parse(v) !== null);
 }
 
 module.exports = {build: build, plan: plan, addData: addData, isValidDate: isValidDate, LIST_FIELDS: LIST_FIELDS,

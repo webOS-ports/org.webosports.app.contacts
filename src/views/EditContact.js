@@ -31,6 +31,7 @@ var
 	persons = require('../data/persons'),
 	choose = require('./choose'),
 	ConfirmDialog = require('./ConfirmDialog'),
+	DateField = require('./DateField'),
 	$L = require('enyo/i18n').$L;
 
 var ADDRESS_PARTS = [
@@ -270,11 +271,13 @@ module.exports = kind({
 				{kind: Groupbox, classes: "edit-dates", components: [
 					{kind: InputDecorator, classes: "flex-row", components: [
 						{content: $L("Birthday"), classes: "edit-label flex-none"},
-						{name: "birthdayInput", kind: Input, type: "date", classes: "flex-auto", placeholder: "YYYY-MM-DD"}
+						{name: "birthdayInput", kind: DateField, classes: "flex-auto",
+							title: $L("Select Birthday"), removeText: $L("Remove Birthday")}
 					]},
 					{kind: InputDecorator, classes: "flex-row", components: [
 						{content: $L("Anniversary"), classes: "edit-label flex-none"},
-						{name: "anniversaryInput", kind: Input, type: "date", classes: "flex-auto", placeholder: "YYYY-MM-DD"}
+						{name: "anniversaryInput", kind: DateField, classes: "flex-auto",
+							title: $L("Select Anniversary"), removeText: $L("Remove Anniversary")}
 					]}
 				]},
 				{name: "relationsGroup", kind: EditGroup, field: "relations"},
@@ -364,8 +367,8 @@ module.exports = kind({
 		this.$.jobTitleInput.set("value", single.organization.title);
 		this.$.departmentInput.set("value", single.organization.department);
 		this.$.organizationInput.set("value", single.organization.name);
-		this.setDate(this.$.birthdayInput, single.birthday);
-		this.setDate(this.$.anniversaryInput, single.anniversary);
+		this.$.birthdayInput.set("value", single.birthday || "");
+		this.$.anniversaryInput.set("value", single.anniversary || "");
 		this.favorite = state.favorite;
 		this.favoriteChanged();
 		this.renderAccountPicker();
@@ -399,12 +402,6 @@ module.exports = kind({
 		this.$.readOnlyNote.set("showing", !!note);
 	},
 
-	// A stored date that is not a full ISO date (a vCard's "--03-14") is
-	// shown as text, so it is kept, not blanked by the date input.
-	setDate: function (inInput, inValue) {
-		inInput.set("type", !inValue || contactEdit.isValidDate(inValue) ? "date" : "text");
-		inInput.set("value", inValue || "");
-	},
 
 	renderAccountPicker: function () {
 		var state = this.state, select = this.$.accountSelect;
@@ -528,6 +525,8 @@ module.exports = kind({
 	cancelTap: function () {
 		this.$.deleteConfirm.hide();
 		this.$.nameDetails.hide();
+		this.$.birthdayInput.$.dialog.hide();
+		this.$.anniversaryInput.$.dialog.hide();
 		this.state = null;
 		this.doCancel();
 		return true;
