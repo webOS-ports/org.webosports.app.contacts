@@ -730,6 +730,29 @@ t.test("details: im: links", function() {
 	assert.strictEqual(details.imTarget("  ", "type_jabber", "p"), null);
 });
 
+t.test("details: a card another app hands over, as the add prompt shows it", function() {
+	var c = details.card({
+		name: {givenName: "Jane", familyName: "Doe"},
+		phoneNumbers: [{value: "+31 6 1234 5678", type: "type_mobile"}, {value: " ", type: "type_home"}],
+		emails: [{value: "jane@example.com", type: "type_work"}],
+		organizations: [{title: "CTO", name: "Acme"}],
+		addresses: [{streetAddress: "Main 1", postalCode: "1234 AB", locality: "Town", country: "NL"}],
+		note: "met at FOSDEM"
+	});
+	assert.strictEqual(c.title, "Jane Doe");
+	assert.deepStrictEqual(c.rows.map(function(r) { return [r.key, r.label, r.value]; }), [
+		["organizations", "Company", "CTO, Acme"],
+		["phoneNumbers", "Mobile", "+31 6 1234 5678"],
+		["emails", "Work", "jane@example.com"],
+		["addresses", "Other", "Main 1\n1234 AB Town\nNL"],
+		["notes", "Note", "met at FOSDEM"]
+	]);
+	assert.strictEqual(details.card({phoneNumbers: [{value: "555"}]}).title, "555");
+	assert.strictEqual(details.card({nickname: "JD", phoneNumbers: [{value: "555"}]}).title, "JD");
+	assert.strictEqual(details.card({organizations: [{name: "Globex"}]}).title, "Globex");
+	assert.deepStrictEqual(details.card(null), {title: "", rows: []});
+});
+
 t.test("names: display names, as the legacy app made them", function() {
 	assert.strictEqual(names.displayName({name: {givenName: "小龙", familyName: "李"}}), "李小龙");
 	assert.strictEqual(names.displayName({name: {honorificPrefix: "Dr.", givenName: "Mary", middleName: "Ann", familyName: "Smith-Jones",
