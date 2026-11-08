@@ -841,6 +841,29 @@ t.test("delete: on a narrow screen, deleting goes back to the list", async funct
 		"var r=e&&e.getBoundingClientRect();return r && r.width>0 && r.left>=0 && r.left<480;})()");
 });
 
+t.test("edit: on a narrow screen the picture stays in its box, off the name", async function() {
+	// Sargo's card: 450x783. The name wraps to below the 96px avatar there.
+	await open({width: 450, height: 783});
+	await openEdit("Mary Ann Smith-Jones");
+	var r = await page.eval("(function(){var n=null;document.querySelectorAll('[id$=_nameInput]').forEach(function(e){if(e.getBoundingClientRect().width)n=e;});" +
+		"var b=n.getBoundingClientRect(),hit=document.elementFromPoint(b.left+4,b.top+b.height/2);" +
+		"var a=null;document.querySelectorAll('.edit-main .avatar').forEach(function(e){if(e.getBoundingClientRect().width)a=e;});" +
+		"var ab=a.getBoundingClientRect(),pb=a.querySelector('.img').getBoundingClientRect();" +
+		"return {hitName:hit===n,inBox:pb.top>=ab.top&&pb.bottom<=ab.bottom&&pb.left>=ab.left&&pb.right<=ab.right};})()");
+	assert.deepStrictEqual(r, {hitName: true, inBox: true});
+});
+
+t.test("details: on a narrow screen the picture stays in its box", async function() {
+	await open({width: 450, height: 783});
+	await tapPerson("Mary Ann Smith-Jones");
+	await waitForDetails("Mary Ann Smith-Jones");
+	var r = await page.eval("(function(){var out=[];document.querySelectorAll('.avatar').forEach(function(a){var ab=a.getBoundingClientRect();if(!ab.width)return;" +
+		"var i=a.querySelector('.img');if(!i)return;var pb=i.getBoundingClientRect();" +
+		"out.push(pb.top>=ab.top-0.5&&pb.bottom<=ab.bottom+0.5&&pb.left>=ab.left-0.5&&pb.right<=ab.right+0.5);});return out;})()");
+	assert.ok(r.length > 0, "an avatar is shown");
+	assert.ok(r.every(function(x) { return x; }), JSON.stringify(r));
+});
+
 t.test("delete: read-only profiles stay, the others go after saying so", async function() {
 	await open();
 	await openEdit("Anna van der Berg");

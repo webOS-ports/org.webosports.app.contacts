@@ -538,6 +538,14 @@ img {
         width: 96px;
         height: 96px;
     }
+    /* The picture inside: the 196px of the full-size avatar left it hanging
+       out of this 96px box and over the name, which wraps to below it. */
+    .edit-main .edit-top .avatar .img {
+        top: 6px;
+        left: 6px;
+        width: calc(100% - 12px);
+        height: calc(100% - 12px);
+    }
     .edit-main .edit-photo-col {
         width: 96px;
     }
