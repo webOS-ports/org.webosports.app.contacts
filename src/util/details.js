@@ -11,6 +11,7 @@
 // Pure module: no Enyo, so it is unit tested under Node.
 
 var labels = require("./labels");
+var names = require("./names");
 var accountRules = require("./accountRules");
 
 function str(inValue) {
@@ -21,7 +22,7 @@ function str(inValue) {
 var NO_SMS = ["type_work_fax", "type_personal_fax", "type_fax", "type_pager"];
 
 // The labels of the rows that are no contact point (for $L).
-var TEXTS = {notes: "Note", birthday: "Birthday", anniversary: "Anniversary"};
+var TEXTS = {notes: "Note", birthday: "Birthday", anniversary: "Anniversary", organization: "Company"};
 
 var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
 	"November", "December"];
@@ -234,5 +235,25 @@ function rows(inPerson, inFormatDate) {
 	return out;
 }
 
-module.exports = {rows: rows, target: target, smsTarget: smsTarget, imActions: imActions, imTarget: imTarget, addressText: addressText, dateText: dateText,
+/**
+	Contact data another app hands over (launch.template(): a vCard read by
+	the contacts service, or newContact launch parameters), as the add
+	prompt shows it before asking what to do with it: a title - the name,
+	else the nickname or company, else the first value - and the rows the
+	details view would show, the company first.
+*/
+function card(inContact, inFormatDate) {
+	var c = inContact || {};
+	var org = (Array.isArray(c.organizations) && c.organizations[0]) || {};
+	var orgText = [str(org.title).trim(), str(org.name).trim()].filter(function(inP) { return inP; }).join(", ");
+	var out = rows({phoneNumbers: c.phoneNumbers, emails: c.emails, ims: c.ims, addresses: c.addresses, urls: c.urls,
+		notes: c.note, birthday: c.birthday, anniversary: c.anniversary, relations: c.relations}, inFormatDate);
+	if (orgText) {
+		out.unshift({key: "organizations", type: "", label: TEXTS.organization, value: orgText, sms: false, entry: null});
+	}
+	var title = names.format(c.name) || str(c.nickname).trim() || str(org.name).trim() || (out[0] ? out[0].value : "");
+	return {title: title, rows: out};
+}
+
+module.exports = {card: card, rows: rows, target: target, smsTarget: smsTarget, imActions: imActions, imTarget: imTarget, addressText: addressText, dateText: dateText,
 	nextOccurrence: nextOccurrence, webUrl: webUrl, dialString: dialString, MONTHS: MONTHS, TEXTS: TEXTS};

@@ -1086,6 +1086,8 @@ t.test("launch: a vCard of one contact asks, then opens it as a new contact", as
 	await open({launchParams: {target: "file:///media/internal/one.vcf"}, vcards: {"file:///media/internal/one.vcf": VCARD_ONE}});
 	await page.waitFor("(function(){var e=document.querySelector('[id$=_addPrompt]');return e && e.getBoundingClientRect().width>0;})()");
 	assert.ok(/Vera Card/.test(await text("[id$=_addPrompt]")));
+	// What the card holds, before deciding what to do with it.
+	assert.ok(/vera@example\.com/.test(await text("[id$=_addPrompt] .add-to-contacts-rows")));
 	await page.tap("[id$=_addNewBtn]");
 	await waitForEdit("Vera Card");
 });
