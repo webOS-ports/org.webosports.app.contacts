@@ -72,5 +72,7 @@ module.exports = kind({
         var text = (this.model && dividers && dividers[this.model.euid]) || "";
         this.$.divider.set("content", text);
         this.$.divider.set("showing", !!text);
+        // The first row under a letter has no line above it.
+        this.addRemoveClass("group-first", !!text);
     }
 });

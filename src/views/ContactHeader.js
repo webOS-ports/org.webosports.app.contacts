@@ -87,6 +87,14 @@ module.exports = kind({
         }
     ],
     
+    create: function () {
+        this.inherited(arguments);
+        this.displayPhotoChanged();
+    },
+    // No picture: the legacy details show the frame empty, not a silhouette.
+    displayPhotoChanged: function () {
+        this.$.photo.addRemoveClass("no-photo", !this.displayPhoto);
+    },
     remoteChanged: function () {
         this.$.favourite.set("showing", !this.remote);
         this.$.profilesButton.set("showing", !this.remote);
@@ -127,7 +135,7 @@ module.exports = kind({
                 list.destroyClientControls();
                 profiles.rows(inContacts, accounts.list).forEach(function (inRow) {
                     list.createComponent({classes: "profile-row flex-row", contactId: inRow.contactId, components: [
-                        {kind: Image, classes: "profile-account-icon flex-none", src: inRow.icon || "assets/header-icon-contacts.png"},
+                        {kind: Image, classes: "profile-account-icon flex-none", src: inRow.icon || "assets/header-icon-contacts.svg"},
                         {classes: "flex-auto profile-text", components: [
                             {classes: "profile-name", content: inRow.name || $L("[No Name Available]")},
                             {classes: "profile-account", content: inRow.accountName +

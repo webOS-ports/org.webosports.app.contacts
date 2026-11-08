@@ -36,8 +36,10 @@ module.exports = kind({
         this.refilter.apply(this, arguments);
     },
     refilter: function () {
+        // Favorites has no search field (as the legacy app), so it lists all
+        // of them whatever All is searching for.
         var favorites = this.favorites, nonFavorites = this.nonFavorites, excludeId = this.excludeId,
-            searchText = this.searchText || "";
+            searchText = favorites ? "" : this.searchText || "";
         this.empty();
         if (!this.globalPersonCollection) {
             return;

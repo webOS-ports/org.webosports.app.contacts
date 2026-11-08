@@ -158,7 +158,7 @@ t.test("list: a change made elsewhere shows", async function() {
 
 t.test("list: Favourites tab shows only favourites", async function() {
 	await open();
-	await page.tapText("[id$=_contactsBar_tabs] *", "Favourites");
+	await page.tapText("[id$=_contactsBar_tabs] *", "Favorites");
 	await page.waitFor("document.querySelectorAll('[id*=_allContactsList] .contacts-item .name').length === 2");
 	assert.deepStrictEqual((await listNames()).sort(), ["Anna van der Berg", "Émile Zola"]);
 });
@@ -173,7 +173,7 @@ t.test("list: search narrows the list by name, nickname, company and email", asy
 t.test("list: Add Favorite on the Favourites tab offers the others, and makes the pick a favourite", async function() {
 	await open();
 	assert.strictEqual(await visible("[id$=_addFavoriteBtn]"), false, "not on the All tab");
-	await page.tapText("[id$=_contactsBar_tabs] *", "Favourites");
+	await page.tapText("[id$=_contactsBar_tabs] *", "Favorites");
 	await page.waitFor("document.querySelectorAll('[id*=_allContactsList] .contacts-item .name').length === 2");
 	assert.strictEqual(await visible("[id$=_addFavoriteBtn]"), true);
 	await page.tap("[id$=_addFavoriteBtn]");
@@ -270,7 +270,7 @@ t.test("list: messages for no search results, no favourites and no contacts", as
 	var d = data();
 	d.persons.forEach(function(p) { p.favorite = false; });
 	await open({data: d});
-	await page.tapText("[id$=_contactsBar_tabs] *", "Favourites");
+	await page.tapText("[id$=_contactsBar_tabs] *", "Favorites");
 	await waitForMessage();
 	assert.strictEqual(await listMessage(), "No favorites yet");
 
@@ -1384,7 +1384,7 @@ t.test("gal: searching All offers the global address list; a result shows read-o
 	assert.strictEqual(await galShowing(), false, "not without a search");
 	await search("anne", 0);
 	assert.strictEqual(await galShowing(), true);
-	await page.tapText("[id$=_tabs] .onyx-radiobutton", "Favourites");
+	await page.tapText("[id$=_tabs] .onyx-radiobutton", "Favorites");
 	await sleep(200);
 	assert.strictEqual(await galShowing(), false, "not on Favourites");
 	await page.tapText("[id$=_tabs] .onyx-radiobutton", "All");
@@ -1498,7 +1498,7 @@ t.test("localisation: German strings, labels and dates, from resources/de", asyn
 	assert.ok(rows.some(function(r) { return r[0] === "Handy"; }), JSON.stringify(rows));
 	await shot("details-de");
 	await openEdit("Anna van der Berg");
-	assert.strictEqual(await text("[id$=_editContact] [id$=_doneBtn]"), "Speichern");
+	assert.strictEqual(await text("[id$=_editContact] [id$=_doneBtn]"), "Fertig");
 	assert.strictEqual(await page.eval("document.querySelector('[id$=_nameInput]').placeholder"), "Name");
 	await shot("edit-de");
 });
@@ -1507,7 +1507,7 @@ t.test("localisation: a language without strings stays English, and fetches noth
 	await open({locale: "nl-NL"});
 	assert.deepStrictEqual(await resourceFetches(), []);
 	assert.deepStrictEqual(await page.eval("Array.prototype.map.call(document.querySelectorAll('[id$=_tabs] .onyx-radiobutton')," +
-		"function(e){return e.textContent;})"), ["All", "Favourites"]);
+		"function(e){return e.textContent;})"), ["All", "Favorites"]);
 	await tapPerson("Anna van der Berg");
 	assert.ok((await detailRows()).some(function(r) { return r[0] === "Birthday" && r[1] === "March 14, 1980"; }));
 	await open({locale: "fr-FR"});

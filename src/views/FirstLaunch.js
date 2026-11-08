@@ -31,7 +31,7 @@ module.exports = kind({
 	},
 	components: [
 		{kind: Toolbar, layoutKind: FittableHeaderLayout, components: [
-			{kind: Image, src: "assets/header-icon-contacts.png", classes: "prefs-header-icon"},
+			{kind: Image, src: "assets/header-icon-contacts.svg", classes: "prefs-header-icon"},
 			{name: "title", fit: true, classes: "prefs-title"}
 		]},
 		{kind: Scroller, fit: true, touch: true, horizontal: "hidden", components: [

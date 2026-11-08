@@ -4,7 +4,7 @@ var
     kind = require('enyo/kind'),
     FittableRows = require('layout/FittableRows'),
     Toolbar = require('onyx/Toolbar'),
-    InputSearchStretch = require('enyo-animated/InputSearchStretch'),
+    SearchField = require('./SearchField'),
     RadioGroup = require('onyx/RadioGroup'),
     Button = require('onyx/Button'),
     Spinner = require('onyx/Spinner'),
@@ -29,33 +29,34 @@ module.exports = kind({
     },
     events: {
         onSelected: "",
-        onAddFavorite: ""
+        onAddFavorite: "",
+        onAddContact: ""
     },
     components: [
+        // The legacy list's light bar: the two tabs across its whole width,
+        // and the search on a row of its own under it.
         {
             name: "tabsToolbar",
             kind: Toolbar,
+            classes: "legacy-toolbar contacts-tabs-toolbar",
             components: [
-                {kind: InputSearchStretch, end:true, targetWidth: 225, placeholder: $L("Search"),
-                    onkeydown: 'inputKeydown', components: [
                 {
                     name: "tabs",
                     kind: RadioGroup,
-                    controlClasses: "luneos-tabbutton",
+                    classes: "legacy-radiogroup",
+                    controlClasses: "legacy-radiobutton",
                     onActivate: "paneChange",
                     components: [
                         { name: "0", content: $L("All"), favorites: false, active: true },
-                        { name: "1", content: $L("Favourites"), favorites: true }
+                        { name: "1", content: $L("Favorites"), favorites: true }
                     ]
                 }
-                ]}
             ]
         },
+        // Named as the field it replaced: the bindings and the tests know it so.
+        { name: "inputSearchStretch", kind: SearchField, placeholder: $L("Search"), onkeydown: 'inputKeydown' },
         // Why the list is empty: no contacts, no favourites, or no match.
         { name: "message", classes: "contacts-list-message", showing: false },
-        // On the Favourites tab only, as the legacy list's Add Favorite.
-        { name: "addFavoriteBtn", kind: Button, classes: "contacts-add-favorite", content: $L("Add Favorite"),
-            showing: false, ontap: "addFavoriteTap" },
         { name: "allContactsList", kind: ContactsList, fit: true, collection: new AllPersonCollection(), ontap: "selectPerson" },
         // While searching All, with an account that has a global address
         // list: search it too, as the legacy list's GAL section.
@@ -68,6 +69,12 @@ module.exports = kind({
             { name: "galScroller", kind: Scroller, classes: "gal-results", touch: true, horizontal: "hidden", showing: false,
                 components: [{ name: "galList", ontap: "galResultTap" }]},
             { name: "galMessage", classes: "gal-message", showing: false }
+        ]},
+        // The legacy list's light bar at the bottom: Add Contact on All,
+        // Add Favorite on Favorites.
+        { name: "listToolbar", kind: Toolbar, classes: "legacy-toolbar legacy-footer list-pane-footer", components: [
+            { name: "addContactBtn", kind: Button, content: $L("Add Contact"), ontap: "addContactTap" },
+            { name: "addFavoriteBtn", kind: Button, content: $L("Add Favorite"), showing: false, ontap: "addFavoriteTap" }
         ]}
     ],
 
@@ -81,6 +88,11 @@ module.exports = kind({
         if (inEvent.originator.getActive()) {
             this.$.allContactsList.collection.set('favorites', inEvent.originator.favorites);
             this.$.addFavoriteBtn.set("showing", !!inEvent.originator.favorites);
+            this.$.addContactBtn.set("showing", !inEvent.originator.favorites);
+            // Favorites draws big pictures and no letters (contacts.css .favorites).
+            this.$.allContactsList.addRemoveClass("favorites", !!inEvent.originator.favorites);
+            // and has no search, as the legacy Favorites
+            this.$.inputSearchStretch.set("showing", !inEvent.originator.favorites);
             this.resetGal();
         }
     },
@@ -208,6 +220,11 @@ module.exports = kind({
             }
         }
         this.resize();
+    },
+
+    addContactTap: function () {
+        this.doAddContact();
+        return true;
     },
 
     addFavoriteTap: function () {
