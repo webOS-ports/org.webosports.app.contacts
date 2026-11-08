@@ -8,7 +8,7 @@
 var
 	kind = require('enyo/kind'),
 	Control = require('enyo/Control'),
-	Select = require('enyo/Select'),
+	Select = require('./LegacySelect'),
 	Option = require('enyo/Option'),
 	Image = require('enyo/Image'),
 	Scroller = require('enyo/Scroller'),

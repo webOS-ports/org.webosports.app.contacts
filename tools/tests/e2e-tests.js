@@ -557,6 +557,29 @@ t.test("edit: a new entry gets the type picked for it", async function() {
 	assert.strictEqual(c.addresses[1].type, "type_home");
 });
 
+t.test("edit: a type opens the legacy menu, not the browser's, and the pick is stored", async function() {
+	await open();
+	await openEdit("Mary Ann Smith-Jones");
+	var select = row("phoneNumbers", 1) + " select.edit-row-type";
+	await page.eval("window.__pressKept=null;window.addEventListener('mousedown',function(e){" +
+		"if(e.target.tagName==='SELECT'){window.__pressKept=e.defaultPrevented;}});");
+	await page.tap(select);
+	await page.waitFor("(function(){var m=document.querySelector('.legacy-menu');return m&&m.getBoundingClientRect().height>0;})()");
+	assert.strictEqual(await page.eval("window.__pressKept"), true, "the press that would open the browser's popup is cancelled");
+	var menu = await page.eval("(function(){var s=document.querySelector(" + JSON.stringify(select) + ");" +
+		"return {items:Array.prototype.map.call(document.querySelectorAll('.legacy-menu .legacy-menu-item'),function(e){return e.textContent;})," +
+		"options:Array.prototype.map.call(s.options,function(o){return o.textContent;})," +
+		"checked:document.querySelector('.legacy-menu .legacy-menu-item.checked').textContent," +
+		"chosen:s.options[s.selectedIndex].textContent};})()");
+	assert.deepStrictEqual(menu.items, menu.options, "the menu lists the select's choices");
+	assert.strictEqual(menu.checked, menu.chosen, "the chosen one has the check mark");
+	await page.tapText(".legacy-menu .legacy-menu-item", "Pager");
+	await page.waitFor("(function(){var m=document.querySelector('.legacy-menu');return !m||!m.getBoundingClientRect().height;})()");
+	assert.strictEqual(await page.eval("document.querySelector(" + JSON.stringify(select) + ").value"), "type_pager");
+	await save();
+	assert.strictEqual((await record("c-mary")).phoneNumbers[0].type, "type_pager");
+});
+
 t.test("edit: the name details popup sets each part", async function() {
 	await open();
 	await openEdit("Gina Talk");

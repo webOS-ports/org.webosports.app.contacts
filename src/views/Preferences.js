@@ -8,7 +8,7 @@
 
 var
 	kind = require('enyo/kind'),
-	Select = require('enyo/Select'),
+	Select = require('./LegacySelect'),
 	Image = require('enyo/Image'),
 	Scroller = require('enyo/Scroller'),
 	FittableRows = require('layout/FittableRows'),
