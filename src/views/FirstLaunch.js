@@ -47,10 +47,11 @@ module.exports = kind({
 				{name: "addAccountBtn", kind: Button, classes: "first-launch-add", content: $L("Add an Account"), ontap: "addAccount"}
 			]}
 		]},
-		{kind: Toolbar, layoutKind: FittableHeaderLayout, components: [
-			{fit: true},
-			{name: "doneBtn", kind: Button, content: $L("Done"), classes: "onyx-affirmative edit-toolbar-button", ontap: "doneTap"},
-			{fit: true}
+		// Done in the middle of the bar: the bar is a flex box, centred
+		// (legacy.less). A fittable layout stretches one "fit" control only, so
+		// a spacer either side left Done to the right of the middle.
+		{kind: Toolbar, components: [
+			{name: "doneBtn", kind: Button, content: $L("Done"), classes: "onyx-affirmative edit-toolbar-button", ontap: "doneTap"}
 		]}
 	],
 	create: function () {
