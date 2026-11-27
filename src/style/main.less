@@ -1124,6 +1124,19 @@ border-top-color:rgba(255,255,255,0.5);
     max-width: 100%;
     margin: 0.75rem auto 0;
 }
+/* A short card (the Zinwa Q25's is 450x380, a Mi A1's on its side 738x345):
+   at full size the picture and the welcome fill it, and "Add an Account",
+   all there is to do, waits under the bottom bar until the page is
+   scrolled. */
+@media all and (max-height: 400px) {
+    .first-launch-image {
+        width: 96px;
+        margin-top: 0.5rem;
+    }
+    .first-launch-text {
+        margin-top: 0.5rem;
+    }
+}
 .edit-main .edit-delete {
     display: block;
     width: 16rem;

@@ -610,6 +610,13 @@ body.onyx .first-launch .onyx-toolbar .edit-toolbar-button {
     margin: 0 6px;
 }
 
+/* First use's "Add an Account" stays centred under the welcome
+   (main.less, .first-launch-add): the legacy button margin above would
+   otherwise put it at the left. */
+body.onyx .first-launch .first-launch-add {
+    margin: 0.75rem auto 0;
+}
+
 body.onyx .edit-main {
     max-width: 694px;
     padding: 20px 0 16px;
